@@ -278,29 +278,32 @@ async function loadQuestionsFromIndexedDB() {
 
 
 async function loadQuestions() {
-
   try {
-
-    const indexedDBData = await loadQuestionsFromIndexedDB();
-
-    if (indexedDBData) {
-
-      processParsedJSON(indexedDBData);
-
-      return;
-
-    } else {
-
-      alert("لا توجد بيانات أسئلة! يرجى الذهاب إلى صفحة التحديث وتحميل ملف القرآن.");
-
+    let data = await loadQuestionsFromIndexedDB();
+    
+    if (!data) {
+        // Fallback: Fetch it from server automatically!
+        console.log("Not in IndexedDB, fetching from server...");
+        const response = await fetch('./quran.json');
+        if (!response.ok) throw new Error("Could not fetch quran.json from server");
+        data = await response.json();
+        
+        // Save to IndexedDB so next time it's instant!
+        try {
+           const db = await openDatabase();
+           const tx = db.transaction([storeName], 'readwrite');
+           tx.objectStore(storeName).put(data, dataKey);
+        } catch(e) { console.error("Could not save to IndexedDB", e); }
     }
-
+    
+    if (data) {
+      processParsedJSON(data);
+    } else {
+      alert("تعذر تحميل الأسئلة. يرجى التأكد من اتصالك بالإنترنت.");
+    }
   } catch (err) {
-
-    alert("حدث خطأ أثناء تحميل البيانات: " + err.message);
-
+    alert("خطأ في قراءة البيانات: " + err.message);
   }
-
 }
 
 
