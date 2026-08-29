@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -218,6 +218,24 @@
       user-select: none;
     }
   </style>
+    <style>
+        @media (max-width: 768px) {
+            .mobile-leaderboard {
+                position: relative !important;
+                width: 90% !important;
+                max-width: 400px;
+                margin: 0 auto 20px auto !important;
+                left: 0 !important;
+                top: 0 !important;
+                max-height: 150px !important;
+                overflow-y: auto;
+            }
+            .container {
+                margin-top: 20px;
+                width: 95%;
+            }
+        }
+    </style>
 </head>
 <body>
   <div id="loading-overlay" class="hidden"> فضلا انتظر قليلا للتحميل...</div>
@@ -312,7 +330,7 @@
     }
   </script>
     <!-- Multiplayer Leaderboard -->
-    <div id="mp-leaderboard" style="display: none; position: fixed; left: 10px; top: 10px; width: 200px; background: rgba(0,0,0,0.8); border: 2px solid var(--button-green); border-radius: 10px; padding: 10px; color: white; z-index: 1000; max-height: 90vh; overflow-y: auto;">
+    <div id="mp-leaderboard" class="mobile-leaderboard" style="display: none; position: fixed; left: 10px; top: 10px; width: 200px; background: rgba(0,0,0,0.8); border: 2px solid var(--button-green); border-radius: 10px; padding: 10px; color: white; z-index: 1000; max-height: 90vh; overflow-y: auto;">
         <h3 style="text-align: center; color: var(--heading-color); margin-top: 0;">🏆 المتصدرون</h3>
         <div id="mp-players-list"></div>
     </div>
