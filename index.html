@@ -525,6 +525,14 @@ function openModal(type, title) {
     <h1>اختر نوع المسابقة</h1>
 
 <div class="quiz-options">
+    <div class="card" onclick="openMultiplayerModal()" onmouseenter="playHover()" style="border: 2px solid var(--button-green); box-shadow: 0 0 15px var(--button-green);">
+        <img src="assets/moshaf.jpg" alt="تحدي مباشر" class="card-img">
+        <div class="card-header" style="color: var(--heading-color);">🎮 تحدي مباشر (Multiplayer)</div>
+    </div>
+    <div class="card" onclick="openSoloMixModal()" onmouseenter="playHover()" style="border: 2px solid var(--button-blue); box-shadow: 0 0 15px var(--button-blue);">
+        <img src="assets/moshaf.jpg" alt="تشكيلة مخصصة" class="card-img">
+        <div class="card-header" style="color: var(--button-blue);">🎯 تشكيلة مخصصة (لعب فردي)</div>
+    </div>
     <div class="card" onclick="openModal('memorization', 'مسابقة حفظ القرآن')" onmouseenter="playHover()">
         <img src="assets/moshaf.jpg" alt="مسابقة حفظ القرآن" class="card-img">
         <div class="card-header">مسابقة حفظ القرآن</div>
@@ -612,5 +620,101 @@ function openModal(type, title) {
         </div>
     </div>
 
+    <link rel="manifest" href="/manifest.json">
+    <!-- Multiplayer Modal -->
+    <div id="multiplayer-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeMultiplayerModal()">&times;</span>
+            <h3>🎮 إنشاء غرفة تحدي مباشر</h3>
+            <p>اختر نوع المسابقة التي تريد تحدي أصدقائك فيها:</p>
+            <div id="mp-category-select" style="text-align: right; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px; margin-bottom: 10px; max-height: 150px; overflow-y: auto;">
+                <label><input type="checkbox" value="mixed" checked> أسئلة متنوعة</label><br>
+                <label><input type="checkbox" value="kids"> مسابقة الأطفال</label><br>
+                <label><input type="checkbox" value="tafsir"> التفسير</label><br>
+                <label><input type="checkbox" value="seerah"> السيرة النبوية</label><br>
+                <label><input type="checkbox" value="fiqh"> الفقه والسنن</label><br>
+                <label><input type="checkbox" value="general"> أسئلة عامة</label><br>
+                <label><input type="checkbox" value="meanings"> معاني الكلمات</label>
+            </div>
+            <select id="mp-questions-count">
+                <option value="5">5 أسئلة</option>
+                <option value="10" selected>10 أسئلة</option>
+                <option value="20">20 سؤال</option>
+            </select>
+            <button onclick="createMultiplayerRoom()" style="background-color: var(--button-blue); color: white; margin-top: 15px;">إنشاء الغرفة الآن</button>
+            <hr style="border-color: var(--card-border); margin: 20px 0;">
+            <h3>لديك كود دعوة؟</h3>
+            <input type="text" id="join-room-code" placeholder="أدخل كود الغرفة المكون من 5 أرقام" style="padding: 10px; width: 80%; border-radius: 5px; border: 1px solid var(--card-border); background: var(--dark-bg); color: var(--text-color); margin-bottom: 10px; text-align: center; font-size: 1.2em;">
+            <button onclick="joinMultiplayerRoom()" style="background-color: var(--button-green); color: white;">دخول الغرفة</button>
+        </div>
+    </div>
+    <!-- Solo Mix Modal -->
+    <div id="solo-mix-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeSoloMixModal()">&times;</span>
+            <h3>🎯 اختر المسابقات التي تريد دمجها</h3>
+            <div id="solo-category-select" style="text-align: right; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px; margin-bottom: 10px; max-height: 150px; overflow-y: auto;">
+                <label><input type="checkbox" value="mixed" checked> أسئلة متنوعة</label><br>
+                <label><input type="checkbox" value="kids"> مسابقة الأطفال</label><br>
+                <label><input type="checkbox" value="tafsir"> التفسير</label><br>
+                <label><input type="checkbox" value="seerah"> السيرة النبوية</label><br>
+                <label><input type="checkbox" value="fiqh"> الفقه والسنن</label><br>
+                <label><input type="checkbox" value="general"> أسئلة عامة</label><br>
+                <label><input type="checkbox" value="meanings"> معاني الكلمات</label>
+            </div>
+            <button onclick="startSoloMixQuiz()" style="background-color: var(--button-blue); color: white; margin-top: 15px;">ابدأ المسابقة الآن</button>
+        </div>
+    </div>
+    <script type="module" src="multiplayer.js"></script>
+
+    <!-- Admin Settings Gear -->
+    <div id="admin-gear" style="position: fixed; bottom: 20px; left: 20px; font-size: 30px; cursor: pointer; z-index: 1000; transition: transform 0.3s; opacity: 0.5;">
+        ⚙️
+    </div>
+
+    <!-- Admin Password Modal -->
+    <div id="admin-password-modal" class="modal" style="display: none; align-items: center; justify-content: center; z-index: 2000; background: rgba(0, 0, 0, 0.8);">
+        <div style="background: linear-gradient(135deg, #2a2a4e, #16213e); padding: 30px; border-radius: 15px; border: 2px solid var(--button-blue); text-align: center; box-shadow: 0 0 20px var(--button-blue); max-width: 300px; width: 90%;">
+            <h3 style="color: var(--button-blue); margin-top: 0;">🔒 لوحة التحكم</h3>
+            <p style="color: #ccc; font-size: 0.9em;">يرجى إدخال كلمة المرور للوصول</p>
+            <input type="password" id="admin-password-input" placeholder="••••" style="width: 80%; padding: 10px; text-align: center; font-size: 1.5em; border-radius: 8px; border: 1px solid var(--button-blue); background: #111; color: white; letter-spacing: 10px; margin-bottom: 20px;">
+            <br>
+            <button onclick="checkAdminPassword()" style="background: var(--button-blue); color: white; padding: 10px 30px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; width: 100%;">دخول</button>
+            <button onclick="document.getElementById('admin-password-modal').style.display='none'" style="background: transparent; color: #888; border: none; margin-top: 15px; cursor: pointer;">إلغاء</button>
+        </div>
+    </div>
+    <script>
+        const adminGear = document.getElementById('admin-gear');
+        let pressTimer;
+        const startPress = (e) => {
+            e.preventDefault();
+            adminGear.style.transform = 'rotate(180deg) scale(1.2)';
+            adminGear.style.opacity = '1';
+            pressTimer = window.setTimeout(() => {
+                document.getElementById('admin-password-modal').style.display = 'flex';
+                document.getElementById('admin-password-input').value = '';
+                document.getElementById('admin-password-input').focus();
+            }, 2000);
+        };
+        const cancelPress = () => {
+            clearTimeout(pressTimer);
+            adminGear.style.transform = 'rotate(0deg) scale(1)';
+            adminGear.style.opacity = '0.5';
+        };
+        adminGear.addEventListener('mousedown', startPress);
+        adminGear.addEventListener('touchstart', startPress);
+        adminGear.addEventListener('mouseup', cancelPress);
+        adminGear.addEventListener('mouseleave', cancelPress);
+        adminGear.addEventListener('touchend', cancelPress);
+        function checkAdminPassword() {
+            const pass = document.getElementById('admin-password-input').value;
+            if (pass === '1153') {
+                window.location.href = 'admin.html';
+            } else {
+                alert('كلمة المرور غير صحيحة!');
+                document.getElementById('admin-password-input').value = '';
+            }
+        }
+    </script>
 </body>
 </html>

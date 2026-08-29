@@ -265,6 +265,22 @@
   }
 </script>
 
+    <!-- Multiplayer Results -->
+    <div id="mp-results" style="display: none; margin-top: 30px; background: var(--card-bg-gradient-start); padding: 20px; border-radius: 10px; border: 2px solid gold;">
+        <h2 style="color: gold;">🏆 النتائج النهائية للمنافسة</h2>
+        <div id="mp-final-leaderboard" style="text-align: right; max-width: 400px; margin: auto;"></div>
+        <button onclick="generateCertificate()" style="background: var(--button-blue); color: white; padding: 10px 20px; font-size: 1.1em; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">📜 إصدار شهادة الفوز</button>
+        <div id="certificate-area" style="display:none; margin-top: 20px; padding: 20px; background: white; color: black; border: 10px solid #d4af37; border-radius: 10px;">
+            <h1 style="color: #d4af37; margin-bottom: 5px;">شهادة تفوق</h1>
+            <h3 style="margin-top: 0;">مسابقة القرآن الكريم</h3>
+            <p>يُشهد بأن المتسابق:</p>
+            <h2 id="cert-name" style="color: #2e8b57;">---</h2>
+            <p>قد شارك في التحدي المباشر وحصل على سكور:</p>
+            <h1 id="cert-score" style="color: #e74c3c;">---</h1>
+            <p style="font-size: 0.8em; color: gray;">Quran Quiz App</p>
+        </div>
+    </div>
+    <script type="module" src="multiplayer-finish.js"></script>
 </body>
 </html>
 

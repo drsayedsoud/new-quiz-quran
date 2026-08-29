@@ -311,5 +311,11 @@
         });
     }
   </script>
+    <!-- Multiplayer Leaderboard -->
+    <div id="mp-leaderboard" style="display: none; position: fixed; left: 10px; top: 10px; width: 200px; background: rgba(0,0,0,0.8); border: 2px solid var(--button-green); border-radius: 10px; padding: 10px; color: white; z-index: 1000; max-height: 90vh; overflow-y: auto;">
+        <h3 style="text-align: center; color: var(--heading-color); margin-top: 0;">🏆 المتصدرون</h3>
+        <div id="mp-players-list"></div>
+    </div>
+    <script type="module" src="multiplayer-quiz.js"></script>
 </body>
 </html>

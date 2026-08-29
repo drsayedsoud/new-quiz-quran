@@ -306,37 +306,22 @@ async function loadQuestions() {
 
 
 function processParsedJSON(jsonData) {
-
-  let source;
-
-  if (quizType === "seerah") {
-
-    source = jsonData.sera;
-
-  } else if (quizType === "fiqh") {
-
-    source = jsonData.sona;
-
-  } else if (quizType === "mixed") {
-
-    source = jsonData.quiz;
-
-  } else if (quizType === "meanings") {
-
-    source = jsonData.words;
-
-  } else if (quizType === "kids") {
-    source = jsonData.kids;
-
-  } else if (quizType === "general") {
-
-    source = jsonData.general;
-
-  } else {
-
-    source = jsonData.quiz?.filter(q => q.type === quizType);
-
-  }
+  let source = [];
+  if (!quizType) quizType = "mixed";
+  const types = quizType.split(',');
+  
+  types.forEach(type => {
+      if (type === "seerah" && jsonData.sera) source = source.concat(jsonData.sera);
+      else if (type === "fiqh" && jsonData.sona) source = source.concat(jsonData.sona);
+      else if (type === "mixed" && jsonData.quiz) source = source.concat(jsonData.quiz);
+      else if (type === "meanings" && jsonData.words) source = source.concat(jsonData.words);
+      else if (type === "kids" && jsonData.kids) source = source.concat(jsonData.kids);
+      else if (type === "general" && jsonData.general) source = source.concat(jsonData.general);
+      else if (jsonData.quiz) {
+          const filtered = jsonData.quiz.filter(q => q.type === type);
+          if (filtered) source = source.concat(filtered);
+      }
+  });
 
 
 
