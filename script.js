@@ -278,18 +278,25 @@ async function loadQuestionsFromIndexedDB() {
 
 
 async function loadQuestions() {
+  const loadingOverlay = document.getElementById("loading-overlay");
+  if (loadingOverlay) {
+      loadingOverlay.classList.remove("hidden");
+      loadingOverlay.innerHTML = "<div style='font-size:1.5em;'>جاري التجهيز...</div>";
+  }
+
   try {
     let data = await loadQuestionsFromIndexedDB();
     
     if (!data) {
-        // Fallback: Fetch it from server automatically!
         console.log("Not in IndexedDB, fetching from server...");
+        if (loadingOverlay) loadingOverlay.innerHTML = "<div style='font-size:1.5em; text-align:center;'>جاري تنزيل الأسئلة (لأول مرة فقط)...<br>يرجى الانتظار قليلاً (حوالي 45 ميجابايت)</div>";
+        
         const response = await fetch('./quran.json');
         if (!response.ok) throw new Error("Could not fetch quran.json from server");
         data = await response.json();
         
-        // Save to IndexedDB so next time it's instant!
         try {
+           if (loadingOverlay) loadingOverlay.innerHTML = "<div style='font-size:1.5em;'>جاري حفظ الأسئلة في جهازك...</div>";
            const db = await openDatabase();
            const tx = db.transaction([storeName], 'readwrite');
            tx.objectStore(storeName).put(data, dataKey);
@@ -297,6 +304,7 @@ async function loadQuestions() {
     }
     
     if (data) {
+      if (loadingOverlay) loadingOverlay.innerHTML = "<div style='font-size:1.5em;'>جاري تهيئة المسابقة...</div>";
       processParsedJSON(data);
     } else {
       alert("تعذر تحميل الأسئلة. يرجى التأكد من اتصالك بالإنترنت.");
