@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>نتيجتك</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background: #121212;
+      color: white;
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      background-color: #1e1e1e;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #0005;
+    }
+    canvas {
+      max-width: 100%;
+      height: auto !important;
+    }
+    .motiv {
+      font-size: 18px;
+      margin: 20px 0;
+      color: #90caf9;
+    }
+    button, a {
+      padding: 10px 20px;
+      margin: 10px 5px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-green { background: #4caf50; color: white; }
+    .btn-orange { background: #ff9800; color: white; }
+    .btn-red { background: #f44336; color: white; }
+    .btn-blue { background: #2196f3; color: white; }
+    .top-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .share-buttons {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .share-btn {
+      background-color: #25D366; /* WhatsApp color */
+      color: white;
+      font-size: 16px;
+      border-radius: 8px;
+      padding: 12px 24px;
+      cursor: pointer;
+      margin: 10px;
+      transition: background-color 0.3s;
+    }
+    .share-btn:hover {
+      background-color: #128C7E;
+    }
+    .share-btn-fb {
+      background-color: #3b5998; /* Facebook color */
+      color: white;
+      font-size: 16px;
+      border-radius: 8px;
+      padding: 12px 24px;
+      cursor: pointer;
+      margin: 10px;
+      transition: background-color 0.3s;
+    }
+    .share-btn-fb:hover {
+      background-color: #2d4373;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+      h1 { font-size: 1.5rem; }
+      .motiv { font-size: 16px; }
+      button, a { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="top-buttons">
+    <button onclick="retryQuiz()" class="btn-orange">🔁 أعد المحاولة</button>
+    <a href="index.html" class="btn-green">🏠 العودة للرئيسية</a>
+    <button onclick="clearHistory()" class="btn-red">🗑️ مسح السجل</button>
+  </div>
+
+  <h1>🎉 نتيجتك في المسابقة</h1>
+  <p>البريد الإلكتروني: <span id="email"></span></p>
+  <p>إجابات صحيحة: <span id="score"></span> من <span id="total"></span></p>
+  <p>النسبة المئوية: <span id="percent"></span>%</p>
+
+  <div class="motiv" id="motiv-text"></div>
+
+  <h2 style="margin-top:40px; color:#00e676;">📊 إحصائيات الأداء</h2>
+  <div style="max-width:100%; overflow-x:auto; margin-top: 20px;">
+    <canvas id="chart" height="220"></canvas>
+  </div>
+
+  <h2 style="margin-top:40px; color:#00e676;">📈 تطور الجلسات السابقة</h2>
+  <div style="max-width:100%; overflow-x:auto;">
+    <canvas id="sessionsChart" height="220" style="margin-top:20px; max-width:600px;"></canvas>
+  </div>
+
+  <!-- زر "شارك نتيجتك" -->
+  <div class="share-buttons">
+    <button class="share-btn" onclick="shareResult()">📲 شارك النتيجة على الواتساب</button>
+    <button class="share-btn-fb" onclick="shareResultFB()">📲 شارك النتيجة على الفيسبوك</button>
+  </div>
+
+</div>
+
+<script>
+  const session = JSON.parse(localStorage.getItem("userSessions") || "[]").pop() || {};
+  const score = session.score || 0;
+  const total = session.total || 10;
+  const email = session.email || "غير معروف";
+  const percentage = ((score / total) * 100).toFixed(1);
+
+  document.getElementById("email").textContent = email;
+  document.getElementById("score").textContent = score;
+  document.getElementById("total").textContent = total;
+  document.getElementById("percent").textContent = percentage;
+
+  const motiv = document.getElementById("motiv-text");
+  if (percentage >= 90) motiv.textContent = "ممتاز! استمر في هذا الأداء الرائع 💪";
+  else if (percentage >= 70) motiv.textContent = "أداء جيد جدًا! اقتربت من التميز 👏";
+  else if (percentage >= 50) motiv.textContent = "لست بعيدًا عن الأفضل! واصل المذاكرة ✨";
+  else motiv.textContent = "لا تيأس، البداية دائمًا صعبة! واصل التدريب 🚀";
+
+  new Chart(document.getElementById('chart'), {
+    type: 'bar',
+    data: {
+      labels: ['إجابات صحيحة', 'إجابات خاطئة'],
+      datasets: [{
+        data: [score, total - score],
+        backgroundColor: ['#4caf50', '#f44336']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.label}: ${ctx.parsed.y} من ${total}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#fff' },
+          grid: { color: '#444' }
+        },
+        y: {
+          beginAtZero: true,
+          max: total,
+          ticks: { stepSize: 1, color: '#fff' },
+          grid: { color: '#333' }
+        }
+      }
+    }
+  });
+
+  const sessions = JSON.parse(localStorage.getItem("userSessions") || "[]");
+  const data = sessions.map(s => s.score);
+
+  // Empty labels for hiding the dates, but keep the data for the chart
+  const labels = sessions.map(() => "");
+
+  new Chart(document.getElementById("sessionsChart"), {
+    type: "bar",
+    data: {
+      labels: labels,  // Empty labels to hide the dates
+      datasets: [{
+        label: "الإجابات الصحيحة",
+        data: data,
+        backgroundColor: data.map(v =>
+          v >= 8 ? "#4caf50" : v >= 5 ? "#ffc107" : "#f44336"
+        ),
+        borderRadius: 6,
+        barPercentage: 0.6,
+        categoryPercentage: 0.5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `إجابات صحيحة: ${ctx.parsed.y}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#fff", font: { size: 12 } },
+          grid: { color: "#444" },
+          display: false  // Hides the x-axis entirely (no dates)
+        },
+        y: {
+          beginAtZero: true,
+          max: 10,
+          ticks: { stepSize: 1, color: "#fff" },
+          grid: { color: "#333" }
+        }
+      }
+    }
+  });
+
+  function retryQuiz() {
+    window.location.href = "quiz.html";
+  }
+
+  function clearHistory() {
+    if (confirm("هل تريد مسح سجل الجلسات؟")) {
+      localStorage.removeItem("userSessions");
+      alert("تم المسح. أعد تحميل الصفحة.");
+      location.reload();
+    }
+  }
+
+  // مشاركة النتيجة عبر الواتساب
+  function shareResult() {
+    const message = `لقد حصلت على نتيجة ${score} من ${total} (${percentage}%) في تطبيق مسابقة القرآن الكريم.\n\nوهذا رابط الموقع: https://quranquiz.pythonanywhere.com/`;
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+  }
+
+  // مشاركة النتيجة عبر الفيسبوك
+  function shareResultFB() {
+    const message = `لقد حصلت على نتيجة ${score} من ${total} (${percentage}%) في تطبيق مسابقة القرآن الكريم.\n\nوهذا رابط الموقع: https://quranquiz.pythonanywhere.com/`;
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=https://quranquiz.pythonanywhere.com/&quote=${encodeURIComponent(message)}`;
+    window.open(facebookUrl, "_blank");
+  }
+</script>
+<!-- باقي الصفحة هنا -->
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then((reg) => {
+        console.log('✅ Service Worker مسجل:', reg);
+      })
+      .catch((err) => {
+        console.error('❌ فشل تسجيل Service Worker:', err);
+      });
+  }
+</script>
+
+</body>
+</html>
+
+

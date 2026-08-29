@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تحديث ملف القرآن الكريم (IndexedDB)</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet" />
+
+    <style>
+        :root {
+            --progress-color-start: #ff4d4f; /* أحمر */
+            --progress-color-end: #52c41a; /* أخضر */
+            --track-color: #333;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a1a1a; /* لون خلفية داكن */
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            color: #f0f0f0; /* لون نص فاتح */
+            box-sizing: border-box; /* لضمان أن البادينج لا يتسبب في شريط تمرير */
+        }
+        .container {
+            background-color: #2c2c2c; /* لون خلفية الكونتينر داكن أيضاً */
+            padding: 40px;
+            border-radius: 20px; /* حواف أكثر دائرية */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6); /* ظل أعمق */
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid #444; /* حدود خفيفة */
+            box-sizing: border-box;
+            display: flex; /* إضافة Flexbox لتنظيم المحتوى */
+            flex-direction: column;
+            align-items: center;
+            gap: 25px; /* مسافة بين العناصر */
+        }
+        h1 {
+            color: #00e676; /* لون أخضر فاقع للعنوان */
+            margin-bottom: 20px;
+            font-size: 2.8em; /* حجم أكبر للعنوان */
+            text-shadow: 0 0 10px rgba(0, 230, 118, 0.4); /* ظل خفيف للعنوان */
+        }
+        p {
+            font-size: 1.2em;
+            color: #cccccc; /* لون نص فاتح قليلاً */
+            margin-bottom: 0px; /* إزالة الهامش السفلي لتجنب المسافات المزدوجة مع gap */
+            line-height: 1.8; /* تباعد أسطر أكبر */
+        }
+        button {
+            background-color: #00e676; /* زر أخضر فاقع */
+            color: #1a1a1a; /* نص داكن على الزر */
+            padding: 18px 40px; /* حجم أكبر للزر */
+            border: none;
+            border-radius: 12px; /* حواف دائرية للزر */
+            cursor: pointer;
+            font-size: 1.5em; /* حجم خط أكبر للزر */
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 6px 15px rgba(0, 230, 118, 0.3); /* ظل أخضر للزر */
+            letter-spacing: 1px; /* تباعد أحرف */
+            margin-top: 25px; /* مسافة أعلى للزر */
+        }
+        button:hover {
+            background-color: #00c853; /* أخضر أغمق عند التمرير */
+            transform: translateY(-5px); /* رفع الزر قليلاً */
+            box-shadow: 0 8px 20px rgba(0, 230, 118, 0.5); /* ظل أكبر عند التمرير */
+        }
+        button:active {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0, 230, 118, 0.3);
+        }
+        #statusMessage {
+            margin-top: 0px; /* إزالة الهامش العلوي لتجنب المسافات المزدوجة مع gap */
+            font-weight: bold;
+            font-size: 1.3em;
+            padding: 18px 25px; /* حجم أكبر للرسالة */
+            border-radius: 15px; /* حواف دائرية للرسالة */
+            transition: all 0.4s ease;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #3a3a3a; /* خلفية داكنة للرسالة */
+            border: 1px solid #555;
+        }
+        .success {
+            background-color: #1e8e3e; /* أخضر غامق للخلفية */
+            color: #e6ffe6; /* نص أخضر فاتح */
+            border: 1px solid #4caf50;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+        }
+        .error {
+            background-color: #c62828; /* أحمر غامق للخلفية */
+            color: #ffe0e0; /* نص أحمر فاتح */
+            border: 1px solid #ef5350;
+            box-shadow: 0 0 15px rgba(239, 83, 80, 0.4);
+        }
+        .loading {
+            background-color: #f9a825; /* برتقالي للخلفية */
+            color: #333; /* نص داكن */
+            border: 1px solid #ffeb3b;
+            box-shadow: 0 0 15px rgba(255, 235, 59, 0.4);
+        }
+        .note {
+            margin-top: 0px; /* إزالة الهامش العلوي لتجنب المسافات المزدوجة مع gap */
+            font-size: 1.05em;
+            color: #999999; /* لون رمادي فاتح */
+            border-top: 1px solid #555; /* خط فاصل أغمق */
+            padding-top: 30px;
+            line-height: 1.6;
+            width: 100%; /* لضمان أن الخط الفاصل يمتد على كامل العرض */
+        }
+        #home-btn {
+            position: fixed;
+            bottom: 30px; /* مسافة أكبر من الأسفل */
+            right: 30px; /* مسافة أكبر من اليمين */
+            background-color: #2196f3; /* أزرق */
+            color: white;
+            border: none;
+            padding: 16px 28px; /* حجم أكبر للزر */
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+            z-index: 999;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        #home-btn:hover {
+            background-color: #1976d2; /* أزرق أغمق */
+            transform: translateY(-3px);
+        }
+
+        /* Styling for message popups (أصبحت الآن تظهر كرسالة عائمة شفافة) */
+        #messageBox {
+            position: fixed; /* تغيير إلى fixed لتبقى مرئية حتى عند التمرير */
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.3em;
+            font-weight: bold;
+            display: none;
+            z-index: 1000; /* للتأكد أنها فوق كل شيء */
+            opacity: 0; /* للتحكم في الظهور والاختفاء بتأثير ناعم */
+            transition: opacity 0.5s ease-in-out, transform 0.3s ease-out;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            white-space: nowrap; /* منع انقسام النص إلى عدة أسطر */
+        }
+
+        .success-msg { background-color: rgba(76, 175, 80, 0.9); } /* أخضر شفاف */
+        .error-msg { background-color: rgba(244, 67, 54, 0.9); } /* أحمر شفاف */
+        .loading-msg { background-color: rgba(255, 193, 7, 0.9); color: #333;} /* أصفر شفاف */
+        .message-show {
+            opacity: 1 !important; /* إظهار الرسالة */
+            transform: translateX(-50%) translateY(0px) !important;
+        }
+
+        /* ----- Progress Bar Styles ----- */
+        .progress-bar-container {
+            width: 100%; /* استخدام عرض كامل للحاوية */
+            background-color: var(--track-color);
+            border-radius: 15px;
+            height: 30px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+            margin-top: 25px; /* مسافة أعلى لشريط التقدم */
+            display: none; /* مخفي افتراضيا، يظهر عند بدء التحميل */
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, var(--progress-color-start), var(--progress-color-end));
+            transition: width 0.3s ease-out; /* حركة سلسة للعرض فقط */
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: white; /* لون النص فوق الشريط */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            z-index: 1; /* للتأكد من أن النص يظهر فوق الشريط المتحرك */
+        }
+        /* ----- End Progress Bar Styles ----- */
+
+        /* Mobile Responsiveness for existing elements */
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px; /* تقليل البادينج على الموبايل */
+                gap: 15px; /* تقليل المسافات بين العناصر */
+            }
+            h1 {
+                font-size: 2em; /* حجم أصغر للعنوان */
+            }
+            p {
+                font-size: 1em; /* حجم أصغر للنص */
+            }
+            button {
+                padding: 14px 30px; /* حجم أصغر للزر */
+                font-size: 1.2em;
+            }
+            #statusMessage {
+                padding: 14px 20px;
+                font-size: 1.1em;
+            }
+            .note {
+                font-size: 0.9em;
+                padding-top: 20px;
+            }
+            #home-btn {
+                bottom: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                font-size: 0.9em;
+            }
+            /* Progress bar adjustments for mobile */
+            .progress-bar-container {
+                height: 25px;
+                margin-top: 15px;
+            }
+            .progress-bar-fill, .progress-text {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>تحديث ملف الأسئلة</h1>
+        <p>اضغط على الزر أدناه لتحميل نسخة جديدة من <strong>quran.xlsx</strong> وتحديثها داخل <strong>IndexedDB</strong>.</p>
+        <button id="downloadButton">🔄 تحديث الملف الآن</button>
+
+        <div class="progress-bar-container" id="progressBarContainer">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+            <span class="progress-text" id="progressText">0%</span>
+        </div>
+        <div id="statusMessage" class="loading">📦 جاري التحقق من الحالة...</div>
+        <p class="note">
+            سيتم حفظ الملف في قاعدة بيانات <strong>IndexedDB</strong> باسم <strong>QuranDB</strong>، داخل Object Store: <strong>quranData</strong>، وتحت المفتاح: <strong>quranJSON</strong>.
+        </p>
+    </div>
+    <button id="home-btn" onclick="goHome()">🏠 العودة للرئيسية</button>
+
+    <div id="messageBox"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script>
+        function goHome() {
+            window.location.href = "index.html";
+        }
+
+        // دالة عرض الرسائل المحدثة لتظهر كرسالة عائمة
+        function showMessage(message, type) {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.classList.remove("success-msg", "error-msg", "loading-msg");
+
+            if (type === "error") {
+                messageBox.classList.add("error-msg");
+            } else if (type === "loading") {
+                messageBox.classList.add("loading-msg");
+            } else { // 'success' or default
+                messageBox.classList.add("success-msg");
+            }
+
+            // إظهار الرسالة بتأثير
+            messageBox.style.display = "block";
+            requestAnimationFrame(() => {
+                messageBox.classList.add('message-show');
+            });
+
+            setTimeout(() => {
+                // إخفاء الرسالة بتأثير
+                messageBox.classList.remove('message-show');
+                messageBox.addEventListener('transitionend', function handler() {
+                    messageBox.style.display = 'none';
+                    messageBox.removeEventListener('transitionend', handler);
+                });
+            }, 4000); // Hide the message after 4 seconds
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const downloadButton = document.getElementById('downloadButton');
+            const statusMessage = document.getElementById('statusMessage');
+            const progressBarContainer = document.getElementById('progressBarContainer');
+            const progressBarFill = document.getElementById('progressBarFill');
+            const progressText = document.getElementById('progressText');
+
+            const dbName = 'QuranDB';
+            const storeName = 'quranData';
+            const dataKey = 'quranJSON';
+            let db;
+
+            // دالة مساعدة لتحديث شريط التقدم الكلي
+            function updateOverallProgressBar(percentage, statusMsg, msgType = 'loading') {
+                // Ensure percentage is between 0 and 100
+                percentage = Math.max(0, Math.min(100, percentage));
+
+                progressBarFill.style.width = `${percentage}%`;
+                progressText.textContent = `${Math.round(percentage)}%`; // تقريب النسبة
+                if (statusMsg) {
+                    showMessage(statusMsg, msgType);
+                    statusMessage.textContent = statusMsg;
+                    statusMessage.className = msgType;
+                }
+            }
+
+            function openDatabase() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(dbName, 1);
+                    request.onupgradeneeded = (event) => {
+                        db = event.target.result;
+                        if (!db.objectStoreNames.contains(storeName)) {
+                            db.createObjectStore(storeName);
+                        }
+                    };
+                    request.onsuccess = (event) => {
+                        db = event.target.result;
+                        resolve(db);
+                    };
+                    request.onerror = (event) => {
+                        reject('خطأ في فتح قاعدة البيانات: ' + event.target.errorCode);
+                    };
+                });
+            }
+
+            async function checkIndexedDBStatus() {
+                try {
+                    db = await openDatabase();
+                    const transaction = db.transaction([storeName], 'readonly');
+                    const objectStore = transaction.objectStore(storeName);
+                    const request = objectStore.get(dataKey);
+                    request.onsuccess = (event) => {
+                        if (event.target.result) {
+                            showMessage('✅ الملف موجود بالفعل. يمكنك تحديثه.', 'success');
+                            statusMessage.textContent = '✅ الملف موجود في IndexedDB.';
+                            statusMessage.className = 'success';
+                        } else {
+                            showMessage('⚠️ لم يتم العثور على الملف. الرجاء تحميله.', 'error');
+                            statusMessage.textContent = '⚠️ لم يتم العثور على الملف في IndexedDB.';
+                            statusMessage.className = 'error';
+                        }
+                    };
+                    request.onerror = (event) => {
+                         showMessage('❌ خطأ أثناء التحقق من وجود الملف.', 'error');
+                         statusMessage.textContent = '❌ خطأ أثناء التحقق من IndexedDB.';
+                         statusMessage.className = 'error';
+                    };
+                } catch (err) {
+                    showMessage('❌ خطأ أثناء فتح قاعدة البيانات.', 'error');
+                    statusMessage.textContent = '❌ خطأ أثناء فتح IndexedDB.';
+                    statusMessage.className = 'error';
+                }
+            }
+
+            checkIndexedDBStatus();
+
+            downloadButton.addEventListener('click', async () => {
+                downloadButton.disabled = true;
+                progressBarContainer.style.display = 'block';
+                updateOverallProgressBar(0, '🔄 بدء عملية التحديث...', 'loading'); // بداية العملية
+
+                try {
+                    db = await openDatabase();
+
+                    // --- المرحلة 1: تحميل الملف (0% - 40%) ---
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('GET', 'quran.xlsx', true);
+                    xhr.responseType = 'blob';
+
+                    let fileBlob; // لتخزين الـ Blob بعد التحميل
+
+                    const downloadPromise = new Promise((resolve, reject) => {
+                        xhr.onprogress = (event) => {
+                            if (event.lengthComputable) {
+                                // تحميل الشبكة يمثل 40% من العملية الكلية
+                                const networkPercent = (event.loaded / event.total) * 40;
+                                updateOverallProgressBar(networkPercent, `📥 جاري تحميل الملف: ${Math.round(networkPercent)}%`);
+                            }
+                        };
+
+                        xhr.onload = () => {
+                            if (xhr.status === 200) {
+                                fileBlob = xhr.response; // حفظ الـ Blob
+                                updateOverallProgressBar(40, "📥 تم تحميل ملف Excel بنجاح.");
+                                resolve();
+                            } else {
+                                reject(new Error(`فشل في التحميل: ${xhr.status} ${xhr.statusText}`));
+                            }
+                        };
+
+                        xhr.onerror = () => {
+                            reject(new Error('فشل في الاتصال بالشبكة أو حدث خطأ أثناء التحميل.'));
+                        };
+
+                        xhr.send();
+                    });
+
+                    await downloadPromise; // انتظار انتهاء التحميل الشبكي
+
+                    // --- المرحلة 2: قراءة ملف Excel (40% - 60%) ---
+                    updateOverallProgressBar(45, "📊 جاري قراءة ملف Excel...");
+                    // محاكاة تأخير بسيط لتقدم الشريط
+                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                    const reader = new FileReader();
+                    const readPromise = new Promise((resolve, reject) => {
+                        reader.onload = resolve;
+                        reader.onerror = reject;
+                        reader.readAsBinaryString(fileBlob);
+                    });
+
+                    const readerEvent = await readPromise;
+                    const data = readerEvent.target.result;
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    updateOverallProgressBar(60, "📊 تم قراءة ملف Excel بنجاح.");
+                    await new Promise(resolve => setTimeout(resolve, 300)); // تأخير بسيط
+
+                    // --- المرحلة 3: تحويل الأوراق إلى JSON (60% - 80%) ---
+                    updateOverallProgressBar(65, "🔄 جاري تحويل البيانات إلى JSON...");
+                    await new Promise(resolve => setTimeout(resolve, 300)); // تأخير بسيط
+
+                    const allQuizData = {};
+                    workbook.SheetNames.forEach((sheetName, index) => {
+                        // For a large number of sheets, you could update progress here too:
+                        // const currentSheetProgress = 65 + ((index / workbook.SheetNames.length) * 15); // Use 15% for this loop
+                        // updateOverallProgressBar(currentSheetProgress, `🔄 تحويل الورقة: ${sheetName}`);
+                        allQuizData[sheetName.toLowerCase()] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+                    });
+                    updateOverallProgressBar(80, "✅ تم تحويل البيانات من جميع الأوراق إلى JSON.");
+                    await new Promise(resolve => setTimeout(resolve, 300)); // تأخير بسيط
+
+                    // --- المرحلة 4: حفظ البيانات في IndexedDB (80% - 100%) ---
+                    updateOverallProgressBar(85, "💾 جاري حفظ النسخة الجديدة مؤقتًا...");
+                    const transactionTemp = db.transaction([storeName], 'readwrite');
+                    const objectStoreTemp = transactionTemp.objectStore(storeName);
+                    await new Promise((resolve, reject) => {
+                        const req = objectStoreTemp.put(allQuizData, dataKey + "_new");
+                        req.onsuccess = resolve;
+                        req.onerror = reject;
+                    });
+                    await new Promise(resolve => setTimeout(resolve, 200)); // تأخير بسيط
+
+                    updateOverallProgressBar(90, "🗑️ جاري حذف النسخة القديمة...");
+                    const transactionDelete = db.transaction([storeName], 'readwrite');
+                    const objectStoreDelete = transactionDelete.objectStore(storeName);
+                    // No need to await on delete request itself, but on the transaction completion
+                    objectStoreDelete.delete(dataKey);
+                    await new Promise((resolve, reject) => {
+                        transactionDelete.oncomplete = resolve;
+                        transactionDelete.onerror = reject;
+                    });
+                    await new Promise(resolve => setTimeout(resolve, 200)); // تأخير بسيط
+
+                    updateOverallProgressBar(95, "🚚 جاري نقل النسخة الجديدة وتأكيد التحديث...");
+                    const transactionFinal = db.transaction([storeName], 'readwrite');
+                    const objectStoreFinal = transactionFinal.objectStore(storeName);
+                    objectStoreFinal.put(allQuizData, dataKey);
+                    objectStoreFinal.delete(dataKey + "_new"); // حذف النسخة المؤقتة
+
+                    await new Promise((resolve, reject) => {
+                        transactionFinal.oncomplete = resolve;
+                        transactionFinal.onerror = reject;
+                    });
+
+                    // --- المرحلة الأخيرة: الانتهاء (100%) ---
+                    updateOverallProgressBar(100, '✅ تم تحديث الملف بنجاح!', 'success');
+                    downloadButton.disabled = false;
+                    progressBarContainer.style.display = 'none'; // إخفاء الشريط بعد الانتهاء
+                    alert('✅ تم تحديث الملف بنجاح! يمكنك الآن استخدام النسخة الجديدة.');
+
+                } catch (err) {
+                    console.error("Error during update process:", err);
+                    updateOverallProgressBar(0, `❌ حدث خطأ: ${err.message}`, 'error'); // إعادة تعيين الشريط للصفر في حالة الخطأ
+                    downloadButton.disabled = false;
+                    progressBarContainer.style.display = 'none'; // إخفاء الشريط في حالة الخطأ
+                    alert(`❌ فشل التحديث: ${err.message}`); // عرض خطأ للمستخدم
+                } finally {
+                     // Ensure button is re-enabled and progress bar hidden even if an unexpected error occurs
+                    downloadButton.disabled = false;
+                    progressBarContainer.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
