@@ -95,3 +95,13 @@ onValue(roomRef, (snapshot) => {
     }
     document.getElementById('players-count').innerText = count;
 });
+
+const inviteBtn = document.getElementById('whatsapp-invite-btn');
+if (inviteBtn) {
+    inviteBtn.addEventListener('click', () => {
+        const appUrl = "https://new-quiz-quran.vercel.app";
+        const message = `مرحباً! أتحداك في مسابقة القرآن الكريم 🏆\nانضم إلي في الغرفة رقم: *${roomCode}*\nرابط اللعبة: ${appUrl}`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    });
+}
