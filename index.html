@@ -531,58 +531,19 @@ function openModal(type, title) {
 
     <h1>اختر نوع المسابقة</h1>
 
-<div class="quiz-options">
-    <div class="card" onclick="openMultiplayerModal()" onmouseenter="playHover()" style="border: 2px solid var(--button-green); box-shadow: 0 0 15px var(--button-green);">
-        <img src="assets/moshaf.jpg" alt="تحدي مباشر" class="card-img">
-        <div class="card-header" style="color: var(--heading-color);">🎮 تحدي مباشر (Multiplayer)</div>
-    </div>
-    <div class="card" onclick="openSoloMixModal()" onmouseenter="playHover()" style="border: 2px solid var(--button-blue); box-shadow: 0 0 15px var(--button-blue);">
-        <img src="assets/moshaf.jpg" alt="تشكيلة مخصصة" class="card-img">
-        <div class="card-header" style="color: var(--button-blue);">🎯 تشكيلة مخصصة (لعب فردي)</div>
-    </div>
-    <div class="card" onclick="openModal('memorization', 'مسابقة حفظ القرآن')" onmouseenter="playHover()">
-        <img src="assets/moshaf.jpg" alt="مسابقة حفظ القرآن" class="card-img">
-        <div class="card-header">مسابقة حفظ القرآن</div>
+<div class="quiz-options" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; margin-top: 50px; margin-bottom: 50px;">
+    <!-- Solo Play Card -->
+    <div class="card" onclick="openSoloMixModal()" onmouseenter="playHover()" style="border: 3px solid var(--button-blue); box-shadow: 0 0 25px rgba(66, 153, 225, 0.4); border-radius: 25px; padding: 40px 20px; width: 100%; max-width: 320px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(145deg, #16213e, #2a2a4e);">
+        <div style="font-size: 5em; margin-bottom: 20px;">👤</div>
+        <div class="card-header" style="color: var(--button-blue); font-size: 1.8em; font-weight: 800;">لعبة فردية</div>
+        <p style="color: #aaa; margin-top: 15px; font-size: 1.1em; line-height: 1.6; text-align: center;">اختبر معلوماتك وتدرب بنفسك في مختلف علوم القرآن والسيرة.</p>
     </div>
 
-    <div class="card" onclick="openModal('tafsir', 'مسابقة التفسير')" onmouseenter="playHover()">
-        <img src="assets/moshaf.jpg" alt="مسابقة التفسير" class="card-img">
-        <div class="card-header">مسابقة التفسير</div>
-    </div>
-
-    <div class="card" onclick="openModal('sura', 'مسابقة اسم السورة')" onmouseenter="playHover()">
-        <img src="assets/moshaf.jpg" alt="مسابقة اسم السورة" class="card-img">
-        <div class="card-header">مسابقة اسم السورة</div>
-    </div>
-
-    <div class="card" onclick="openModal('mixed', 'مسابقة مختلطة')" onmouseenter="playHover()">
-        <img src="assets/moshaf.jpg" alt="مسابقة مختلطة" class="card-img">
-        <div class="card-header">مسابقة مختلطة</div>
-    </div>
-
-    <div class="card" onclick="openModal('meanings', 'مسابقة معاني كلمات القرآن')" onmouseenter="playHover()">
-        <img src="assets/moshaf.jpg" alt="مسابقة معاني كلمات القرآن" class="card-img">
-        <div class="card-header">مسابقة معاني الكلمات</div>
-    </div>
-
-    <div class="card" onclick="openModal('general', 'مسابقة معلومات قرانية')" onmouseenter="playHover()">
-        <img src="assets/informations.jpg" alt="مسابقة معلومات قرآنية" class="card-img">
-        <div class="card-header">مسابقة معلومات قرآنية</div>
-    </div>
-
-    <div class="card" onclick="openModal('seerah', 'مسابقة السيرة النبوية')" onmouseenter="playHover()">
-        <img src="assets/sera.jpg" alt="مسابقة السيرة النبوية" class="card-img">
-        <div class="card-header">مسابقة السيرة النبوية</div>
-    </div>
-
-    <div class="card" onclick="openModal('fiqh', 'مسابقة الفقه الإسلامي')" onmouseenter="playHover()">
-        <img src="assets/sona.jpg" alt="مسابقة الفقه الإسلامي" class="card-img">
-        <div class="card-header">مسابقة الفقه الإسلامي</div>
-    </div>
-
-    <div class="card" onclick="openModal('kids', 'مسابقة الأطفال')" onmouseenter="playHover()">
-        <img src="assets/child.jpeg" alt="مسابقة الأطفال" class="card-img">
-         <div class="card-header">مسابقة الأطفال<br>من 5 إلى 6 سنوات</div>
+    <!-- Multiplayer Card -->
+    <div class="card" onclick="openMultiplayerModal()" onmouseenter="playHover()" style="border: 3px solid var(--button-green); box-shadow: 0 0 25px rgba(16, 185, 129, 0.4); border-radius: 25px; padding: 40px 20px; width: 100%; max-width: 320px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(145deg, #16213e, #2a2a4e);">
+        <div style="font-size: 5em; margin-bottom: 20px;">👥</div>
+        <div class="card-header" style="color: var(--button-green); font-size: 1.8em; font-weight: 800;">تحدي مباشر</div>
+        <p style="color: #aaa; margin-top: 15px; font-size: 1.1em; line-height: 1.6; text-align: center;">تحدى أصدقاءك وعائلتك في غرفة خاصة ومنافسة مباشرة!</p>
     </div>
 </div>
 

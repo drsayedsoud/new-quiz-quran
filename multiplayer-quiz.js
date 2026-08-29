@@ -1,6 +1,20 @@
-import { db, ref, update, onValue } from './firebase-init.js';
+import { db, ref, onValue, update } from './firebase-init.js';
+
 const roomCode = localStorage.getItem('mp_roomCode');
 const localUserId = localStorage.getItem('mp_userId');
+const isHost = localStorage.getItem('mp_isHost') === 'true';
+
+if (roomCode) {
+    // Seed Math.random so all players generate the EXACT same questions and choices
+    let seed = 0;
+    for (let i = 0; i < roomCode.length; i++) {
+        seed += roomCode.charCodeAt(i) * (i + 1);
+    }
+    Math.random = function() {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+    };
+}
 
 if (roomCode && localUserId) {
     document.getElementById('mp-leaderboard').style.display = 'block';

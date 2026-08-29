@@ -307,8 +307,8 @@ async function loadQuestions() {
 
 function processParsedJSON(jsonData) {
   let source = [];
-  if (!quizType) quizType = "mixed";
-  const types = quizType.split(',');
+  if (!quizType) quizType = 'mixed';
+  const types = quizType.split(',').map(t => t.trim());
   
   types.forEach(type => {
       if (type === "seerah" && jsonData.sera) source = source.concat(jsonData.sera);
@@ -401,22 +401,30 @@ function processParsedJSON(jsonData) {
 
 
 
+let mpSeed = null;
+function getRandom() {
+    if (localStorage.getItem('mp_roomCode')) {
+        if (mpSeed === null) {
+            const code = localStorage.getItem('mp_roomCode');
+            mpSeed = 0;
+            for (let i = 0; i < code.length; i++) {
+                mpSeed += code.charCodeAt(i) * (i + 1);
+            }
+        }
+        mpSeed = (mpSeed * 9301 + 49297) % 233280;
+        return mpSeed / 233280;
+    }
+    return Math.random();
+}
+
 function shuffle(array) {
-
   let currentIndex = array.length, randomIndex;
-
   while (currentIndex !== 0) {
-
-    randomIndex = Math.floor(Math.random() * currentIndex);
-
+    randomIndex = Math.floor(getRandom() * currentIndex);
     currentIndex--;
-
     [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-
   }
-
   return array;
-
 }
 
 

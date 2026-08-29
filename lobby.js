@@ -67,15 +67,15 @@ const roomRef = ref(db, `rooms/${roomCode}`);
 onValue(roomRef, (snapshot) => {
     const data = snapshot.val();
     if (!data) {
-        alert("الغرفة غير موجودة أو تم إغلاقها");
+        alert("الغرفة غير موجودة!");
         window.location.href = 'index.html';
         return;
     }
     
     if (data.status === 'playing') {
-        localStorage.setItem("quizType", data.settings.category);
-        localStorage.setItem("mp_roomCode", roomCode);
-        window.location.href = 'quiz.html?mp=true';
+        if (data.types) localStorage.setItem('quizType', data.types);
+        window.location.href = 'quiz.html';
+        return;
     }
     
     const playersList = document.getElementById('players-list');
