@@ -287,7 +287,7 @@ async function loadQuestions() {
   try {
     let data = await loadQuestionsFromIndexedDB();
     
-    if (!data) {
+    if (!data || !data.kids || data.kids.length === 0) { console.log("Outdated DB, forcing refetch");
         console.log("Not in IndexedDB, fetching from server...");
         if (loadingOverlay) loadingOverlay.innerHTML = "<div style='font-size:1.5em; text-align:center;'>جاري تنزيل الأسئلة (لأول مرة فقط)...<br>يرجى الانتظار قليلاً (حوالي 45 ميجابايت)</div>";
         
