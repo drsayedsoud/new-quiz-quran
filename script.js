@@ -5,7 +5,10 @@ let quizData = [];
 let currentIndex = 0;
 
 
+
+let heroPosition = 0;
 let quizType = localStorage.getItem("quizType") || "mixed";
+
 
 // Handle multiplayer juz selection embedded in quizType
 if (quizType.includes('_juz_')) {
@@ -330,7 +333,14 @@ function processParsedJSON(jsonData) {
   if (!quizType) quizType = 'mixed';
   const types = quizType.split(',').map(t => t.trim());
   
-  types.forEach(type => {
+  
+    if (quizType === 'kids') {
+        const track = document.getElementById('kids-hero-track');
+        if(track) track.style.display = 'block';
+    }
+    
+    types.forEach(type => {
+
       if (type === "seerah" && jsonData.sera) source = source.concat(jsonData.sera);
       else if (type === "fiqh" && jsonData.sona) source = source.concat(jsonData.sona);
       else if (type === "mixed" && jsonData.quiz) source = source.concat(jsonData.quiz);
@@ -709,17 +719,36 @@ function displayQuestion() {
 
 
 
+
 function handleAnswer(button, correctAnswer) {
-
   const buttons = document.querySelectorAll(".option");
-
   clearInterval(questionTimerInterval);
-
   if (questionProgressBar) questionProgressBar.classList.remove('blinking');
 
-
+  // Superhero Logic for Kids
+  if (quizType === "kids") {
+      const heroProgress = document.getElementById('kids-hero-progress');
+      if (heroProgress) {
+          if (button.textContent === correctAnswer) {
+              heroPosition += 10;
+              if (heroPosition > 90) {
+                  heroPosition = 90;
+                  // Reset after a celebration delay
+                  setTimeout(() => {
+                      heroPosition = 0;
+                      heroProgress.style.width = heroPosition + '%';
+                  }, 2500);
+              }
+          } else {
+              heroPosition -= 10;
+              if (heroPosition < 0) heroPosition = 0;
+          }
+          heroProgress.style.width = heroPosition + '%';
+      }
+  }
 
   buttons.forEach(btn => {
+
 
     btn.disabled = true;
 
