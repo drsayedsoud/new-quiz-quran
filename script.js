@@ -4,7 +4,16 @@ let quizData = [];
 
 let currentIndex = 0;
 
+
 let quizType = localStorage.getItem("quizType") || "mixed";
+
+// Handle multiplayer juz selection embedded in quizType
+if (quizType.includes('_juz_')) {
+    const parts = quizType.split('_juz_');
+    quizType = parts[0];
+    localStorage.setItem('selectedJuz', parts[1]);
+}
+
 
 let selectedSura = localStorage.getItem("selectedSura") || null;
 
