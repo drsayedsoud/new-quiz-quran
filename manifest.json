@@ -1,6 +1,6 @@
 {
   "name": "مسابقة القرآن الكريم",
-  "short_name": "القرآن",
+  "short_name": "مسابقة",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1a1a2e",
@@ -8,19 +8,14 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "assets/moshaf.jpg",
+      "src": "assets/icon-192.png",
       "sizes": "192x192",
-      "type": "image/jpeg"
+      "type": "image/png"
     },
     {
-      "src": "assets/moshaf.jpg",
+      "src": "assets/icon-512.png",
       "sizes": "512x512",
-      "type": "image/jpeg"
-    },
-    {
-      "src": "assets/moshaf.jpg",
-      "sizes": "any",
-      "type": "image/jpeg"
+      "type": "image/png"
     }
   ]
 }
