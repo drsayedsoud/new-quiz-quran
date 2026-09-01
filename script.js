@@ -334,7 +334,7 @@ function processParsedJSON(jsonData) {
   const types = quizType.split(',').map(t => t.trim());
   
   
-    if (quizType === 'kids') {
+    if (quizType.startsWith('kids')) {
         const track = document.getElementById('kids-hero-track');
         if(track) track.style.display = 'block';
     }
@@ -726,7 +726,7 @@ function handleAnswer(button, correctAnswer) {
   if (questionProgressBar) questionProgressBar.classList.remove('blinking');
 
   // Superhero Logic for Kids
-  if (quizType === "kids") {
+  if (quizType.startsWith('kids')) {
       const heroProgress = document.getElementById('kids-hero-progress');
       if (heroProgress) {
           if (button.textContent === correctAnswer) {
@@ -769,7 +769,7 @@ function handleAnswer(button, correctAnswer) {
 if (button.textContent === correctAnswer) {
   playSound(winSound);
 
-  if (quizType === "kids" && typeof showBalloonFestival === "function") {
+  if (quizType.startsWith('kids') && typeof showBalloonFestival === "function") {
     showBalloonFestival();  // 🎈 استدعاء البالونات عند الفوز في الأطفال فقط
   }
 
