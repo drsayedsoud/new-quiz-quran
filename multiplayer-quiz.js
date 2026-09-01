@@ -26,7 +26,11 @@ if (roomCode && localUserId) {
               const barsContainer = document.getElementById('mp-vertical-bars');
               if (barsContainer) {
                   barsContainer.style.display = 'block';
-                  const totalQ = parseInt(localStorage.getItem('mp_qCount')) || 10;
+                  
+                  let mpMode = localStorage.getItem('mp_mode') || 'questions';
+                  let mpVal = parseInt(localStorage.getItem('mp_val')) || 10;
+                  const totalQ = mpMode === 'questions' ? mpVal : 50; // In time mode, visually max at 50 points
+
                   
                   const playerKeys = Object.keys(players);
                   playerKeys.forEach((playerKey, index) => {

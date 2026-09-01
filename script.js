@@ -463,6 +463,27 @@ function processParsedJSON(jsonData) {
 
 
   quizData = shuffle(filteredSource);
+    
+    // MP LOGIC PATCH
+    const isMp = localStorage.getItem('mp_roomCode');
+    if (isMp) {
+        const mpMode = localStorage.getItem('mp_mode') || 'questions';
+        const mpVal = parseInt(localStorage.getItem('mp_val')) || 10;
+        
+        if (mpMode === 'questions') {
+            quizData = quizData.slice(0, mpVal);
+        } else if (mpMode === 'time') {
+            // Time mode: they can answer as many as they want, time is limited
+            totalTime = mpVal * 60; // mpVal is in minutes
+        }
+    } else {
+        // For solo, let's just cap it at 20 to prevent infinite games, unless it's a specific Juz maybe?
+        // Actually, we'll leave it as is or cap to 30.
+        if (quizData.length > 50) {
+            quizData = quizData.slice(0, 50); // Cap solo games to 50 max
+        }
+    }
+
 
 
 
