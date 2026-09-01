@@ -27,7 +27,7 @@ if (roomCode && localUserId) {
             const sortedPlayers = Object.values(players).sort((a, b) => b.score - a.score);
             sortedPlayers.forEach(p => {
                 list.innerHTML += `
-                    <div class="player-row" style="display: flex; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; animation: fadeIn 0.3s ease;">
+                    <div class="player-row" style="display: flex; align-items: center; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 8px 10px; animation: fadeIn 0.3s ease;">
                         <img src="${p.avatar}" style="width: 30px; height: 30px; border-radius: 50%; margin-left: 10px; border: 2px solid var(--button-green);">
                         <div style="flex-grow: 1; font-size: 0.9em;">${p.name}</div>
                         <div style="font-weight: bold; color: gold;">${p.score}</div>
