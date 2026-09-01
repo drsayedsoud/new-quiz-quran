@@ -75,6 +75,7 @@ onValue(roomRef, (snapshot) => {
     if (data.status === 'playing') {
         if (data.settings && data.settings.category) localStorage.setItem('quizType', data.settings.category);
         else if (data.types) localStorage.setItem('quizType', data.types);
+        if (data.settings) { localStorage.setItem('mp_mode', data.settings.mode || 'questions'); localStorage.setItem('mp_val', data.settings.val || 10); }
         window.location.href = 'quiz.html';
         return;
     }

@@ -59,7 +59,7 @@ window.startSoloMixQuiz = function() {
     window.location.href = "quiz.html";
 }
 
-window.createMultiplayerRoomWithParams = async function(category, qCount) {
+window.createMultiplayerRoomWithParams = async function(category, mode, val) {
     if (!category) { alert("يرجى اختيار قسم أولاً"); return; }
     
     const roomCode = generateRoomCode();
