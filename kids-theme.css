@@ -183,3 +183,7 @@ body.mp-kids .timer-box { padding: 6px 10px !important; margin-top: 0 !important
 body.mp-kids .mini-timer { font-weight: 800; color: #5f27cd; font-size: 0.9em; }
 body.mp-kids .timer-box .score-box { margin-top: 4px !important; }
 body.mp-kids #mute-sound-btn { margin-top: 2px !important; font-size: 18px !important; }
+
+/* Naskh face for kids questions and answers (Arabic-Indic digits look right in it) */
+body.kids-mode #question-text, body.kids-mode .option { font-family: 'Noto Naskh Arabic', 'Amiri', 'Cairo', serif !important; }
+body.kids-mode .option { font-weight: 700 !important; }

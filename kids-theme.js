@@ -186,8 +186,25 @@
         if (b) b.textContent = on ? '🔊 القراءة: تعمل' : '🔇 القراءة: متوقفة';
         return on;
     };
+    // Make maths and symbols readable by an Arabic voice: "15 × 6 = ؟" -> "١٥ ضرب ٦ يساوي كم"
+    KidsTheme.arabicizeForSpeech = function (text) {
+        return String(text || '')
+            .replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d])
+            .replace(/\s*[×x\*]\s*/g, ' ضرب ')
+            .replace(/\s*÷\s*/g, ' على ')
+            .replace(/\s*\+\s*/g, ' زائد ')
+            .replace(/(?<=[٠-٩\)])\s*[-−]\s*(?=[٠-٩\(])/g, ' ناقص ')
+            .replace(/\s*=\s*/g, ' يساوي ')
+            .replace(/([٠-٩])\s*\/\s*([٠-٩])/g, '$1 على $2')
+            .replace(/([٠-٩])\s*%/g, '$1 بالمئة')
+            .replace(/[?؟]/g, ' كم؟')
+            .replace(/\.\.\.+|…|▢+/g, ' فراغ ')
+            .replace(/\s{2,}/g, ' ').trim();
+    };
     KidsTheme.speak = function (text, choices) {
         if (!('speechSynthesis' in window) || !text) return;
+        text = KidsTheme.arabicizeForSpeech(text);
+        if (choices) choices = choices.map(KidsTheme.arabicizeForSpeech);
         try {
             speechSynthesis.cancel();
             const say = (t, rate) => { const u = new SpeechSynthesisUtterance(t); u.lang = 'ar-SA'; u.rate = rate || 0.9; const v = speechSynthesis.getVoices().find(v => /^ar/i.test(v.lang)); if (v) u.voice = v; speechSynthesis.speak(u); };

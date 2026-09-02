@@ -457,6 +457,15 @@ async function readJsonWithProgress(response, onProgress) {
 }
 
 // Strips numbering artefacts such as "Q(462): " from imported questions
+// Western digits -> Arabic-Indic digits for display (answers are compared on the raw value, see isCorrectChoice)
+function toArabicDigits(text) {
+  return String(text ?? '').replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+}
+function isCorrectChoice(btn, correctAnswer) {
+  const raw = btn && btn.dataset && btn.dataset.value !== undefined ? btn.dataset.value : (btn ? btn.textContent : '');
+  return String(raw) === String(correctAnswer);
+}
+
 function cleanQuestionText(text) {
   return String(text || '').replace(/^\s*Q\s*\(\s*\d+\s*\)\s*[:：\-]?\s*/i, '').replace(/^\s*س\s*\d+\s*[:：\-]\s*/, '').trim();
 }
@@ -883,7 +892,7 @@ function displayQuestion() {
       <div style="font-size: 14px; color: #bbb;">أكمل الآية الكريمة</div>
       <div style="font-size: 26px; margin-top: 10px; font-family: 'Amiri', serif; line-height: 2; color: #fff;">❝ ${cleanQuestionText(q.question.replace('أكمل الآية:', ''))} ❞</div>`;
   } else {
-    questionTextElement.textContent = cleanQuestionText(q.question);
+    questionTextElement.textContent = toArabicDigits(cleanQuestionText(q.question));
   }
   const favBtn = document.getElementById('fav-btn');
   if (favBtn && window.Progress) {
@@ -919,7 +928,8 @@ function displayQuestion() {
 
   buttons.forEach((btn, i) => {
 
-    btn.textContent = options[i];
+    btn.dataset.value = String(options[i]);
+    btn.textContent = toArabicDigits(options[i]);
 
     btn.className = "option";
 
@@ -993,7 +1003,7 @@ function handleAnswer(button, correctAnswer) {
   if (quizType.startsWith('kids')) {
       const heroProgress = document.getElementById('kids-hero-progress');
       if (heroProgress) {
-          if (button.textContent === correctAnswer) {
+          if (isCorrectChoice(button, correctAnswer)) {
               heroPosition += 10;
               if (heroPosition > 90) {
                   heroPosition = 90;
@@ -1016,7 +1026,7 @@ function handleAnswer(button, correctAnswer) {
 
     btn.disabled = true;
 
-    if (btn.textContent === correctAnswer) {
+    if (isCorrectChoice(btn, correctAnswer)) {
 
       btn.classList.add("correct");
 
@@ -1030,7 +1040,7 @@ function handleAnswer(button, correctAnswer) {
 
 
 
-if (button.textContent === correctAnswer) {
+if (isCorrectChoice(button, correctAnswer)) {
     if (quizType.startsWith('kids')) {
         if (window.KidsTheme) {
             KidsTheme.correct(button);
