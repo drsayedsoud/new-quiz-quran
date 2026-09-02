@@ -39,6 +39,14 @@
     .ok { color: #86efac; } .warn { color: #fde68a; } .err { color: #fca5a5; }
     .card.lib { background: linear-gradient(160deg, #1f2a44 0%, #172033 100%); border-color: #2f4a6b; }
     .lib-head h2 { font-size: 1.25em; color: #7dd3fc; }
+    .two-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 6px; }
+    .big-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 22px 14px; border-radius: 18px; border: 2px solid transparent; color: #fff; cursor: pointer; font-family: inherit; text-align: center; transition: transform 0.15s, filter 0.15s; }
+    .big-btn:hover { transform: translateY(-3px); filter: brightness(1.08); }
+    .big-btn .ic { font-size: 2.2em; }
+    .big-btn b { font-size: 1.15em; }
+    .big-btn small { color: rgba(255,255,255,0.8); font-size: 0.82em; }
+    .big-btn.blue { background: linear-gradient(135deg, #2563eb, #0ea5e9); }
+    .big-btn.green { background: linear-gradient(135deg, #059669, #10b981); }
     .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 6px; }
     .step { display: flex; gap: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(125,211,252,0.18); border-radius: 16px; padding: 14px; }
     .step-n { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; background: #0ea5e9; color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; }
@@ -52,7 +60,7 @@
     .setup-body { font-size: 0.85em; color: var(--muted); line-height: 1.8; margin-top: 8px; }
     .setup-body a { color: #7dd3fc; font-weight: 800; }
     #gh-token { flex: 1; min-width: 220px; padding: 9px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; font-family: inherit; }
-    @media (max-width: 760px) { .two { grid-template-columns: 1fr; } .steps { grid-template-columns: 1fr; } }
+    @media (max-width: 760px) { .two { grid-template-columns: 1fr; } .steps { grid-template-columns: 1fr; } .two-btns { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -85,43 +93,18 @@
   </div>
 
   <div class="card lib">
-    <div class="lib-head"><h2>📚 مكتبة الأسئلة</h2><p class="sub">نزّل، عدّل في إكسيل، ثم انشر بضغطة واحدة. الأعمدة المطلوبة: question, choice1, choice2, choice3, choice4, correct_answer (والتفسير explanation اختياري).</p></div>
-
-    <div class="steps">
-      <div class="step">
-        <div class="step-n">1</div>
-        <div class="step-body">
-          <b>نزّل مكتبة الأسئلة الحالية</b>
-          <span>ملف إكسيل فيه ورقة لكل قسم، عدّل فيه أو أضف صفوفاً</span>
-          <div class="row"><button class="btn blue" id="dl-xlsx">⬇️ تنزيل (Excel)</button><button class="btn ghost" id="cur-btn">🔎 أعداد الأسئلة الحالية</button></div>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-n">2</div>
-        <div class="step-body">
-          <b>ارفع الملف المعدّل</b>
-          <span>الأوراق الموجودة في الملف تُستبدل، وما لم تُرفع يبقى كما هو</span>
-          <label class="drop" id="drop">📂 اضغط لاختيار ملف الإكسيل (.xlsx)<input type="file" id="xlsx" accept=".xlsx,.xls" style="display:none"></label>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-n">3</div>
-        <div class="step-body">
-          <b>انشر إلى الموقع</b>
-          <span>يُرفع إلى GitHub تلقائياً ويتحدث الموقع خلال دقيقة، ويحصل كل جهاز على الأسئلة الجديدة عند أول مسابقة</span>
-          <div class="row"><button class="btn green" id="publish-btn" disabled>🚀 نشر إلى الموقع الآن</button><button class="btn ghost" id="dl-btn" disabled>⬇️ تنزيل quran.zip بدلاً من النشر</button></div>
-        </div>
-      </div>
+    <div class="lib-head"><h2>📚 مكتبة الأسئلة</h2><p class="sub">نزّل النسخة الحالية كملف إكسيل، عدّل فيه، ثم ارفعه وسيُحوَّل ويُنشر على الموقع تلقائياً.</p></div>
+    <div class="two-btns">
+      <button class="big-btn blue" id="dl-xlsx"><span class="ic">⬇️</span><b>تنزيل النسخة الحالية</b><small>ملف إكسيل، ورقة لكل قسم</small></button>
+      <label class="big-btn green" for="xlsx"><span class="ic">⬆️</span><b>رفع نسخة جديدة</b><small>اختر ملف الإكسيل وسيُنشر تلقائياً</small><input type="file" id="xlsx" accept=".xlsx,.xls" style="display:none"></label>
     </div>
-
     <div class="log" id="log" style="margin-top:12px; display:none;"></div>
+    <div class="row" style="margin-top:10px;"><button class="btn ghost" id="cur-btn">🔎 أعداد الأسئلة الحالية</button><button class="btn ghost" id="dl-btn" disabled style="display:none;">⬇️ تنزيل quran.zip</button><button class="btn green" id="publish-btn" disabled style="display:none;">🚀 نشر</button></div>
 
     <details class="setup">
       <summary>🔑 إعداد النشر التلقائي (مرة واحدة) <span id="gh-badge"></span></summary>
       <div class="setup-body">
-        ثلاث خطوات فقط: <b>1)</b> اضغط <a href="https://github.com/settings/tokens/new?scopes=repo&description=Quran%20Quiz%20Admin" target="_blank">هذا الرابط</a> (الإعدادات معبّأة مسبقاً) وانزل لأسفل الصفحة واضغط الزر الأخضر <b>Generate token</b>. <b>2)</b> انسخ الرمز الذي يظهر (يبدأ بـ ghp_). <b>3)</b> الصقه هنا واضغط "حفظ الرمز". يُحفظ في هذا المتصفح فقط.
+        <b>1)</b> اضغط <a href="https://github.com/settings/tokens/new?scopes=repo&description=Quran%20Quiz%20Admin" target="_blank">هذا الرابط</a> وانزل لأسفل واضغط <b>Generate token</b>. <b>2)</b> انسخ الرمز (يبدأ بـ ghp_). <b>3)</b> الصقه هنا واضغط "حفظ الرمز".
         <div class="row" style="margin-top:8px;">
           <input type="password" id="gh-token" placeholder="ghp_...">
           <button class="btn ghost" id="gh-save">حفظ الرمز</button>
@@ -284,8 +267,10 @@
       if (!replaced) throw new Error('لم تُقرأ أي ورقة صالحة، تأكد من أسماء الأوراق والأعمدة (question, choice1..4, correct_answer)');
       log('🧩 تجهيز ملفات الأقسام...');
       built = await buildArtifacts(current);
-      log('✅ جاهز: ' + built.files.length + ' ملفات (' + (built.quranZip.size / 1048576).toFixed(1) + ' ميجابايت للحزمة الكاملة). اضغط "نشر إلى الموقع الآن".', 'ok');
+      log('✅ تم التحويل (' + built.files.length + ' ملفات). جاري النشر إلى الموقع...', 'ok');
       document.getElementById('publish-btn').disabled = false; document.getElementById('dl-btn').disabled = false;
+      if (!(localStorage.getItem('gh_token') || '').trim()) { log('⚠️ لم يُعدّ النشر التلقائي بعد: افتح "إعداد النشر التلقائي" أسفل هذا القسم مرة واحدة ثم أعد رفع الملف.', 'warn'); document.getElementById('dl-btn').style.display = 'inline-block'; return; }
+      await publishNow();
     } catch (e) { log('❌ ' + e.message, 'err'); }
   };
   document.getElementById('dl-btn').onclick = () => {
@@ -295,7 +280,7 @@
 
   // ---- publish: one commit with all files via the Git Data API ----
   const toBase64 = blob => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1]); fr.onerror = rej; fr.readAsDataURL(blob); });
-  document.getElementById('publish-btn').onclick = async () => {
+  async function publishNow() {
     if (!built) return;
     const btn = document.getElementById('publish-btn'); btn.disabled = true;
     try {
@@ -314,9 +299,10 @@
       const counts = Object.entries(built.manifest.categories).map(([k, v]) => k + '=' + v.count).join(', ');
       const commit = await gh(base + '/git/commits', { method: 'POST', body: JSON.stringify({ message: 'Update question bank from admin panel (' + counts + ')', tree: newTree.sha, parents: [headSha] }) });
       await gh(base + '/git/refs/heads/' + REPO.branch, { method: 'PATCH', body: JSON.stringify({ sha: commit.sha, force: false }) });
-      log('🎉 تم النشر إلى GitHub (commit ' + commit.sha.slice(0, 7) + '). سيتحدث الموقع تلقائياً خلال دقيقة تقريباً.', 'ok');
-    } catch (e) { log('❌ ' + e.message, 'err'); btn.disabled = false; }
-  };
+      log('🎉 تم النشر (commit ' + commit.sha.slice(0, 7) + '). سيتحدث الموقع تلقائياً خلال دقيقة تقريباً.', 'ok'); document.getElementById('publish-btn').style.display = 'none';
+    } catch (e) { log('❌ ' + e.message, 'err'); btn.disabled = false; document.getElementById('publish-btn').style.display = 'inline-block'; }
+  }
+  document.getElementById('publish-btn').onclick = publishNow;
 </script>
 </body>
 </html>
