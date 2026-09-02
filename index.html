@@ -634,7 +634,7 @@ function openModal(type, title) {
     </header>
 
     <div class="home-cards">
-      <div class="home-card solo" onpointerdown="startSoloPress()" onpointerup="endSoloPress()" onpointerleave="abortSoloPress(event)" onpointercancel="abortSoloPress(event)" ontouchmove="abortSoloPress(event)" onclick="soloCardClick(event)" onmouseenter="playHover()">
+      <div class="home-card solo" onpointerdown="startSoloPress(event)" onpointerup="endSoloPress()" onpointerleave="abortSoloPress(event)" onpointercancel="abortSoloPress(event)" ontouchmove="trackSoloMove(event)" onclick="soloCardClick(event)" onmouseenter="playHover()">
         <div class="hc-orb" style="top: -60px; right: -60px; background: #f0abfc;"></div>
         <div class="hc-icon"><svg viewBox="0 0 96 96" width="84" height="84"><defs><linearGradient id="sA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0abfc"/><stop offset="1" stop-color="#a855f7"/></linearGradient><linearGradient id="sB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c4b5fd"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><circle cx="48" cy="48" r="44" fill="rgba(255,255,255,0.08)"/><circle cx="48" cy="36" r="16" fill="url(#sA)"/><path d="M20 82c2-16 14-24 28-24s26 8 28 24z" fill="url(#sB)"/><path d="M70 14l2.4 5 5.6.7-4.1 3.9 1 5.5-4.9-2.7-4.9 2.7 1-5.5-4.1-3.9 5.6-.7z" fill="#fde68a"/><path d="M40 33c2 3 5 4 8 4s6-1 8-4" stroke="#4c1d95" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg></div>
         <div class="hc-title">لعبة فردية</div>
@@ -811,15 +811,15 @@ function openModal(type, title) {
           <select id="multi-juz-select" class="opt-select"><option value="">اختر جزءاً محدداً...</option><script>for (let i = 1; i <= 30; i++) { document.write('<option value="' + i + '">الجزء ' + i + '</option>'); }</script></select>
           <button class="opt-go" onclick="startJuzQuiz('multi')">اختيار</button>
         </div>
-        <button class="opt-big" style="--c:#8b5cf6" onclick="startCompleteQuiz('multi')"><span class="opt-big-icon">🧩</span><span><b>أكمل الآية</b><small>نُخفي كلمة من الآية · يتبع الجزء المختار أعلاه</small></span></button>
         <button class="mp-back" onclick="hideQuranOptions('multi')">🔙 رجوع للأقسام</button>
       </div>
       <div id="multi-kids-options" class="opt-panel kids-panel" style="display: none;">
         <div class="opt-head"><span class="cat-icon" style="--c:#fb7185"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><div><div class="cat-title">مسابقة الأطفال</div><div class="cat-sub">اختر المستوى المناسب لعمر الطفل</div></div></div>
-        <button class="level-card" style="--c:#fb7185" onclick="showMultiSettings('kids_1')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><span><b>المستوى الأول</b><small>حساب بسيط وأسئلة سهلة · حتى 9 سنوات</small></span><span class="level-badge">١</span></button>
-        <button class="level-card" style="--c:#38bdf8" onclick="showMultiSettings('kids_2')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر</small></span><span class="level-badge">٢</span></button>
-        
-        <button class="level-card" style="--c:#8b5cf6" onclick="showMultiSettings('kids_3')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#c4b5fd"/><path d="M16 30l6-12 6 12M18.5 25h7" stroke="#5b21b6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 12l1.5 3 3.5.5-2.5 2.5.6 3.5-3.1-1.7-3.1 1.7.6-3.5L27 15.5l3.5-.5z" fill="#fbbf24"/></svg></span><span><b>المستوى الثالث</b><small>نسب وكسور وهندسة ومعلومات قرآنية وسيرة · 12 سنة فأكثر</small></span><span class="level-badge">٣</span></button>
+        <div class="level-grid">
+          <button class="level-card" style="--c:#fb7185" onclick="showMultiSettings('kids_1')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><span><b>المستوى الأول</b><small>حساب بسيط وأسئلة سهلة · حتى 9 سنوات</small></span><span class="level-badge">١</span></button>
+          <button class="level-card" style="--c:#38bdf8" onclick="showMultiSettings('kids_2')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر</small></span><span class="level-badge">٢</span></button>
+          <button class="level-card" style="--c:#8b5cf6" onclick="showMultiSettings('kids_3')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#c4b5fd"/><path d="M16 30l6-12 6 12M18.5 25h7" stroke="#5b21b6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 12l1.5 3 3.5.5-2.5 2.5.6 3.5-3.1-1.7-3.1 1.7.6-3.5L27 15.5l3.5-.5z" fill="#fbbf24"/></svg></span><span><b>المستوى الثالث</b><small>نسب وكسور وهندسة ومعلومات قرآنية وسيرة · 12 سنة فأكثر</small></span><span class="level-badge">٣</span></button>
+        </div>
         <button class="mp-back" onclick="hideKidsOptions('multi')">🔙 رجوع للأقسام</button>
       </div>
       <button class="mp-back" onclick="mpShowStep('home')">🔙 رجوع</button>
@@ -926,19 +926,26 @@ function openModal(type, title) {
   .cat-arrow { display: none; }
   .opt-panel { display: flex; flex-direction: column; gap: 10px; }
   .opt-head { display: flex; align-items: center; gap: 12px; text-align: right; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 10px 12px; }
-  .opt-big, .level-card { --c: #10b981; display: flex; align-items: center; gap: 12px; text-align: right; width: 100%; padding: 12px 14px !important; border-radius: 18px !important; cursor: pointer; font-family: 'Cairo', sans-serif; color: #fff !important; background: linear-gradient(135deg, color-mix(in srgb, var(--c) 85%, #000), var(--c)) !important; border: 1px solid rgba(255,255,255,0.2) !important; box-shadow: 0 8px 20px color-mix(in srgb, var(--c) 35%, transparent) !important; transition: transform 0.2s !important; font-size: 1em !important; }
-  .opt-big:hover, .level-card:hover { transform: translateY(-3px); }
-  .opt-big > span:not(.opt-big-icon), .level-card > span:not(.opt-big-icon):not(.level-badge) { display: flex; flex-direction: column; flex-grow: 1; }
-  .opt-big b, .level-card b { font-size: 1.1em; font-weight: 900; }
-  .opt-big small, .level-card small { font-size: 0.75em; opacity: 0.85; font-weight: 600; }
+  .opt-big { --c: #10b981; display: flex; align-items: center; gap: 12px; text-align: right; width: 100%; padding: 12px 14px !important; border-radius: 18px !important; cursor: pointer; font-family: 'Cairo', sans-serif; color: #fff !important; background: linear-gradient(135deg, color-mix(in srgb, var(--c) 85%, #000), var(--c)) !important; border: 1px solid rgba(255,255,255,0.2) !important; box-shadow: 0 8px 20px color-mix(in srgb, var(--c) 35%, transparent) !important; transition: transform 0.2s !important; font-size: 1em !important; }
+  .opt-big:hover { transform: translateY(-3px); }
+  .opt-big > span:not(.opt-big-icon) { display: flex; flex-direction: column; flex-grow: 1; }
+  .opt-big b { font-size: 1.1em; font-weight: 900; }
+  .opt-big small { font-size: 0.75em; opacity: 0.85; font-weight: 600; }
   .opt-big-icon { width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.18); flex-shrink: 0; }
   .opt-big-icon svg { width: 30px; height: 30px; }
   .opt-row { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 8px; }
   .opt-row .opt-big-icon { background: color-mix(in srgb, var(--c) 22%, transparent); }
   .opt-select { flex-grow: 1; min-width: 0; padding: 11px 10px !important; border-radius: 12px !important; background: rgba(0,0,0,0.3) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2) !important; font-size: 0.95em !important; outline: none; font-family: 'Cairo', sans-serif; }
   .opt-go { background: var(--button-blue) !important; color: #fff !important; border: none !important; border-radius: 12px !important; padding: 11px 16px !important; font-weight: 800 !important; cursor: pointer; font-family: 'Cairo', sans-serif; }
-  .level-badge { width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #2d2b55; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 1.1em; flex-shrink: 0; box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
-  .kids-panel .level-card { border: 3px solid #fff !important; border-radius: 999px !important; }
+  .level-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+  .level-card { --c: #10b981; position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; width: 100%; padding: 16px 10px 12px !important; border-radius: 20px !important; cursor: pointer; font-family: 'Cairo', sans-serif; color: #fff !important; background: linear-gradient(160deg, color-mix(in srgb, var(--c) 85%, #000), var(--c)) !important; border: 2px solid rgba(255,255,255,0.35) !important; box-shadow: 0 8px 20px color-mix(in srgb, var(--c) 35%, transparent) !important; transition: transform 0.2s !important; font-size: 1em !important; }
+  .level-card:hover { transform: translateY(-3px); }
+  .level-card .opt-big-icon { width: 42px; height: 42px; background: rgba(255,255,255,0.22); }
+  .level-card .opt-big-icon svg { width: 26px; height: 26px; }
+  .level-card > span:not(.opt-big-icon):not(.level-badge) { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .level-card b { font-size: 0.95em; font-weight: 900; }
+  .level-card small { font-size: 0.7em; opacity: 0.9; font-weight: 600; line-height: 1.4; }
+  .level-badge { position: absolute; top: 8px; inset-inline-end: 8px; width: 24px; height: 24px; border-radius: 50%; background: #fff; color: #2d2b55; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 0.8em; flex-shrink: 0; box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
   .modal.kids-look .modal-content { background: linear-gradient(180deg, #7ed6ff, #ffe9a8) !important; border: 5px solid #fff !important; border-radius: 30px !important; }
   .modal.kids-look .cat-title, .modal.kids-look h3 { color: #5f27cd !important; }
   .modal.kids-look .cat-sub { color: #5f6c7b !important; font-weight: 700; }
@@ -996,15 +1003,15 @@ function openModal(type, title) {
           <select id="solo-juz-select" class="opt-select"><option value="">اختر جزءاً محدداً...</option><script>for (let i = 1; i <= 30; i++) { document.write('<option value="' + i + '">الجزء ' + i + '</option>'); }</script></select>
           <button class="opt-go" onclick="startJuzQuiz('solo')">ابدأ</button>
         </div>
-        <button class="opt-big" style="--c:#8b5cf6" onclick="startCompleteQuiz('solo')"><span class="opt-big-icon">🧩</span><span><b>أكمل الآية</b><small>نُخفي كلمة من الآية وتختار الصحيحة · يتبع الجزء المختار أعلاه</small></span></button>
         <button class="mp-back" onclick="hideQuranOptions('solo')">🔙 رجوع للأقسام</button>
       </div>
     <div id="solo-kids-options" class="opt-panel kids-panel" style="display: none;">
         <div class="opt-head"><span class="cat-icon" style="--c:#fb7185"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><div><div class="cat-title">مسابقة الأطفال</div><div class="cat-sub">اختر المستوى المناسب لعمر الطفل</div></div></div>
-        <button class="level-card" style="--c:#fb7185" onclick="startSingleQuiz('kids_1', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><span><b>المستوى الأول</b><small>حساب بسيط وأسئلة سهلة · حتى 9 سنوات</small></span><span class="level-badge">١</span></button>
-        <button class="level-card" style="--c:#38bdf8" onclick="startSingleQuiz('kids_2', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر</small></span><span class="level-badge">٢</span></button>
-        
-        <button class="level-card" style="--c:#8b5cf6" onclick="startSingleQuiz('kids_3', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#c4b5fd"/><path d="M16 30l6-12 6 12M18.5 25h7" stroke="#5b21b6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 12l1.5 3 3.5.5-2.5 2.5.6 3.5-3.1-1.7-3.1 1.7.6-3.5L27 15.5l3.5-.5z" fill="#fbbf24"/></svg></span><span><b>المستوى الثالث</b><small>نسب وكسور وهندسة ومعلومات قرآنية وسيرة · 12 سنة فأكثر</small></span><span class="level-badge">٣</span></button>
+        <div class="level-grid">
+          <button class="level-card" style="--c:#fb7185" onclick="startSingleQuiz('kids_1', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><span><b>المستوى الأول</b><small>حساب بسيط وأسئلة سهلة · حتى 9 سنوات</small></span><span class="level-badge">١</span></button>
+          <button class="level-card" style="--c:#38bdf8" onclick="startSingleQuiz('kids_2', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر</small></span><span class="level-badge">٢</span></button>
+          <button class="level-card" style="--c:#8b5cf6" onclick="startSingleQuiz('kids_3', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#c4b5fd"/><path d="M16 30l6-12 6 12M18.5 25h7" stroke="#5b21b6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 12l1.5 3 3.5.5-2.5 2.5.6 3.5-3.1-1.7-3.1 1.7.6-3.5L27 15.5l3.5-.5z" fill="#fbbf24"/></svg></span><span><b>المستوى الثالث</b><small>نسب وكسور وهندسة ومعلومات قرآنية وسيرة · 12 سنة فأكثر</small></span><span class="level-badge">٣</span></button>
+        </div>
         <button class="mp-back" onclick="hideKidsOptions('solo')">🔙 رجوع للأقسام</button>
       </div>
   </div>
@@ -1142,9 +1149,13 @@ function openModal(type, title) {
     let soloCardTimer;
     let isLongPress = false;
     let soloMoved = false;
-    function startSoloPress() {
+    let soloStartX = 0, soloStartY = 0;
+    function startSoloPress(e) {
         isLongPress = false;
         soloMoved = false;
+        const p = (e && e.touches && e.touches[0]) || e;
+        soloStartX = p ? p.clientX : 0;
+        soloStartY = p ? p.clientY : 0;
         soloCardTimer = setTimeout(() => {
             isLongPress = true;
             if(confirm("هل تريد مسح ذاكرة التخزين (الكاش) وإعادة تحميل التطبيق من جديد؟")) {
@@ -1152,12 +1163,18 @@ function openModal(type, title) {
                 indexedDB.deleteDatabase("QuranDB");
                 location.reload(true);
             }
-        }, 1000); 
+        }, 1000);
     }
-    
+
     function abortSoloPress(e) {
         clearTimeout(soloCardTimer);
         soloMoved = true;
+    }
+    // A finger resting on the card always drifts a few px before touchend, which used to
+    // count as a "move" and silently cancel the tap. Only real drags/scrolls should cancel it.
+    function trackSoloMove(e) {
+        const p = (e.touches && e.touches[0]) || e;
+        if (Math.hypot(p.clientX - soloStartX, p.clientY - soloStartY) > 12) abortSoloPress(e);
     }
     function endSoloPress() {
         clearTimeout(soloCardTimer);
@@ -1275,18 +1292,6 @@ function startSingleQuiz(category, mode, juz) {
         if (params.get('open') === 'kids') setTimeout(() => { openSoloMixModal(); showKidsOptions('solo'); }, 300);
     })();
 
-    function startCompleteQuiz(mode) {
-        const juz = document.getElementById(mode + '-juz-select').value;
-        if (mode === 'solo') {
-            localStorage.removeItem("mp_roomCode"); localStorage.removeItem("mp_isHost");
-            if (juz) localStorage.setItem("selectedJuz", juz); else localStorage.removeItem("selectedJuz");
-            localStorage.setItem("quizType", "complete");
-            localStorage.setItem("quizTitle", juz ? "🧩 أكمل الآية - الجزء " + juz : "🧩 أكمل الآية");
-            window.location.href = "quiz.html";
-        } else {
-            showMultiSettings(juz ? "complete_juz_" + juz : "complete");
-        }
-    }
     function startJuzQuiz(mode) {
         const juzSelect = document.getElementById(mode + '-juz-select');
         const val = juzSelect.value;

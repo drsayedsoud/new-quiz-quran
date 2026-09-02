@@ -2,3 +2,5 @@
 
 quran.json
 node_modules
+.claude/
+static-server.js
