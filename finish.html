@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="kids-theme.css">
   <script src="kids-theme.js"></script>
   <script src="wake-lock.js"></script>
+  <script src="progress.js"></script>
   <style>
     :root { --bg: #1a1a2e; --card: #22223f; --border: #34345c; --text: #e6e6f0; --muted: #a0aec0; --green: #10b981; --blue: #4299e1; --gold: #f6c343; --red: #ef4444; }
     * { box-sizing: border-box; }
@@ -112,8 +113,13 @@
 
   <div class="top-buttons">
     <button onclick="retryQuiz()" class="primary">🔁 العب مرة أخرى</button>
+    <a href="profile.html">👤 ملفي</a>
     <a href="index.html">🏠 الرئيسية</a>
   </div>
+  <section class="card" id="unlock-card" style="display: none; border-color: #f6c343;">
+    <h2>🏅 إنجاز جديد!</h2>
+    <div id="unlock-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+  </section>
 
   <section class="card" id="hero-card">
     <div class="ring-wrap">
@@ -197,6 +203,18 @@
     else if (percentage >= 50) motiv.textContent = "لست بعيداً عن الأفضل! واصل المذاكرة ✨";
     else motiv.textContent = "لا تيأس، البداية دائماً صعبة! واصل التدريب 🚀";
   }
+
+  // ---- freshly unlocked achievements / sticker ----
+  (function () {
+    let got = null; try { got = JSON.parse(sessionStorage.getItem('justUnlocked') || 'null'); sessionStorage.removeItem('justUnlocked'); } catch (e) {}
+    if (!got) return;
+    const items = (got.achievements || []).map(a => '<div style="display:flex;align-items:center;gap:12px;background:rgba(246,195,67,0.12);border:1px solid rgba(246,195,67,0.4);border-radius:14px;padding:10px 14px;text-align:right;"><span style="font-size:2em;">' + a.icon + '</span><div><b>' + a.title + '</b><div style="font-size:0.85em;color:#a0aec0;">' + a.desc + '</div></div></div>');
+    if (got.sticker) items.push('<div style="display:flex;align-items:center;gap:12px;background:rgba(29,209,161,0.12);border:1px solid rgba(29,209,161,0.4);border-radius:14px;padding:10px 14px;text-align:right;"><span style="font-size:2.4em;">' + got.sticker + '</span><div><b>ملصق جديد لمجموعتك!</b><div style="font-size:0.85em;color:#a0aec0;">شاهد ملصقاتك في صفحة ملفي</div></div></div>');
+    if (!items.length) return;
+    document.getElementById('unlock-list').innerHTML = items.join('');
+    document.getElementById('unlock-card').style.display = 'block';
+    if (window.KidsTheme && KidsTheme.isActive()) setTimeout(() => KidsTheme.play('tada'), 900);
+  })();
 
   // ---- chips ----
   const chips = [];

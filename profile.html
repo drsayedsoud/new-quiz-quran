@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>ملفي</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a2e">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="kids-theme.css">
+  <script src="kids-theme.js"></script>
+  <script src="progress.js"></script>
+  <script src="wake-lock.js"></script>
+  <style>
+    :root { --bg: #1a1a2e; --card: #22223f; --border: #34345c; --text: #e6e6f0; --muted: #a0aec0; --green: #10b981; --blue: #4299e1; --gold: #f6c343; --red: #ef4444; }
+    * { box-sizing: border-box; }
+    body { background: radial-gradient(circle at top, #24244a 0%, var(--bg) 60%); color: var(--text); font-family: 'Cairo', sans-serif; margin: 0; padding: 14px 12px 40px; min-height: 100vh; }
+    .wrap { max-width: 620px; margin: auto; }
+    .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .top h1 { font-size: 1.35em; margin: 0; }
+    .back { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 8px 14px; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: 0.9em; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 16px; margin-bottom: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+    h2 { font-size: 1.1em; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size: 0.85em; margin: 0 0 12px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .stat { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 10px 6px; text-align: center; }
+    .stat b { display: block; font-size: 1.3em; color: #fff; }
+    .stat span { font-size: 0.7em; color: var(--muted); }
+    .stat .ic { display: block; font-size: 1.2em; }
+    .ach-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .ach { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 12px 8px; text-align: center; transition: transform 0.2s; }
+    .ach.on { border-color: var(--gold); background: linear-gradient(160deg, rgba(246,195,67,0.18), rgba(255,255,255,0.03)); }
+    .ach .ic { font-size: 2em; display: block; }
+    .ach.off .ic { filter: grayscale(1); opacity: 0.35; }
+    .ach b { display: block; font-size: 0.85em; margin-top: 4px; }
+    .ach small { display: block; color: var(--muted); font-size: 0.7em; line-height: 1.4; }
+    .stickers { display: flex; flex-wrap: wrap; gap: 8px; font-size: 2em; }
+    .stickers span { background: rgba(255,255,255,0.06); border-radius: 14px; padding: 6px 10px; }
+    .stickers span.off { opacity: 0.2; filter: grayscale(1); }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .btn { padding: 11px 16px; border-radius: 999px; border: none; color: #fff; font-family: inherit; font-weight: 800; cursor: pointer; font-size: 0.95em; }
+    .btn.green { background: var(--green); } .btn.blue { background: var(--blue); } .btn.ghost { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
+    .qlist { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .q { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 10px 12px; }
+    .q .t { font-weight: 700; line-height: 1.6; }
+    .q .a { color: #86efac; font-size: 0.85em; margin-top: 4px; }
+    .q .x { background: none; border: none; color: #f87171; cursor: pointer; font-family: inherit; font-size: 0.8em; float: left; }
+    .empty { color: var(--muted); font-size: 0.9em; padding: 8px 0; }
+    .streak { font-size: 1.05em; }
+    body.kids-mode .card { background: rgba(255,255,255,0.94) !important; border: 4px solid #fff !important; border-radius: 28px !important; color: #2d2b55; }
+    body.kids-mode .stat { background: #f4f0ff; border: 3px solid #e2dbff; } body.kids-mode .stat b { color: #e63946; } body.kids-mode .stat span, body.kids-mode .sub, body.kids-mode .ach small, body.kids-mode .empty { color: #5f6c7b; }
+    body.kids-mode .ach { background: #f4f0ff; border: 3px solid #e2dbff; } body.kids-mode .ach.on { border-color: #feca57; background: #fff8e1; }
+    body.kids-mode h2, body.kids-mode .top h1 { color: #5f27cd !important; }
+    body.kids-mode .back { background: #fff; color: #5f27cd; border: 3px solid #c8b6ff; }
+    body.kids-mode .q { background: #f4f0ff; border: 2px solid #e2dbff; } body.kids-mode .q .a { color: #059669; }
+    @media (max-width: 420px) { .stats { grid-template-columns: repeat(2, 1fr); } .ach-grid { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><h1 id="title">👤 ملفي</h1><a class="back" href="index.html">🏠 الرئيسية</a></div>
+
+  <section class="card">
+    <h2 id="stats-h">📊 إحصائياتي</h2>
+    <p class="sub streak" id="streak-line"></p>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section class="card" id="stickers-card" style="display: none;">
+    <h2>🎨 ملصقاتي</h2>
+    <p class="sub">تحصل على ملصق جديد مع كل نتيجة 3 نجوم في مسابقات الأطفال</p>
+    <div class="stickers" id="stickers"></div>
+  </section>
+
+  <section class="card">
+    <h2>🏅 الإنجازات</h2>
+    <p class="sub" id="ach-sub"></p>
+    <div class="ach-grid" id="ach"></div>
+  </section>
+
+  <section class="card">
+    <div class="row"><div><h2>📝 مراجعة أخطائي</h2><p class="sub" id="wrong-sub" style="margin:0"></p></div><button class="btn green" id="review-btn" onclick="startType('review', '📝 مراجعة أخطائي')">ابدأ المراجعة</button></div>
+    <div class="qlist" id="wrong-list"></div>
+  </section>
+
+  <section class="card">
+    <div class="row"><div><h2>💛 المفضلة</h2><p class="sub" id="fav-sub" style="margin:0"></p></div><button class="btn blue" id="fav-btn" onclick="startType('favorites', '💛 من المفضلة')">مسابقة منها</button></div>
+    <div class="qlist" id="fav-list"></div>
+  </section>
+</div>
+
+<script>
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const isKids = String(localStorage.getItem('quizType') || '').startsWith('kids');
+  if (isKids && window.KidsTheme) { KidsTheme.activate(); document.getElementById('title').textContent = '🦸 ملف البطل'; }
+
+  const st = Progress.stats();
+  const stat = (ic, v, l) => '<div class="stat"><span class="ic">' + ic + '</span><b>' + v + '</b><span>' + l + '</span></div>';
+  document.getElementById('stats').innerHTML =
+    stat('🎮', st.games, 'مسابقة') + stat('✅', st.correct, 'إجابة صحيحة') + stat('🏆', st.best + '%', 'أفضل نتيجة') + stat('📊', st.avg + '%', 'المتوسط') +
+    stat('🔥', st.bestStreak, 'أطول سلسلة') + stat('🌟', st.perfect, 'علامة كاملة') + stat('⭐', st.kidsStars, 'نجوم الأطفال') + stat('📅', st.streakDays, 'أيام متتالية');
+  const sk = Progress.streak();
+  document.getElementById('streak-line').textContent = sk.count > 1 ? '🔥 لعبت ' + sk.count + ' أيام متتالية، حافظ على السلسلة!' : 'العب كل يوم لتبني سلسلة أيام متتالية';
+
+  // stickers
+  const have = Progress.stickers();
+  if (have.length || isKids) {
+    document.getElementById('stickers-card').style.display = 'block';
+    document.getElementById('stickers').innerHTML = Progress.STICKERS.map(s => '<span class="' + (have.includes(s) ? '' : 'off') + '">' + s + '</span>').join('');
+  }
+
+  // achievements
+  const un = Progress.unlocked();
+  const defs = Progress.DEFS;
+  document.getElementById('ach-sub').textContent = Object.keys(un).length + ' من ' + defs.length + ' إنجازاً';
+  document.getElementById('ach').innerHTML = defs.map(d => '<div class="ach ' + (un[d.id] ? 'on' : 'off') + '"><span class="ic">' + d.icon + '</span><b>' + d.title + '</b><small>' + d.desc + '</small></div>').join('');
+
+  // wrong bank
+  function renderLists() {
+    const wrong = Progress.getWrong();
+    document.getElementById('wrong-sub').textContent = wrong.length ? wrong.length + ' سؤالاً تنتظر التصحيح' : 'لا توجد أخطاء محفوظة، ممتاز!';
+    document.getElementById('review-btn').disabled = !wrong.length;
+    document.getElementById('review-btn').style.opacity = wrong.length ? 1 : 0.4;
+    document.getElementById('wrong-list').innerHTML = wrong.slice(0, 8).map((q, i) => '<div class="q"><button class="x" onclick="dropWrong(' + i + ')">حذف</button><div class="t">' + esc(q.question) + '</div><div class="a">✅ ' + esc(q.correct_answer) + '</div></div>').join('') + (wrong.length > 8 ? '<div class="empty">و' + (wrong.length - 8) + ' أسئلة أخرى...</div>' : '');
+    const fav = Progress.getFav();
+    document.getElementById('fav-sub').textContent = fav.length ? fav.length + ' سؤالاً محفوظاً' : 'اضغط ☆ أثناء المسابقة لحفظ أي سؤال هنا';
+    document.getElementById('fav-btn').disabled = fav.length < 4;
+    document.getElementById('fav-btn').style.opacity = fav.length >= 4 ? 1 : 0.4;
+    document.getElementById('fav-list').innerHTML = fav.slice(0, 8).map((q, i) => '<div class="q"><button class="x" onclick="dropFav(' + i + ')">إزالة</button><div class="t">' + esc(q.question) + '</div><div class="a">✅ ' + esc(q.correct_answer) + '</div></div>').join('') + (fav.length > 8 ? '<div class="empty">و' + (fav.length - 8) + ' أسئلة أخرى...</div>' : '');
+  }
+  function dropWrong(i) { Progress.removeWrong(Progress.getWrong()[i]); renderLists(); }
+  function dropFav(i) { Progress.removeFav(Progress.getFav()[i]); renderLists(); }
+  renderLists();
+
+  function startType(type, title) {
+    ['mp_roomCode', 'mp_isHost', 'selectedJuz', 'selectedSura'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('quizType', type);
+    localStorage.setItem('quizTitle', title);
+    location.href = 'quiz.html';
+  }
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+</script>
+</body>
+</html>

@@ -249,7 +249,7 @@ const storeName = 'quranData';
 
 const dataKey = 'quranJSON';
 // Bump whenever quran.zip changes so devices with an older cached bank download the new one
-const DATA_VERSION = 3;
+const DATA_VERSION = 4;
 
 let db;
 
@@ -477,6 +477,41 @@ function dailyQuestions(jsonData) {
   return picked;
 }
 
+// "Complete the verse": hide one word of an aya, distractors are words of similar length from other ayat
+function completeVerseQuestions(jsonData) {
+  const ayat = (jsonData.quiz || []).filter(q => q && typeof q.correct_answer === 'string');
+  const pool = selectedJuz ? ayat.filter(q => String(q.juz_number).replace('.0', '') === selectedJuz) : ayat;
+  const words = [];
+  const clean = w => w.replace(/[،؛,.!؟:"«»()\[\]]/g, '');
+  pool.forEach(q => String(q.correct_answer).split(/\s+/).map(clean).forEach(w => { if (w.length >= 3 && w.length <= 12 && /^[؀-ۿ]+$/.test(w)) words.push(w); }));
+  const result = [];
+  const used = new Set();
+  const candidates = pool.slice();
+  for (let i = candidates.length - 1; i > 0; i--) { const j = Math.floor(getRandom() * (i + 1)); [candidates[i], candidates[j]] = [candidates[j], candidates[i]]; }
+  for (const q of candidates) {
+    if (result.length >= 120) break;
+    const aya = String(q.correct_answer).trim();
+    const parts = aya.split(/\s+/).map(clean).filter(Boolean);
+    if (parts.length < 4 || parts.length > 40) continue;
+    const idx = 1 + Math.floor(getRandom() * (parts.length - 1));
+    const answer = parts[idx];
+    if (answer.length < 3 || used.has(aya)) continue;
+    used.add(aya);
+    const shown = parts.map((w, k) => k === idx ? '▢▢▢' : w).join(' ');
+    const distractors = [];
+    let guard = 0;
+    while (distractors.length < 3 && guard++ < 400) {
+      const w = words[Math.floor(getRandom() * words.length)];
+      if (w && w !== answer && Math.abs(w.length - answer.length) <= 3 && !distractors.includes(w) && !parts.includes(w)) distractors.push(w);
+    }
+    if (distractors.length < 3) continue;
+    const choices = [answer, ...distractors];
+    for (let i = choices.length - 1; i > 0; i--) { const j = Math.floor(getRandom() * (i + 1)); [choices[i], choices[j]] = [choices[j], choices[i]]; }
+    result.push({ question: 'أكمل الآية: ' + shown, choice1: choices[0], choice2: choices[1], choice3: choices[2], choice4: choices[3], correct_answer: answer, explanation: aya, sura_info: q.sura_info, juz_number: q.juz_number, src: 'complete' });
+  }
+  return result;
+}
+
 function recordDaily(session) {
   if (session.type !== 'daily') return;
   const dayKey = new Date().toISOString().slice(0, 10);
@@ -509,6 +544,9 @@ function processParsedJSON(jsonData) {
       else if (type === "kids" && jsonData.kids) source = source.concat(jsonData.kids);
       else if (type === "general" && jsonData.general) source = source.concat(jsonData.general);
       else if (type === "daily") source = source.concat(dailyQuestions(jsonData));
+      else if (type === "complete") source = source.concat(completeVerseQuestions(jsonData));
+      else if (type === "review") source = source.concat(window.Progress ? Progress.getWrong() : []);
+      else if (type === "favorites") source = source.concat(window.Progress ? Progress.getFav() : []);
       else if (Array.isArray(jsonData[type])) source = source.concat(jsonData[type]);
       else if (jsonData.quiz) {
           const filtered = jsonData.quiz.filter(q => q.type === type);
@@ -558,7 +596,7 @@ function processParsedJSON(jsonData) {
 
 
 
-  if (selectedSura) {
+  if (quizType === 'complete' || quizType === 'review' || quizType === 'favorites') { /* already scoped */ } else if (selectedSura) {
 
     filteredSource = filteredSource.filter(q => q.sura_info === selectedSura);
 
@@ -664,6 +702,7 @@ function finishQuiz() {
   sessions.push(session);
   localStorage.setItem("userSessions", JSON.stringify(sessions));
   recordDaily(session);
+  if (window.Progress) { try { Progress.onSessionSaved(session); } catch (e) { console.error(e); } }
   window.location.href = "finish.html";
 }
 
@@ -803,6 +842,7 @@ function displayQuestion() {
 
     localStorage.setItem("userSessions", JSON.stringify(sessions));
   recordDaily(session);
+  if (window.Progress) { try { Progress.onSessionSaved(session); } catch (e) { console.error(e); } }
 
     window.location.href = "finish.html";
 
@@ -838,11 +878,20 @@ function displayQuestion() {
 
     `;
 
+  } else if (q.question.startsWith('أكمل الآية:')) {
+    questionTextElement.innerHTML = `
+      <div style="font-size: 14px; color: #bbb;">أكمل الآية الكريمة</div>
+      <div style="font-size: 26px; margin-top: 10px; font-family: 'Amiri', serif; line-height: 2; color: #fff;">❝ ${cleanQuestionText(q.question.replace('أكمل الآية:', ''))} ❞</div>`;
   } else {
-
     questionTextElement.textContent = cleanQuestionText(q.question);
-
   }
+  const favBtn = document.getElementById('fav-btn');
+  if (favBtn && window.Progress) {
+    const on = Progress.isFav(q);
+    favBtn.textContent = on ? '💛 محفوظ' : '☆ حفظ السؤال';
+    favBtn.onclick = () => { const now = Progress.toggleFav(q, quizType); favBtn.textContent = now ? '💛 محفوظ' : '☆ حفظ السؤال'; if (window.KidsTheme && KidsTheme.isActive()) KidsTheme.play(now ? 'star' : 'pop'); };
+  }
+  if (window.KidsTheme && KidsTheme.isActive() && KidsTheme.readEnabled()) KidsTheme.speak(cleanQuestionText(q.question), [q.choice1, q.choice2, q.choice3, q.choice4]);
 
 
 
@@ -996,6 +1045,7 @@ if (button.textContent === correctAnswer) {
 
   answeredCount++;
   correctCount++;
+  if (window.Progress && quizType === 'review') Progress.removeWrong(quizData[currentIndex] || {});
   streak++;
   if (streak > bestStreak) bestStreak = streak;
   if (streak >= 3) showStreakToast(streak);
@@ -1007,6 +1057,7 @@ if (button.textContent === correctAnswer) {
   streak = 0;
   vibrate([60, 40, 60]);
   const currentQ = quizData[currentIndex] || {};
+  if (window.Progress && quizType !== 'review') Progress.addWrong(currentQ, quizType);
   wrongAnswers.push({
     question: cleanQuestionText(currentQ.question),
     chosen: button ? button.textContent : '',
@@ -1117,6 +1168,7 @@ function endQuiz() {
 
   localStorage.setItem("userSessions", JSON.stringify(sessions));
   recordDaily(session);
+  if (window.Progress) { try { Progress.onSessionSaved(session); } catch (e) { console.error(e); } }
 
   window.location.href = "finish.html";
 

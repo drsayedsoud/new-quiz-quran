@@ -536,6 +536,7 @@ function openModal(type, title) {
 <link rel="stylesheet" href="kids-theme.css">
 <script src="kids-theme.js"></script>
 <script src="wake-lock.js"></script>
+<script src="progress.js"></script>
 <link rel="stylesheet" href="mobile.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -544,6 +545,7 @@ function openModal(type, title) {
 
     <!-- Top Actions -->
     <div style="position: absolute; top: 15px; left: 15px; display: flex; gap: 10px; z-index: 100;">
+        <button onclick="location.href='profile.html'" title="ملفي وإنجازاتي" style="background: rgba(246,195,67,0.15); border: 1px solid rgba(246,195,67,0.4); color: #f6c343; height: 45px; padding: 0 14px; border-radius: 999px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Cairo'; font-weight: 800; backdrop-filter: blur(10px);">👤 ملفي <span id="profile-badge" style="display:none;background:#ef4444;color:#fff;border-radius:999px;padding:0 7px;font-size:0.75em;"></span></button>
         <button onclick="shareApp()" title="مشاركة التطبيق" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: transform 0.3s ease, background 0.3s ease;" onmouseenter="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='scale(1.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='scale(1)';">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
         </button>
@@ -655,6 +657,11 @@ function openModal(type, title) {
           <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><path d="M24 4l5.9 12 13.1 1.9-9.5 9.3 2.3 13.1L24 34.1l-11.8 6.2 2.3-13.1L5 17.9 18.1 16z" fill="#fbbf24"/><path d="M24 12l3.5 7.2 7.9 1.1-5.7 5.6 1.3 7.9L24 30.1l-7 3.7 1.3-7.9-5.7-5.6 7.9-1.1z" fill="#fde68a"/></svg></span>
           <span class="quick-label">تحدي اليوم</span>
           <span class="daily-badge" id="daily-badge">10 أسئلة جديدة</span>
+        </button>
+        <button class="quick-tile" id="review-tile" style="--tile:#f87171; display: none;" onclick="startReview()">
+          <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><rect x="10" y="6" width="28" height="36" rx="4" fill="#fecaca"/><path d="M16 16h16M16 23h16M16 30h10" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/><path d="M30 30l4 4 8-9" stroke="#16a34a" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="quick-label">مراجعة أخطائي</span>
+          <span class="daily-badge" id="review-badge" style="background: rgba(248,113,113,0.15); color: #fca5a5;"></span>
         </button>
         <button class="quick-tile" style="--tile:#10b981" onclick="openSoloMixModal(); showQuranOptions('solo')">
           <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><path d="M6 12c6-3 12-3 17 1v26c-5-4-11-4-17-1z" fill="#34d399"/><path d="M42 12c-6-3-12-3-17 1v26c5-4 11-4 17-1z" fill="#059669"/><path d="M11 20h7M11 25h7M30 20h7M30 25h7" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round"/></svg></span>
@@ -798,12 +805,15 @@ function openModal(type, title) {
           <select id="multi-juz-select" class="opt-select"><option value="">اختر جزءاً محدداً...</option><script>for (let i = 1; i <= 30; i++) { document.write('<option value="' + i + '">الجزء ' + i + '</option>'); }</script></select>
           <button class="opt-go" onclick="startJuzQuiz('multi')">اختيار</button>
         </div>
+        <button class="opt-big" style="--c:#8b5cf6" onclick="startCompleteQuiz('multi')"><span class="opt-big-icon">🧩</span><span><b>أكمل الآية</b><small>نُخفي كلمة من الآية · يتبع الجزء المختار أعلاه</small></span></button>
         <button class="mp-back" onclick="hideQuranOptions('multi')">🔙 رجوع للأقسام</button>
       </div>
       <div id="multi-kids-options" class="opt-panel kids-panel" style="display: none;">
         <div class="opt-head"><span class="cat-icon" style="--c:#fb7185"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><div><div class="cat-title">مسابقة الأطفال</div><div class="cat-sub">اختر المستوى المناسب لعمر الطفل</div></div></div>
         <button class="level-card" style="--c:#fb7185" onclick="showMultiSettings('kids_1')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><span><b>المستوى الأول</b><small>حساب بسيط وأسئلة سهلة · حتى 9 سنوات</small></span><span class="level-badge">١</span></button>
         <button class="level-card" style="--c:#38bdf8" onclick="showMultiSettings('kids_2')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر</small></span><span class="level-badge">٢</span></button>
+        
+        <button class="level-card" style="--c:#8b5cf6" onclick="showMultiSettings('kids_3')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#c4b5fd"/><path d="M16 30l6-12 6 12M18.5 25h7" stroke="#5b21b6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 12l1.5 3 3.5.5-2.5 2.5.6 3.5-3.1-1.7-3.1 1.7.6-3.5L27 15.5l3.5-.5z" fill="#fbbf24"/></svg></span><span><b>المستوى الثالث</b><small>نسب وكسور وهندسة ومعلومات قرآنية وسيرة · 12 سنة فأكثر</small></span><span class="level-badge">٣</span></button>
         <button class="mp-back" onclick="hideKidsOptions('multi')">🔙 رجوع للأقسام</button>
       </div>
       <button class="mp-back" onclick="mpShowStep('home')">🔙 رجوع</button>
@@ -972,12 +982,15 @@ function openModal(type, title) {
           <select id="solo-juz-select" class="opt-select"><option value="">اختر جزءاً محدداً...</option><script>for (let i = 1; i <= 30; i++) { document.write('<option value="' + i + '">الجزء ' + i + '</option>'); }</script></select>
           <button class="opt-go" onclick="startJuzQuiz('solo')">ابدأ</button>
         </div>
+        <button class="opt-big" style="--c:#8b5cf6" onclick="startCompleteQuiz('solo')"><span class="opt-big-icon">🧩</span><span><b>أكمل الآية</b><small>نُخفي كلمة من الآية وتختار الصحيحة · يتبع الجزء المختار أعلاه</small></span></button>
         <button class="mp-back" onclick="hideQuranOptions('solo')">🔙 رجوع للأقسام</button>
       </div>
     <div id="solo-kids-options" class="opt-panel kids-panel" style="display: none;">
         <div class="opt-head"><span class="cat-icon" style="--c:#fb7185"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><div><div class="cat-title">مسابقة الأطفال</div><div class="cat-sub">اختر المستوى المناسب لعمر الطفل</div></div></div>
         <button class="level-card" style="--c:#fb7185" onclick="startSingleQuiz('kids_1', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><span><b>المستوى الأول</b><small>حساب بسيط وأسئلة سهلة · حتى 9 سنوات</small></span><span class="level-badge">١</span></button>
         <button class="level-card" style="--c:#38bdf8" onclick="startSingleQuiz('kids_2', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر</small></span><span class="level-badge">٢</span></button>
+        
+        <button class="level-card" style="--c:#8b5cf6" onclick="startSingleQuiz('kids_3', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#c4b5fd"/><path d="M16 30l6-12 6 12M18.5 25h7" stroke="#5b21b6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 12l1.5 3 3.5.5-2.5 2.5.6 3.5-3.1-1.7-3.1 1.7.6-3.5L27 15.5l3.5-.5z" fill="#fbbf24"/></svg></span><span><b>المستوى الثالث</b><small>نسب وكسور وهندسة ومعلومات قرآنية وسيرة · 12 سنة فأكثر</small></span><span class="level-badge">٣</span></button>
         <button class="mp-back" onclick="hideKidsOptions('solo')">🔙 رجوع للأقسام</button>
       </div>
   </div>
@@ -1191,6 +1204,21 @@ function startSingleQuiz(category, mode, juz) {
         }
     }
 
+    function startReview() {
+        localStorage.removeItem("mp_roomCode"); localStorage.removeItem("mp_isHost"); localStorage.removeItem("selectedJuz");
+        localStorage.setItem("quizType", "review");
+        localStorage.setItem("quizTitle", "📝 مراجعة أخطائي");
+        window.location.href = "quiz.html";
+    }
+    (function () {
+        if (!window.Progress) return;
+        const n = Progress.getWrong().length;
+        const tile = document.getElementById('review-tile');
+        if (tile && n > 0) { tile.style.display = 'flex'; document.getElementById('review-badge').textContent = n + (n > 10 ? ' سؤالاً' : ' أسئلة'); }
+        const fresh = Object.keys(Progress.unlocked()).length;
+        const badge = document.getElementById('profile-badge');
+        if (badge && fresh) { badge.style.display = 'inline'; badge.textContent = fresh; }
+    })();
     function startDailyChallenge() {
         localStorage.removeItem("mp_roomCode");
         localStorage.removeItem("mp_isHost");
@@ -1211,6 +1239,18 @@ function startSingleQuiz(category, mode, juz) {
         if (params.get('open') === 'kids') setTimeout(() => { openSoloMixModal(); showKidsOptions('solo'); }, 300);
     })();
 
+    function startCompleteQuiz(mode) {
+        const juz = document.getElementById(mode + '-juz-select').value;
+        if (mode === 'solo') {
+            localStorage.removeItem("mp_roomCode"); localStorage.removeItem("mp_isHost");
+            if (juz) localStorage.setItem("selectedJuz", juz); else localStorage.removeItem("selectedJuz");
+            localStorage.setItem("quizType", "complete");
+            localStorage.setItem("quizTitle", juz ? "🧩 أكمل الآية - الجزء " + juz : "🧩 أكمل الآية");
+            window.location.href = "quiz.html";
+        } else {
+            showMultiSettings(juz ? "complete_juz_" + juz : "complete");
+        }
+    }
     function startJuzQuiz(mode) {
         const juzSelect = document.getElementById(mode + '-juz-select');
         const val = juzSelect.value;
@@ -1226,11 +1266,11 @@ function startSingleQuiz(category, mode, juz) {
 <script>
 let tempMultiCategory = '';
 let currentMultiMode = 'questions';
-const MP_CATEGORY_LABELS = { mixed: 'القرآن الكريم كاملاً', seerah: 'السيرة النبوية', fiqh: 'الفقه الإسلامي', general: 'معلومات قرآنية', meanings: 'معاني الكلمات', kids_1: 'الأطفال - مستوى 1', kids_2: 'الأطفال - مستوى 2' };
+const MP_CATEGORY_LABELS = { mixed: 'القرآن الكريم كاملاً', seerah: 'السيرة النبوية', fiqh: 'الفقه الإسلامي', general: 'معلومات قرآنية', meanings: 'معاني الكلمات', kids_1: 'الأطفال - مستوى 1', kids_2: 'الأطفال - مستوى 2', kids_3: 'الأطفال - مستوى 3', complete: 'أكمل الآية', review: 'مراجعة أخطائي', favorites: 'المفضلة' };
 
 function mpCategoryLabel(cat) {
     if (!cat) return '';
-    if (cat.includes('_juz_')) return 'القرآن الكريم - الجزء ' + cat.split('_juz_')[1];
+    if (cat.includes('_juz_')) return (cat.startsWith('complete') ? 'أكمل الآية - الجزء ' : 'القرآن الكريم - الجزء ') + cat.split('_juz_')[1];
     return MP_CATEGORY_LABELS[cat] || cat;
 }
 

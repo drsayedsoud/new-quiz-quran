@@ -176,6 +176,39 @@
         KidsTheme.cheer(['حاول مرة أخرى! 💪', 'قريب جداً! 🙂', 'لا بأس، استمر! 🌈'][Math.floor(Math.random() * 3)], '#ff6b6b');
     };
 
+    // ---------- Read the question aloud (Web Speech API, Arabic voice when available) ----------
+    KidsTheme.readEnabled = function () { return localStorage.getItem('kids_read') !== 'off'; };
+    KidsTheme.toggleRead = function () {
+        const on = !KidsTheme.readEnabled();
+        localStorage.setItem('kids_read', on ? 'on' : 'off');
+        if (!on && window.speechSynthesis) speechSynthesis.cancel();
+        const b = document.getElementById('kids-read-btn');
+        if (b) b.textContent = on ? '🔊 القراءة: تعمل' : '🔇 القراءة: متوقفة';
+        return on;
+    };
+    KidsTheme.speak = function (text, choices) {
+        if (!('speechSynthesis' in window) || !text) return;
+        try {
+            speechSynthesis.cancel();
+            const say = (t, rate) => { const u = new SpeechSynthesisUtterance(t); u.lang = 'ar-SA'; u.rate = rate || 0.9; const v = speechSynthesis.getVoices().find(v => /^ar/i.test(v.lang)); if (v) u.voice = v; speechSynthesis.speak(u); };
+            say(text, 0.9);
+            if (choices && choices.length) say('الاختيارات: ' + choices.map(String).join('، '), 0.95);
+        } catch (e) { /* ignore */ }
+    };
+    function addReadButton() {
+        if (document.getElementById('kids-read-btn')) return;
+        const host = document.querySelector('.footer');
+        if (!host) return;
+        const b = document.createElement('button');
+        b.id = 'kids-read-btn';
+        b.textContent = KidsTheme.readEnabled() ? '🔊 القراءة: تعمل' : '🔇 القراءة: متوقفة';
+        b.style.cssText = 'background:#6b46c1;color:#fff;';
+        b.onclick = () => { if (KidsTheme.toggleRead()) { const q = document.getElementById('question-text'); if (q) KidsTheme.speak(q.textContent); } };
+        host.prepend(b);
+    }
+    const _activate = KidsTheme.activate;
+    KidsTheme.activate = function () { _activate(); if (location.pathname.toLowerCase().endsWith('quiz.html') && 'speechSynthesis' in window) addReadButton(); };
+
     window.KidsTheme = KidsTheme;
 
     // Finish page: trophy, stars and confetti sized to the result

@@ -19,18 +19,20 @@ const CATEGORY_LABELS = {
     general: 'معلومات قرآنية',
     meanings: 'معاني الكلمات',
     kids_1: 'الأطفال - مستوى 1',
-    kids_2: 'الأطفال - مستوى 2'
+    kids_2: 'الأطفال - مستوى 2',
+    kids_3: 'الأطفال - مستوى 3',
+    complete: 'أكمل الآية'
 };
 
 const CATEGORY_ICONS = {
-    mixed: '📖', seerah: '🕌', fiqh: '⚖️', general: '💡', meanings: '🔤', kids_1: '🎈', kids_2: '🚀'
+    mixed: '📖', seerah: '🕌', fiqh: '⚖️', general: '💡', meanings: '🔤', kids_1: '🎈', kids_2: '🚀', kids_3: '🏅', complete: '🧩'
 };
 
 export function categoryLabel(category) {
     if (!category) return 'غير محدد';
     if (category.includes('_juz_')) {
         const juz = category.split('_juz_')[1];
-        return 'القرآن الكريم - الجزء ' + juz;
+        return (category.startsWith('complete') ? 'أكمل الآية - الجزء ' : 'القرآن الكريم - الجزء ') + juz;
     }
     return CATEGORY_LABELS[category] || category;
 }
