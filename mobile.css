@@ -1,0 +1,81 @@
+/* ===== Shared mobile / responsive layer (loaded on every page) ===== */
+html, body { overflow-x: hidden; max-width: 100%; -webkit-text-size-adjust: 100%; }
+* { -webkit-tap-highlight-color: transparent; }
+button, input, select, textarea { font-family: inherit; }
+button, .option, .card, .home-card, .cat-card, .quick-tile, .avatar-option, .mp-choice, .chip-btn { touch-action: manipulation; }
+img, svg, canvas, video { max-width: 100%; height: auto; }
+svg[width], svg[height] { height: auto; }
+.modal { padding: 10px; box-sizing: border-box; }
+.modal-content { max-height: 94vh; overflow-y: auto; box-sizing: border-box; }
+.ui-dialog-overlay, .modal { padding-top: max(10px, env(safe-area-inset-top)); padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+
+@media (max-width: 480px) {
+  body { padding-left: max(12px, env(safe-area-inset-left)) !important; padding-right: max(12px, env(safe-area-inset-right)) !important; }
+  /* Prevent iOS zoom on focus */
+  input, select, textarea { font-size: 16px !important; }
+  /* Home */
+  .home-hero h1 { font-size: 1.75em !important; }
+  .home-sub { font-size: 0.95em !important; }
+  .home-stats span { font-size: 0.78em !important; padding: 5px 11px !important; }
+  .hc-title { font-size: 1.4em !important; }
+  .hc-desc { font-size: 0.9em !important; }
+  /* Modals */
+  .modal-content { padding: 16px 12px !important; border-radius: 20px !important; }
+  #mp-modal-title, #solo-modal-title { font-size: 1.2em !important; }
+  .mp-choice .big { font-size: 1.8em !important; }
+  .cat-grid { max-height: 60vh; }
+  .cat-title { font-size: 0.95em !important; }
+  .cat-sub { font-size: 0.7em !important; }
+  #mp-step-settings { max-height: 70vh; }
+  .set-group { padding: 10px !important; }
+  /* Quiz */
+  .container { padding: 14px 12px !important; border-radius: 18px !important; }
+  #quiz-title { font-size: 1.15em !important; }
+  #question-text { font-size: 20px !important; line-height: 1.8 !important; margin: 12px 0 !important; }
+  .option { font-size: 15px !important; padding: 12px !important; }
+  .timer-box { font-size: 12.5px !important; }
+  .footer { gap: 8px !important; }
+  .footer button { font-size: 13.5px !important; padding: 10px 12px !important; flex: 1 1 45%; }
+  #kids-hero-track { height: 40px !important; }
+  #kids-hero { width: 46px !important; height: 46px !important; }
+  /* Lobby */
+  .top-bar h1 { font-size: 1.05em !important; }
+  .ghost-btn { padding: 7px 10px !important; font-size: 0.82em !important; }
+  .room-code { font-size: 2em !important; letter-spacing: 6px !important; padding: 6px 12px 6px 18px !important; }
+  .share-btn { padding: 9px 13px !important; font-size: 0.88em !important; }
+  .chip { font-size: 0.82em !important; padding: 4px 11px !important; }
+  .players-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)) !important; }
+  .avatar-option { width: 56px !important; height: 56px !important; }
+  #countdown-overlay .num { font-size: 5.5em !important; }
+  /* Finish */
+  .top-buttons { gap: 6px; }
+  .top-buttons button, .top-buttons a { flex: 1 1 45%; margin: 4px 0 !important; font-size: 14px !important; padding: 10px 8px !important; }
+  #mp-results { padding: 14px 10px !important; }
+  #mp-results h2 { font-size: 1.25em !important; }
+  #mp-results button { font-size: 14px !important; padding: 10px 14px !important; }
+}
+
+@media (max-width: 360px) {
+  .cat-grid { grid-template-columns: 1fr !important; }
+  .cat-card { flex-direction: row !important; text-align: right !important; padding: 10px 12px !important; }
+  .cat-icon { width: 48px !important; height: 48px !important; }
+  .cat-icon svg { width: 30px !important; height: 30px !important; }
+  .quick-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px !important; }
+  .quick-icon { width: 48px !important; height: 48px !important; }
+  .quick-label { font-size: 0.8em !important; }
+  .home-card { padding: 20px 14px 18px !important; }
+  .hc-icon { width: 84px !important; height: 84px !important; }
+  .seg-btn small { display: none !important; }
+  .room-code { font-size: 1.7em !important; letter-spacing: 4px !important; }
+  #question-text { font-size: 18px !important; }
+  body.kids-mode #question-text { font-size: 1.35em !important; }
+  body.kids-mode .option { font-size: 1.05em !important; }
+  .players-grid { grid-template-columns: 1fr 1fr !important; }
+}
+
+/* Short screens (landscape phones) */
+@media (max-height: 520px) {
+  .modal-content { max-height: 96vh; }
+  .cat-grid, #mp-step-settings { max-height: 60vh; }
+  #countdown-overlay .num { font-size: 4em !important; }
+}
