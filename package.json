@@ -2,6 +2,6 @@
   "name": "new-quiz-quran",
   "private": true,
   "scripts": {
-    "build": "node scripts/split-bank.js"
+    "split-bank": "node scripts/split-bank.js"
   }
 }
