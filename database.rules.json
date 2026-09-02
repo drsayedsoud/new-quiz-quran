@@ -1,0 +1,53 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "rooms": {
+      ".read": true,
+      ".indexOn": ["createdAt", "status"],
+
+      "$code": {
+        ".read": true,
+        ".write": "$code.matches(/^[0-9]{5}$/)",
+        ".validate": "newData.hasChildren(['hostId', 'status', 'createdAt', 'settings'])",
+
+        "code":      { ".validate": "newData.isString() && newData.val() === $code" },
+        "hostId":    { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 64" },
+        "status":    { ".validate": "newData.isString() && newData.val().matches(/^(waiting|playing|finished|closed)$/)" },
+        "createdAt": { ".validate": "newData.isNumber() && newData.val() > 1700000000000" },
+        "startedAt": { ".validate": "newData.isNumber()" },
+        "round":     { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 1000" },
+        "currentQuestionIndex": { ".validate": "newData.isNumber()" },
+
+        "settings": {
+          ".validate": "newData.hasChildren(['category'])",
+          "category":      { ".validate": "newData.isString() && newData.val().length <= 64" },
+          "mode":          { ".validate": "newData.isString() && newData.val().matches(/^(questions|time)$/)" },
+          "val":           { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 500" },
+          "qTime":         { ".validate": "newData.isNumber() && newData.val() >= 5 && newData.val() <= 180" },
+          "maxPlayers":    { ".validate": "newData.isNumber() && newData.val() >= 2 && newData.val() <= 50" },
+          "showLive":      { ".validate": "newData.isBoolean()" },
+          "roomName":      { ".validate": "newData.isString() && newData.val().length <= 24" },
+          "questionCount": { ".validate": "newData.isNumber()" },
+          "$other":        { ".validate": false }
+        },
+
+        "players": {
+          "$uid": {
+            ".validate": "$uid.length <= 64 && newData.hasChildren(['name', 'avatar'])",
+            "name":        { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
+            "avatar":      { ".validate": "newData.isString() && newData.val().beginsWith('assets/') && newData.val().length <= 64" },
+            "score":       { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
+            "answered":    { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
+            "hasFinished": { ".validate": "newData.isBoolean()" },
+            "joinedAt":    { ".validate": "newData.isNumber()" },
+            "$other":      { ".validate": false }
+          }
+        },
+
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
