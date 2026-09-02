@@ -33,6 +33,7 @@
           "sync":          { ".validate": "newData.isBoolean()" },
           "teams":         { ".validate": "newData.isBoolean()" },
           "roomName":      { ".validate": "newData.isString() && newData.val().length <= 24" },
+          "pick":          { ".validate": "newData.isString() && newData.val().length <= 800" },
           "questionCount": { ".validate": "newData.isNumber()" },
           "$other":        { ".validate": false }
         },

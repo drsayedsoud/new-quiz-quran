@@ -69,6 +69,14 @@ export function getLocalUserId() {
     return id;
 }
 
+// Stable short id for a question text (same function in script.js) so a teacher's picked list survives any shuffling
+export function questionHash(text) {
+    const s = String(text || '').replace(/\s+/g, ' ').trim();
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+    return h.toString(36).slice(0, 10);
+}
+
 export function escapeHtml(str) {
     return String(str ?? '').replace(/[&<>"']/g, c => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -87,6 +95,7 @@ export function saveRoomToLocal(roomCode, room) {
     localStorage.setItem('mp_showlive', settings.showLive === false ? 'false' : 'true');
     localStorage.setItem('mp_sync', settings.sync === true ? 'true' : 'false');
     localStorage.setItem('mp_teams', settings.teams === true ? 'true' : 'false');
+    if (settings.pick) localStorage.setItem('mp_pick', settings.pick); else localStorage.removeItem('mp_pick');
     localStorage.setItem('quizType', settings.category || 'mixed');
     localStorage.setItem('quizTitle', '🔴 تحدي مباشر: ' + categoryLabel(settings.category));
     // Stale solo filters must not leak into the shared game
@@ -95,7 +104,7 @@ export function saveRoomToLocal(roomCode, room) {
 }
 
 export function clearMpState() {
-    ['mp_roomCode', 'mp_isHost', 'mp_mode', 'mp_val', 'mp_round', 'mp_sync', 'mp_teams'].forEach(k => localStorage.removeItem(k));
+    ['mp_roomCode', 'mp_isHost', 'mp_mode', 'mp_val', 'mp_round', 'mp_sync', 'mp_teams', 'mp_pick'].forEach(k => localStorage.removeItem(k));
 }
 
 export function isRoomExpired(room) {

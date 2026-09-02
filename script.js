@@ -497,6 +497,13 @@ function isCorrectChoice(btn, correctAnswer) {
   return String(raw) === String(correctAnswer);
 }
 
+function questionHash(text) {
+  const s = String(text || '').replace(/\s+/g, ' ').trim();
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  return h.toString(36).slice(0, 10);
+}
+
 function cleanQuestionText(text) {
   return String(text || '').replace(/^\s*Q\s*\(\s*\d+\s*\)\s*[:：\-]?\s*/i, '').replace(/^\s*س\s*\d+\s*[:：\-]\s*/, '').trim();
 }
@@ -656,6 +663,12 @@ function processParsedJSON(jsonData) {
         const mpMode = localStorage.getItem('mp_mode') || 'questions';
         const mpVal = parseInt(localStorage.getItem('mp_val')) || 10;
         
+        const pick = (localStorage.getItem('mp_pick') || '').split(',').filter(Boolean);
+        if (pick.length) {
+            const byHash = new Map(filteredSource.map(q => [questionHash(q.question), q]));
+            const chosen = pick.map(h => byHash.get(h)).filter(Boolean);
+            if (chosen.length) quizData = chosen;
+        }
         const mpQTime = parseInt(localStorage.getItem('mp_qtime'));
         if (mpQTime >= 5 && mpQTime <= 180) { questionTime = mpQTime; questionTimeLeft = questionTime; }
         if (mpMode === 'questions') {
