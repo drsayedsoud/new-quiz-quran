@@ -83,6 +83,11 @@ if (enabled) {
     const origDisplay = window.displayQuestion;
     window.displayQuestion = function () {
         if (ended) return;
+        // The per-question timer ran out without an answer: count it so the teacher can auto-reveal
+        if (room && (room.phase || 'question') === 'question') {
+            const idx = room.currentQuestionIndex || 0;
+            if (answeredIdx !== idx && currentIndex === idx + 1) { answeredIdx = idx; update(ref(db, `rooms/${roomCode}/players/${myId}/answers/${idx}`), { c: '', ok: false, t: Date.now() }).catch(() => {}); }
+        }
         if (!room || !quizData || !quizData.length) { pending = true; show('<div class="pulse">📡</div><h3>جاري الاتصال بالغرفة...</h3>'); return; }
         apply();
     };
