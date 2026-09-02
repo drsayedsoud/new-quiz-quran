@@ -157,3 +157,21 @@ body.kids-mode .kids-stars { font-size: 2.2em; letter-spacing: 4px; margin: 6px 
 body.kids-mode #mp-final-leaderboard > div > div { background: #f4f0ff !important; border: 3px solid #e2dbff !important; color: #2d2b55 !important; border-radius: 999px !important; }
 body.kids-mode #mp-final-leaderboard > div > div > div { color: #2d2b55 !important; }
 body.kids-mode #mp-final-leaderboard > div > div > div:last-child { color: #e63946 !important; }
+
+/* Compact kids layout for small phones */
+@media (max-width: 480px) {
+    body.kids-mode { padding: 8px !important; }
+    body.kids-mode .container { padding: 12px 10px !important; border-radius: 22px !important; border-width: 3px !important; }
+    body.kids-mode #quiz-title { font-size: 1.3em !important; margin-bottom: 4px !important; }
+    body.kids-mode #quiz-info { font-size: 0.8em !important; }
+    body.kids-mode .timer-box { padding: 8px !important; font-size: 0.85em !important; margin-top: 6px !important; }
+    body.kids-mode .progress-bar-container-3d { height: 16px !important; margin-top: 8px !important; }
+    body.kids-mode #mute-sound-btn { font-size: 20px !important; margin-top: 4px !important; }
+    body.kids-mode #question-text { font-size: 1.35em !important; padding: 12px !important; margin: 12px 0 !important; line-height: 1.5 !important; }
+    body.kids-mode .options { gap: 10px !important; }
+    body.kids-mode .option { font-size: 1.05em !important; padding: 11px 14px !important; border-width: 3px !important; }
+    body.kids-mode #kids-hero-track { height: 44px !important; margin-bottom: 14px !important; }
+    body.kids-mode #kids-hero { width: 46px !important; height: 46px !important; }
+    body.kids-mode .footer { margin-top: 16px !important; }
+    body.kids-mode .footer button { padding: 9px 12px !important; font-size: 0.85em !important; }
+}

@@ -32,12 +32,13 @@
       color: #f0f0f0;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start; /* centering is done by the container margin so tall content never gets clipped at the top */
       min-height: 100vh;
       padding: 20px;
     }
 
     .container {
+      margin: auto;
       width: 100%;
       max-width: 500px;
       background-color: #1f1f1f;
