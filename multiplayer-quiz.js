@@ -28,6 +28,25 @@ if (roomCode) {
         : `🎯 تحدي ${mpVal} ${mpVal > 10 ? 'سؤال' : 'أسئلة'} - نفس الأسئلة لجميع اللاعبين`;
 
     const showLive = localStorage.getItem('mp_showlive') !== 'false';
+
+    // Kids rooms: drop the title/time lines and the solo hero track so the standings sit right above the question
+    if ((localStorage.getItem('quizType') || '').startsWith('kids')) {
+        document.body.classList.add('mp-kids');
+        const tb = document.querySelector('.timer-box');
+        const totalEl = document.getElementById('total-timer');
+        const qEl = document.getElementById('question-timer');
+        if (tb && totalEl && qEl) {
+            [...tb.childNodes].filter(n => n.nodeType === 3).forEach(n => n.remove());
+            const mini = document.createElement('div');
+            mini.className = 'mini-timer';
+            mini.append('⏱️ ');
+            mini.appendChild(totalEl);
+            mini.append(' · ');
+            mini.appendChild(qEl);
+            mini.append(' ث');
+            tb.prepend(mini);
+        }
+    }
     document.getElementById('mp-leaderboard').style.display = showLive ? 'block' : 'none';
 
     // ---- Room watchdog: host closed the room ----

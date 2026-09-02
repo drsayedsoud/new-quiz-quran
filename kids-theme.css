@@ -175,3 +175,11 @@ body.kids-mode #mp-final-leaderboard > div > div > div:last-child { color: #e639
     body.kids-mode .footer { margin-top: 16px !important; }
     body.kids-mode .footer button { padding: 9px 12px !important; font-size: 0.85em !important; }
 }
+
+/* Kids multiplayer room: compact header, standings directly above the question */
+body.mp-kids #quiz-title, body.mp-kids #quiz-info, body.mp-kids #kids-hero-track { display: none !important; }
+body.mp-kids #mp-leaderboard { margin-bottom: 10px !important; }
+body.mp-kids .timer-box { padding: 6px 10px !important; margin-top: 0 !important; }
+body.mp-kids .mini-timer { font-weight: 800; color: #5f27cd; font-size: 0.9em; }
+body.mp-kids .timer-box .score-box { margin-top: 4px !important; }
+body.mp-kids #mute-sound-btn { margin-top: 2px !important; font-size: 18px !important; }
