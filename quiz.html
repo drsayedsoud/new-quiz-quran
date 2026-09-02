@@ -9,7 +9,7 @@
   // تم تعطيل التحقق من البريد الإلكتروني لتجاوز تسجيل الدخول
   /*
   if (!localStorage.getItem("userEmail")) {
-    window.location.href = "login.html";
+    window.location.href = "index.html";
   }
   */
 </script>
@@ -17,7 +17,6 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Amiri&family=Noto+Naskh+Arabic:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
   <audio id="hover-sound" src="/assets/hover.mp3" preload="auto"></audio>
   <audio id="click-sound" src="/assets/click.mp3" preload="auto"></audio>
@@ -311,7 +310,7 @@
 
     function logout() {
       localStorage.removeItem("userEmail");
-      window.location.href = "login.html";
+      window.location.href = "index.html";
     }
 
     // ✅ SOUND TOGGLE

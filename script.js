@@ -249,7 +249,7 @@ const storeName = 'quranData';
 
 const dataKey = 'quranJSON';
 // Bump whenever quran.zip changes so devices with an older cached bank download the new one
-const DATA_VERSION = 4;
+const DATA_VERSION = 5; // legacy; the bank is now versioned by data/manifest.json
 
 let db;
 
@@ -293,140 +293,120 @@ function openDatabase() {
 
 
 
-async function loadQuestionsFromIndexedDB() {
+// ---------- Question bank: one small file per category, cached in IndexedDB, versioned by data/manifest.json ----------
+const CATEGORY_FILE = { quiz: 'quiz', words: 'words', sera: 'sera', sona: 'sona', general: 'general', kids_1: 'kids_1', kids_2: 'kids_2', kids_3: 'kids_3' };
 
-  return new Promise(async (resolve, reject) => {
-
-    try {
-
-      db = await openDatabase();
-
-      const transaction = db.transaction([storeName], 'readonly');
-
-      const objectStore = transaction.objectStore(storeName);
-
-      const request = objectStore.get(dataKey);
-
-
-
-      request.onsuccess = async (event) => {
-
-        const blob = event.target.result;
-
-        if (!blob) {
-
-          return resolve(null);
-
-        }
-
-
-
-        try {
-
-          let jsonData;
-
-          if (blob instanceof Blob) {
-
-            const arrayBuffer = await blob.arrayBuffer();
-
-            jsonData = JSON.parse(new TextDecoder().decode(arrayBuffer));
-
-          } else {
-
-            jsonData = blob;
-
-          }
-
-          resolve(jsonData);
-
-        } catch (err) {
-
-          reject(err);
-
-        }
-
-      };
-
-
-
-      request.onerror = (event) => {
-
-        reject(event.target.error);
-
-      };
-
-
-
-    } catch (error) {
-
-      reject(error);
-
-    }
-
+function neededCategories(type) {
+  const need = new Set();
+  String(type || 'mixed').split(',').map(t => t.trim()).forEach(t => {
+    const base = t.split('_juz_')[0];
+    if (base === 'mixed' || base === 'complete') need.add('quiz');
+    else if (base === 'meanings') need.add('words');
+    else if (base === 'seerah') need.add('sera');
+    else if (base === 'fiqh') need.add('sona');
+    else if (base === 'general') need.add('general');
+    else if (base === 'daily') { need.add('sera'); need.add('sona'); need.add('general'); }
+    else if (base === 'review' || base === 'favorites') { /* local banks only */ }
+    else if (CATEGORY_FILE[base]) need.add(base);
+    else need.add('quiz');
   });
-
+  return [...need];
 }
 
+function idbGet(key) {
+  return new Promise(async (resolve) => {
+    try {
+      db = await openDatabase();
+      const req = db.transaction([storeName], 'readonly').objectStore(storeName).get(key);
+      req.onsuccess = e => resolve(e.target.result || null);
+      req.onerror = () => resolve(null);
+    } catch (e) { resolve(null); }
+  });
+}
+function idbPut(key, value) {
+  return new Promise(async (resolve) => {
+    try {
+      db = await openDatabase();
+      const tx = db.transaction([storeName], 'readwrite');
+      tx.objectStore(storeName).put(value, key);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    } catch (e) { resolve(false); }
+  });
+}
 
+async function fetchManifest() {
+  try {
+    const r = await fetch('./data/manifest.json', { cache: 'no-cache' });
+    if (r.ok) return await r.json();
+  } catch (e) { /* offline or not built yet */ }
+  return null;
+}
+
+async function unzipJson(bytes, entryName) {
+  try {
+    const zip = await JSZip.loadAsync(bytes);
+    const file = zip.file(entryName) || zip.file(Object.keys(zip.files)[0]);
+    return JSON.parse(await file.async('string'));
+  } catch (e) {
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+}
+
+async function downloadCategory(cat, onProgress) {
+  let response = await fetch('./data/' + CATEGORY_FILE[cat] + '.zip');
+  if (response.ok) return unzipJson(await readBytesWithProgress(response, onProgress), CATEGORY_FILE[cat] + '.json');
+  // Fallback: the old single bundle
+  response = await fetch('./quran.zip');
+  if (!response.ok) throw new Error('Could not fetch the question bank');
+  const all = await unzipJson(await readBytesWithProgress(response, onProgress), 'quran.json');
+  return all[cat] || [];
+}
 
 async function loadQuestions() {
   const loadingOverlay = document.getElementById("loading-overlay");
-  if (loadingOverlay) {
-      loadingOverlay.classList.remove("hidden");
-      loadingOverlay.innerHTML = "<div style='font-size:1.5em;'>جاري التجهيز...</div>";
-  }
-
+  const show = html => { if (loadingOverlay) { loadingOverlay.classList.remove("hidden"); loadingOverlay.innerHTML = html; } };
+  show("<div style='font-size:1.5em;'>جاري التجهيز...</div>");
   try {
-    let data = await loadQuestionsFromIndexedDB();
-    
-    if (!data || data.__v !== DATA_VERSION || !Array.isArray(data.kids_1) || data.kids_1.length === 0) { console.log("Outdated DB, forcing refetch");
-        console.log("Not in IndexedDB, fetching from server...");
-        if (loadingOverlay) loadingOverlay.innerHTML = "<div style='font-size:1.5em; text-align:center;'>جاري تنزيل الأسئلة (لأول مرة فقط)...<br>يرجى الانتظار قليلاً (حوالي 8 ميجابايت)</div>";
-        
-        const response = await fetch('./quran.zip');
-        if (!response.ok) throw new Error("Could not fetch quran.zip from server");
-        data = await readJsonWithProgress(response, (pct, mb) => {
-            if (!loadingOverlay) return;
-            const bar = pct === null ? '' : '<div style="width:100%;height:14px;background:rgba(255,255,255,0.15);border-radius:999px;overflow:hidden;margin:14px 0 8px;"><div style="width:' + pct + '%;height:100%;background:linear-gradient(90deg,#10b981,#34d399);transition:width 0.3s;"></div></div>';
-            loadingOverlay.innerHTML = '<div style="text-align:center;max-width:320px;padding:0 16px;">' +
-                '<div style="font-size:1.3em;font-weight:800;">⬇️ جاري تنزيل الأسئلة (لأول مرة فقط)</div>' + bar +
-                '<div style="font-size:0.95em;color:#cbd5e0;">' + (pct === null ? '' : pct + '% · ') + mb + ' ميجابايت</div>' +
-                '<div style="font-size:0.8em;color:#a0aec0;margin-top:8px;">تُحفظ الأسئلة على جهازك ولن تُنزَّل مرة أخرى</div></div>';
-        });
-        
-        try {
-           if (loadingOverlay) loadingOverlay.innerHTML = "<div style='font-size:1.5em;'>جاري حفظ الأسئلة في جهازك...</div>";
-           data.__v = DATA_VERSION;
-           const db = await openDatabase();
-           const tx = db.transaction([storeName], 'readwrite');
-           tx.objectStore(storeName).put(data, dataKey);
-        } catch(e) { console.error("Could not save to IndexedDB", e); }
+    const cats = neededCategories(quizType);
+    const manifest = await fetchManifest();
+    const data = {};
+    for (let i = 0; i < cats.length; i++) {
+      const cat = cats[i];
+      const cached = await idbGet('cat:' + cat);
+      const fresh = cached && Array.isArray(cached.items) && cached.items.length && (!manifest || cached.v === manifest.version);
+      if (fresh) { data[cat] = cached.items; continue; }
+      if (cached && cached.items && cached.items.length && !manifest) { data[cat] = cached.items; continue; }
+      const label = cats.length > 1 ? ' (' + (i + 1) + '/' + cats.length + ')' : '';
+      const items = await downloadCategory(cat, (pct, mb) => {
+        const bar = pct === null ? '' : '<div style="width:100%;height:14px;background:rgba(255,255,255,0.15);border-radius:999px;overflow:hidden;margin:14px 0 8px;"><div style="width:' + pct + '%;height:100%;background:linear-gradient(90deg,#10b981,#34d399);transition:width 0.3s;"></div></div>';
+        show('<div style="text-align:center;max-width:320px;padding:0 16px;">' +
+          '<div style="font-size:1.3em;font-weight:800;">⬇️ جاري تنزيل أسئلة هذا القسم' + label + '</div>' + bar +
+          '<div style="font-size:0.95em;color:#cbd5e0;">' + (pct === null ? '' : pct + '% · ') + mb + ' ميجابايت</div>' +
+          '<div style="font-size:0.8em;color:#a0aec0;margin-top:8px;">تُحفظ على جهازك ولن تُنزَّل مرة أخرى</div></div>');
+      });
+      data[cat] = items;
+      idbPut('cat:' + cat, { v: manifest ? manifest.version : 'unknown', items });
     }
-    
-    if (data) {
-      if (loadingOverlay) loadingOverlay.innerHTML = "<div style='font-size:1.5em;'>جاري تهيئة المسابقة...</div>";
-      processParsedJSON(data);
-    } else {
-      alert("تعذر تحميل الأسئلة. يرجى التأكد من اتصالك بالإنترنت.");
-    }
+    show("<div style='font-size:1.5em;'>جاري تهيئة المسابقة...</div>");
+    processParsedJSON(data);
   } catch (err) {
     console.error(err);
     if (loadingOverlay) {
-      loadingOverlay.classList.remove("hidden");
-      loadingOverlay.innerHTML = '<div style="text-align:center;max-width:320px;padding:0 16px;">' +
+      show('<div style="text-align:center;max-width:320px;padding:0 16px;">' +
         '<div style="font-size:2.5em;">📡</div><div style="font-size:1.2em;font-weight:800;margin:6px 0;">تعذر تحميل الأسئلة</div>' +
         '<div style="font-size:0.9em;color:#cbd5e0;">تأكد من اتصالك بالإنترنت ثم أعد المحاولة</div>' +
         '<button onclick="location.reload()" style="margin-top:16px;padding:12px 26px;border:none;border-radius:999px;background:#10b981;color:#fff;font-weight:800;font-family:inherit;font-size:1em;cursor:pointer;">🔄 إعادة المحاولة</button>' +
-        '<br><button onclick="location.href=\'index.html\'" style="margin-top:10px;background:transparent;border:none;color:#a0aec0;font-family:inherit;cursor:pointer;">الرئيسية</button></div>';
+        '<br><button onclick="location.href=\'index.html\'" style="margin-top:10px;background:transparent;border:none;color:#a0aec0;font-family:inherit;cursor:pointer;">الرئيسية</button></div>');
     } else {
       alert("خطأ في قراءة البيانات: " + err.message);
     }
   }
 }
 
-// Reads a JSON body chunk by chunk so the first-time download can show real progress
-async function readJsonWithProgress(response, onProgress) {
-  if (!response.body || !response.body.getReader) return response.json();
+// Reads a body chunk by chunk so downloads can show real progress
+async function readBytesWithProgress(response, onProgress) {
+  if (!response.body || !response.body.getReader) return new Uint8Array(await response.arrayBuffer());
   const total = parseInt(response.headers.get('Content-Length')) || 0;
   const reader = response.body.getReader();
   const chunks = [];
@@ -436,24 +416,16 @@ async function readJsonWithProgress(response, onProgress) {
     if (done) break;
     chunks.push(value);
     received += value.length;
-    if (Date.now() - lastTick > 150) {
+    if (onProgress && Date.now() - lastTick > 150) {
       lastTick = Date.now();
       onProgress(total ? Math.min(99, Math.round(received / total * 100)) : null, (received / 1048576).toFixed(1));
     }
   }
-  onProgress(100, (received / 1048576).toFixed(1));
+  if (onProgress) onProgress(100, (received / 1048576).toFixed(1));
   const all = new Uint8Array(received);
   let offset = 0;
   for (const c of chunks) { all.set(c, offset); offset += c.length; }
-      if (onProgress) onProgress(100, (received / 1048576).toFixed(1) + " (فك الضغط...)");
-    try {
-        const zip = await JSZip.loadAsync(all);
-        const jsonText = await zip.file("quran.json").async("string");
-        return JSON.parse(jsonText);
-    } catch (e) {
-        // Fallback in case it's actually just plain json (for some reason)
-        return JSON.parse(new TextDecoder().decode(all));
-    }
+  return all;
 }
 
 // Strips numbering artefacts such as "Q(462): " from imported questions
@@ -1049,6 +1021,8 @@ if (isCorrectChoice(button, correctAnswer)) {
             wowSound.play().catch(e => console.log('Audio error:', e));
             if (typeof showBalloonFestival === "function") showBalloonFestival();
         }
+    } else if (window.KidsTheme) {
+        KidsTheme.play('star');
     } else {
         playSound(winSound);
     }
@@ -1075,6 +1049,7 @@ if (isCorrectChoice(button, correctAnswer)) {
     explanation: currentQ.explanation ? String(currentQ.explanation) : ''
   });
   if (quizType.startsWith('kids') && window.KidsTheme) KidsTheme.wrong(button);
+  else if (window.KidsTheme) KidsTheme.play('wrong');
   else playSound(loseSound);
 }
 
@@ -1092,45 +1067,7 @@ if (isCorrectChoice(button, correctAnswer)) {
 
 
 
-async function checkIndexedDB() {
-
-  try {
-
-    db = await openDatabase();
-
-    const transaction = db.transaction([storeName], 'readonly');
-
-    const objectStore = transaction.objectStore(storeName);
-
-    const request = objectStore.get(dataKey);
-
-    request.onsuccess = (event) => {
-
-      if (event.target.result) {
-
-        // ملف موجود
-
-      } else {
-
-        // ملف غير موجود
-
-      }
-
-    };
-
-    request.onerror = (event) => {
-
-      // خطأ أثناء التحقق
-
-    };
-
-  } catch (e) {
-
-    // خطأ عام أثناء التحقق
-
-  }
-
-}
+async function checkIndexedDB() { /* replaced by the per-category loader */ }
 
 
 

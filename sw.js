@@ -1,7 +1,7 @@
 // Single service worker for the whole app.
 // Pages and scripts: network first (so updates show up immediately), cache as offline fallback.
 // Images / sounds: cache first. quran.json and Firebase are never touched (IndexedDB + realtime).
-const CACHE_NAME = 'quran-quiz-v8';
+const CACHE_NAME = 'quran-quiz-v9';
 const PRECACHE = [
   './index.html',
   './quiz.html',
@@ -42,7 +42,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = event.request.url;
   if (event.request.method !== 'GET') return;
-  if (url.includes('quran.json') || url.includes('quran.zip') || url.includes('firebase') || url.includes('gstatic') || url.includes('googleapis')) return;
+  if (url.includes('quran.json') || url.includes('quran.zip') || url.includes('/data/') || url.includes('firebase') || url.includes('gstatic') || url.includes('googleapis')) return;
 
   const isAsset = /\.(png|jpe?g|gif|svg|mp3|woff2?)$/i.test(url.split('?')[0]);
   if (isAsset) {

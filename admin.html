@@ -71,7 +71,7 @@
 
   <div class="card">
     <h2>📦 تحديث بنك الأسئلة من إكسيل</h2>
-    <p class="sub">ارفع ملف الإكسيل (نفس أسماء الأوراق: القران، سيرة، فقه، معاني، عامة). الأوراق الموجودة تُستبدل، وأقسام الأطفال والأوراق غير الموجودة تبقى كما هي. النتيجة ملف quran.zip جاهز للرفع إلى المستودع.</p>
+    <p class="sub">ارفع ملف الإكسيل (نفس أسماء الأوراق: القران، سيرة، فقه، معاني، عامة). الأوراق الموجودة تُستبدل، وأقسام الأطفال والأوراق غير الموجودة تبقى كما هي. النتيجة ملف quran.zip: ارفعه في GitHub بدل الملف القديم (Add file ← Upload files في المستودع new-quiz-quran) وسيُقسَّم ويُنشر تلقائياً خلال دقيقة، ويحصل كل مستخدم على النسخة الجديدة عند أول مسابقة.</p>
     <label class="drop" id="drop">📂 اضغط لاختيار ملف .xlsx<input type="file" id="xlsx" accept=".xlsx,.xls" style="display:none"></label>
     <div class="log" id="log" style="margin-top:12px; display:none;"></div>
     <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
@@ -173,7 +173,7 @@
       const zip = new JSZip();
       zip.file('quran.json', JSON.stringify(current));
       newZipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 9 } });
-      log('✅ جاهز: quran.zip بحجم ' + (newZipBlob.size / 1048576).toFixed(1) + ' ميجابايت. ضعه مكان الملف القديم في المستودع، وارفع رقم DATA_VERSION في script.js، ثم ارفع التعديل.', 'ok');
+      log('✅ جاهز: quran.zip بحجم ' + (newZipBlob.size / 1048576).toFixed(1) + ' ميجابايت. ارفعه إلى GitHub مكان الملف القديم (Upload files) وسيُنشر تلقائياً.', 'ok');
       document.getElementById('dl-btn').disabled = false;
     } catch (e) { log('❌ ' + e.message, 'err'); }
   };
