@@ -1,0 +1,47 @@
+<!-- Multiplayer Modal -->
+    <div id="multiplayer-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeMultiplayerModal()">&times;</span>
+            <h3>🎮 إنشاء غرفة تحدي مباشر</h3>
+            <p>اختر نوع المسابقة التي تريد تحدي أصدقائك فيها:</p>
+            <div id="mp-category-select" style="text-align: right; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px; margin-bottom: 10px; max-height: 150px; overflow-y: auto;">
+                <label><input type="checkbox" value="mixed"> أسئلة متنوعة</label><br>
+                <label><input type="checkbox" value="kids"> مسابقة الأطفال</label><br>
+                <label><input type="checkbox" value="tafsir"> التفسير</label><br>
+                <label><input type="checkbox" value="seerah"> السيرة النبوية</label><br>
+                <label><input type="checkbox" value="fiqh"> الفقه والسنن</label><br>
+                <label><input type="checkbox" value="general"> أسئلة عامة</label><br>
+                <label><input type="checkbox" value="meanings"> معاني الكلمات</label>
+            </div>
+            <select id="mp-questions-count">
+                <option value="5">5 أسئلة</option>
+                <option value="10" selected>10 أسئلة</option>
+                <option value="20">20 سؤال</option>
+            </select>
+            <button onclick="createMultiplayerRoom()" style="background-color: var(--button-blue); color: white; margin-top: 15px;">إنشاء الغرفة الآن</button>
+            <hr style="border-color: var(--card-border); margin: 20px 0;">
+            <h3>لديك كود دعوة؟</h3>
+            <input type="text" id="join-room-code" placeholder="أدخل كود الغرفة المكون من 5 أرقام" style="padding: 10px; width: 80%; border-radius: 5px; border: 1px solid var(--card-border); background: var(--dark-bg); color: var(--text-color); margin-bottom: 10px; text-align: center; font-size: 1.2em;">
+            <button onclick="joinMultiplayerRoom()" style="background-color: var(--button-green); color: white;">دخول الغرفة</button>
+        </div>
+    </div>
+    <!-- Solo Mix Modal -->
+    <div id="solo-mix-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeSoloMixModal()">&times;</span>
+            <h3>🎯 اختر المسابقات التي تريد دمجها</h3>
+            <div id="solo-category-select" style="text-align: right; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px; margin-bottom: 10px; max-height: 150px; overflow-y: auto;">
+                <label><input type="checkbox" value="mixed"> أسئلة متنوعة</label><br>
+                <label><input type="checkbox" value="kids"> مسابقة الأطفال</label><br>
+                <label><input type="checkbox" value="tafsir"> التفسير</label><br>
+                <label><input type="checkbox" value="seerah"> السيرة النبوية</label><br>
+                <label><input type="checkbox" value="fiqh"> الفقه والسنن</label><br>
+                <label><input type="checkbox" value="general"> أسئلة عامة</label><br>
+                <label><input type="checkbox" value="meanings"> معاني الكلمات</label>
+            </div>
+            <button onclick="startSoloMixQuiz()" style="background-color: var(--button-blue); color: white; margin-top: 15px;">ابدأ المسابقة الآن</button>
+        </div>
+    </div>
+    <script type="module" src="multiplayer.js"></script>
+
+    <!-- Admin Settings Gear -->

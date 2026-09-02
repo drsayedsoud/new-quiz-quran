@@ -381,8 +381,8 @@ async function loadQuestions() {
         console.log("Not in IndexedDB, fetching from server...");
         if (loadingOverlay) loadingOverlay.innerHTML = "<div style='font-size:1.5em; text-align:center;'>جاري تنزيل الأسئلة (لأول مرة فقط)...<br>يرجى الانتظار قليلاً (حوالي 45 ميجابايت)</div>";
         
-        const response = await fetch('./quran.json');
-        if (!response.ok) throw new Error("Could not fetch quran.json from server");
+        const response = await fetch('./quran.zip');
+        if (!response.ok) throw new Error("Could not fetch quran.zip from server");
         data = await readJsonWithProgress(response, (pct, mb) => {
             if (!loadingOverlay) return;
             const bar = pct === null ? '' : '<div style="width:100%;height:14px;background:rgba(255,255,255,0.15);border-radius:999px;overflow:hidden;margin:14px 0 8px;"><div style="width:' + pct + '%;height:100%;background:linear-gradient(90deg,#10b981,#34d399);transition:width 0.3s;"></div></div>';
@@ -442,7 +442,15 @@ async function readJsonWithProgress(response, onProgress) {
   const all = new Uint8Array(received);
   let offset = 0;
   for (const c of chunks) { all.set(c, offset); offset += c.length; }
-  return JSON.parse(new TextDecoder().decode(all));
+      if (onProgress) onProgress(100, (received / 1048576).toFixed(1) + " (فك الضغط...)");
+    try {
+        const zip = await JSZip.loadAsync(all);
+        const jsonText = await zip.file("quran.json").async("string");
+        return JSON.parse(jsonText);
+    } catch (e) {
+        // Fallback in case it's actually just plain json (for some reason)
+        return JSON.parse(new TextDecoder().decode(all));
+    }
 }
 
 // Strips numbering artefacts such as "Q(462): " from imported questions
