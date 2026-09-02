@@ -230,7 +230,8 @@
   // ---- token ----
   const tokenEl = document.getElementById('gh-token');
   tokenEl.value = localStorage.getItem('gh_token') || '';
-  document.getElementById('gh-save').onclick = () => { localStorage.setItem('gh_token', tokenEl.value.trim()); document.getElementById('gh-status').innerHTML = '<span class="ok">تم الحفظ في هذا المتصفح</span>'; };
+  const badge = document.getElementById('gh-badge'); const setBadge = () => { if (badge) badge.textContent = localStorage.getItem('gh_token') ? ' ✅ مُعدّ' : ' ⚠️ غير مُعدّ'; }; setBadge();
+  document.getElementById('gh-save').onclick = () => { localStorage.setItem('gh_token', tokenEl.value.trim()); document.getElementById('gh-status').innerHTML = '<span class="ok">تم الحفظ في هذا المتصفح</span>'; setBadge(); };
   const gh = async (path, opts = {}) => {
     const token = (localStorage.getItem('gh_token') || tokenEl.value || '').trim();
     if (!token) throw new Error('لم يُحفظ رمز GitHub بعد (افتح "إعداد النشر التلقائي")');
