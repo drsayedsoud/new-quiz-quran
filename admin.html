@@ -70,13 +70,29 @@
   </div>
 
   <div class="card">
-    <h2>📦 تحديث بنك الأسئلة من إكسيل</h2>
-    <p class="sub">ارفع ملف الإكسيل (نفس أسماء الأوراق: القران، سيرة، فقه، معاني، عامة). الأوراق الموجودة تُستبدل، وأقسام الأطفال والأوراق غير الموجودة تبقى كما هي. النتيجة ملف quran.zip: ارفعه في GitHub بدل الملف القديم (Add file ← Upload files في المستودع new-quiz-quran) وسيُقسَّم ويُنشر تلقائياً خلال دقيقة، ويحصل كل مستخدم على النسخة الجديدة عند أول مسابقة.</p>
-    <label class="drop" id="drop">📂 اضغط لاختيار ملف .xlsx<input type="file" id="xlsx" accept=".xlsx,.xls" style="display:none"></label>
+    <h2>📦 بنك الأسئلة: تنزيل، تعديل في إكسيل، ثم نشر بضغطة</h2>
+    <p class="sub">1) نزّل البنك الحالي كملف إكسيل. 2) عدّل أو أضف الأسئلة في الأوراق (question, choice1..choice4, correct_answer, explanation). 3) ارفع الملف هنا وسيُنشر تلقائياً إلى GitHub ثم إلى الموقع خلال دقيقة، ويحصل كل جهاز على الأسئلة الجديدة عند أول مسابقة.</p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+      <button class="btn blue" id="dl-xlsx">⬇️ تنزيل البنك الحالي (Excel)</button>
+      <button class="btn ghost" id="cur-btn">🔎 أعداد البنك الحالي</button>
+    </div>
+    <details style="margin-bottom:12px;">
+      <summary style="cursor:pointer; color:var(--muted); font-size:0.9em;">🔑 إعداد النشر التلقائي (مرة واحدة)</summary>
+      <div style="font-size:0.85em; color:var(--muted); line-height:1.8; margin-top:8px;">
+        أنشئ رمز وصول من GitHub: <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" style="color:#7dd3fc;">إنشاء Fine-grained token</a> ← Repository access: <b>new-quiz-quran</b> فقط ← Permissions ← Contents: <b>Read and write</b>. الصق الرمز هنا، ويُحفظ في هذا المتصفح فقط.
+        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+          <input type="password" id="gh-token" placeholder="github_pat_..." style="flex:1; min-width:220px; padding:9px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit;">
+          <button class="btn ghost" id="gh-save">حفظ الرمز</button>
+          <button class="btn ghost" id="gh-test">اختبار الاتصال</button>
+        </div>
+        <div id="gh-status" style="margin-top:6px;"></div>
+      </div>
+    </details>
+    <label class="drop" id="drop">📂 اضغط لاختيار ملف الإكسيل الجديد (.xlsx)<input type="file" id="xlsx" accept=".xlsx,.xls" style="display:none"></label>
     <div class="log" id="log" style="margin-top:12px; display:none;"></div>
     <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
-      <button class="btn green" id="dl-btn" disabled>⬇️ تنزيل quran.zip الجديد</button>
-      <button class="btn ghost" id="cur-btn">🔎 عرض أعداد البنك الحالي</button>
+      <button class="btn green" id="publish-btn" disabled>🚀 نشر إلى الموقع الآن</button>
+      <button class="btn ghost" id="dl-btn" disabled>⬇️ تنزيل quran.zip بدلاً من النشر</button>
     </div>
   </div>
 </div>
@@ -136,12 +152,18 @@
 </script>
 
 <script>
-  // ---- Excel -> quran.zip (client side) ----
-  const SHEETS = { quiz: ['القران', 'قرآن', 'القرآن', 'Quran', 'Sheet1'], sera: ['سيرة', 'السيرة'], sona: ['فقه', 'الفقه', 'سنن'], words: ['معاني', 'كلمات'], general: ['عامة', 'عام'] };
+  // ---- Bank round trip: Excel download, Excel upload, build split files, publish to GitHub (client side) ----
+  const REPO = { owner: 'drsayedsoud', repo: 'new-quiz-quran', branch: 'master' };
+  const SHEETS = {
+    quiz: ['القران', 'قرآن', 'القرآن', 'Quran', 'Sheet1'], sera: ['سيرة', 'السيرة'], sona: ['فقه', 'الفقه', 'سنن'],
+    words: ['معاني', 'كلمات'], general: ['عامة', 'عام'], kids_1: ['اطفال1', 'أطفال1', 'kids_1'], kids_2: ['اطفال2', 'أطفال2', 'kids_2'], kids_3: ['اطفال3', 'أطفال3', 'kids_3']
+  };
   const KEYS = ['question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct_answer'];
+  const COLS = ['question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct_answer', 'explanation', 'type', 'sura_info', 'juz_number'];
   const logEl = document.getElementById('log');
   const log = (m, cls) => { logEl.style.display = 'block'; logEl.innerHTML += '<div class="' + (cls || '') + '">' + m + '</div>'; logEl.scrollTop = logEl.scrollHeight; };
-  let newZipBlob = null;
+  const norm = s => String(s ?? '').replace(/\s+/g, ' ').trim();
+  let built = null; // { bank, quranZip, files: [{path, blob}] }
 
   async function loadCurrentBank() {
     const r = await fetch('quran.zip', { cache: 'no-store' });
@@ -152,9 +174,62 @@
   document.getElementById('cur-btn').onclick = async () => {
     try { const d = await loadCurrentBank(); log('البنك الحالي: ' + Object.keys(d).filter(k => Array.isArray(d[k])).map(k => k + ' = ' + d[k].length).join(' | '), 'ok'); } catch (e) { log(e.message, 'err'); }
   };
+
+  // ---- download as Excel ----
+  document.getElementById('dl-xlsx').onclick = async () => {
+    try {
+      log('⬇️ تجهيز ملف الإكسيل...');
+      const d = await loadCurrentBank();
+      const wb = XLSX.utils.book_new();
+      for (const [key, names] of Object.entries(SHEETS)) {
+        if (!Array.isArray(d[key])) continue;
+        const rows = d[key].map(q => { const o = {}; COLS.forEach(c => { if (q[c] !== undefined) o[c] = q[c]; }); return o; });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows, { header: COLS.filter(c => rows.some(r => r[c] !== undefined)) }), names[0]);
+      }
+      XLSX.writeFile(wb, 'quran-bank.xlsx');
+      log('✅ نُزّل quran-bank.xlsx (ورقة لكل قسم). عدّل فيه ثم ارفعه هنا.', 'ok');
+    } catch (e) { log('❌ ' + e.message, 'err'); }
+  };
+
+  // ---- token ----
+  const tokenEl = document.getElementById('gh-token');
+  tokenEl.value = localStorage.getItem('gh_token') || '';
+  document.getElementById('gh-save').onclick = () => { localStorage.setItem('gh_token', tokenEl.value.trim()); document.getElementById('gh-status').innerHTML = '<span class="ok">تم الحفظ في هذا المتصفح</span>'; };
+  const gh = async (path, opts = {}) => {
+    const token = (localStorage.getItem('gh_token') || tokenEl.value || '').trim();
+    if (!token) throw new Error('لم يُحفظ رمز GitHub بعد (افتح "إعداد النشر التلقائي")');
+    const r = await fetch('https://api.github.com' + path, Object.assign({}, opts, { headers: Object.assign({ 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }, opts.headers || {}) }));
+    if (!r.ok) { let msg = r.status + ''; try { msg += ' ' + (await r.json()).message; } catch (e) {} throw new Error('GitHub: ' + msg); }
+    return r.json();
+  };
+  document.getElementById('gh-test').onclick = async () => {
+    const st = document.getElementById('gh-status');
+    try { const info = await gh('/repos/' + REPO.owner + '/' + REPO.repo); st.innerHTML = '<span class="ok">✅ متصل بالمستودع ' + info.full_name + (info.permissions && info.permissions.push ? ' (صلاحية كتابة)' : ' (بلا صلاحية كتابة!)') + '</span>'; }
+    catch (e) { st.innerHTML = '<span class="err">' + e.message + '</span>'; }
+  };
+
+  // ---- build artifacts ----
+  const hashStr = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(36); };
+  async function buildArtifacts(bank) {
+    const files = [];
+    const manifest = { version: hashStr(JSON.stringify(bank)).slice(0, 10) + Date.now().toString(36).slice(-3), builtAt: new Date().toISOString(), categories: {} };
+    for (const [cat, items] of Object.entries(bank)) {
+      if (!Array.isArray(items)) continue;
+      const z = new JSZip(); z.file(cat + '.json', JSON.stringify(items));
+      const blob = await z.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 9 } });
+      files.push({ path: 'data/' + cat + '.zip', blob });
+      manifest.categories[cat] = { count: items.length, bytes: blob.size };
+    }
+    files.push({ path: 'data/manifest.json', blob: new Blob([JSON.stringify(manifest)], { type: 'application/json' }) });
+    const all = new JSZip(); all.file('quran.json', JSON.stringify(bank));
+    const quranZip = await all.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 9 } });
+    files.push({ path: 'quran.zip', blob: quranZip });
+    return { bank, quranZip, files, manifest };
+  }
+
   document.getElementById('xlsx').onchange = async (ev) => {
     const file = ev.target.files[0]; if (!file) return;
-    logEl.innerHTML = ''; newZipBlob = null; document.getElementById('dl-btn').disabled = true;
+    logEl.innerHTML = ''; built = null; document.getElementById('publish-btn').disabled = true; document.getElementById('dl-btn').disabled = true;
     try {
       log('📖 قراءة ' + file.name + '...');
       const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
@@ -164,22 +239,46 @@
       for (const [key, names] of Object.entries(SHEETS)) {
         const name = names.find(n => wb.Sheets[n]);
         if (!name) { log('• ' + key + ': لا توجد ورقة، أبقيت ' + (current[key] || []).length + ' سؤالاً', 'warn'); continue; }
-        const rows = XLSX.utils.sheet_to_json(wb.Sheets[name]);
-        const valid = rows.filter(q => KEYS.every(k => String(q[k] ?? '').trim() !== '') && [q.choice1, q.choice2, q.choice3, q.choice4].map(String).includes(String(q.correct_answer)));
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[name]).map(q => { const o = {}; Object.keys(q).forEach(k => o[String(k).trim()] = typeof q[k] === 'string' ? norm(q[k]) : q[k]); return o; });
+        const valid = rows.filter(q => KEYS.every(k => norm(q[k]) !== '') && [q.choice1, q.choice2, q.choice3, q.choice4].map(norm).includes(norm(q.correct_answer)));
         log('• ' + key + ' (' + name + '): ' + rows.length + ' صف، صالح ' + valid.length + '، كان ' + (current[key] || []).length, valid.length ? 'ok' : 'err');
         if (valid.length) { current[key] = valid; replaced++; }
       }
       if (!replaced) throw new Error('لم تُقرأ أي ورقة صالحة، تأكد من أسماء الأوراق والأعمدة (question, choice1..4, correct_answer)');
-      const zip = new JSZip();
-      zip.file('quran.json', JSON.stringify(current));
-      newZipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 9 } });
-      log('✅ جاهز: quran.zip بحجم ' + (newZipBlob.size / 1048576).toFixed(1) + ' ميجابايت. ارفعه إلى GitHub مكان الملف القديم (Upload files) وسيُنشر تلقائياً.', 'ok');
-      document.getElementById('dl-btn').disabled = false;
+      log('🧩 تجهيز ملفات الأقسام...');
+      built = await buildArtifacts(current);
+      log('✅ جاهز: ' + built.files.length + ' ملفات (' + (built.quranZip.size / 1048576).toFixed(1) + ' ميجابايت للحزمة الكاملة). اضغط "نشر إلى الموقع الآن".', 'ok');
+      document.getElementById('publish-btn').disabled = false; document.getElementById('dl-btn').disabled = false;
     } catch (e) { log('❌ ' + e.message, 'err'); }
   };
   document.getElementById('dl-btn').onclick = () => {
-    if (!newZipBlob) return;
-    const a = document.createElement('a'); a.href = URL.createObjectURL(newZipBlob); a.download = 'quran.zip'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    if (!built) return;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(built.quranZip); a.download = 'quran.zip'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  };
+
+  // ---- publish: one commit with all files via the Git Data API ----
+  const toBase64 = blob => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1]); fr.onerror = rej; fr.readAsDataURL(blob); });
+  document.getElementById('publish-btn').onclick = async () => {
+    if (!built) return;
+    const btn = document.getElementById('publish-btn'); btn.disabled = true;
+    try {
+      const base = '/repos/' + REPO.owner + '/' + REPO.repo;
+      log('🔗 الاتصال بـ GitHub...');
+      const ref = await gh(base + '/git/ref/heads/' + REPO.branch);
+      const headSha = ref.object.sha;
+      const headCommit = await gh(base + '/git/commits/' + headSha);
+      const tree = [];
+      for (const f of built.files) {
+        log('⬆️ رفع ' + f.path + ' (' + (f.blob.size / 1024).toFixed(0) + ' KB)...');
+        const blob = await gh(base + '/git/blobs', { method: 'POST', body: JSON.stringify({ content: await toBase64(f.blob), encoding: 'base64' }) });
+        tree.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.sha });
+      }
+      const newTree = await gh(base + '/git/trees', { method: 'POST', body: JSON.stringify({ base_tree: headCommit.tree.sha, tree }) });
+      const counts = Object.entries(built.manifest.categories).map(([k, v]) => k + '=' + v.count).join(', ');
+      const commit = await gh(base + '/git/commits', { method: 'POST', body: JSON.stringify({ message: 'Update question bank from admin panel (' + counts + ')', tree: newTree.sha, parents: [headSha] }) });
+      await gh(base + '/git/refs/heads/' + REPO.branch, { method: 'PATCH', body: JSON.stringify({ sha: commit.sha, force: false }) });
+      log('🎉 تم النشر إلى GitHub (commit ' + commit.sha.slice(0, 7) + '). سيتحدث الموقع تلقائياً خلال دقيقة تقريباً.', 'ok');
+    } catch (e) { log('❌ ' + e.message, 'err'); btn.disabled = false; }
   };
 </script>
 </body>
