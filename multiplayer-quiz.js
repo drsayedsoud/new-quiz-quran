@@ -101,8 +101,18 @@ if (roomCode) {
             });
         }
 
-        // Inline leaderboard (all screens)
+        // Team totals (when the room plays in two teams)
         const list = document.getElementById('mp-players-list');
+        if (localStorage.getItem('mp_teams') === 'true') {
+            const red = entries.filter(([, p]) => p.team === 'red').reduce((a, [, p]) => a + (p.score || 0), 0);
+            const blue = entries.filter(([, p]) => p.team === 'blue').reduce((a, [, p]) => a + (p.score || 0), 0);
+            const pct = red + blue ? Math.round(red / (red + blue) * 100) : 50;
+            let bar = document.getElementById('team-bar');
+            if (!bar) { bar = document.createElement('div'); bar.id = 'team-bar'; list.parentElement.insertBefore(bar, list); }
+            bar.innerHTML = `<div style="display:flex;justify-content:space-between;font-weight:900;margin-bottom:4px;"><span style="color:#f87171;">🔴 الأحمر ${red}</span><span style="color:#60a5fa;">🔵 الأزرق ${blue}</span></div>
+                <div style="height:14px;border-radius:999px;overflow:hidden;background:#3b82f6;"><div style="width:${pct}%;height:100%;background:#ef4444;transition:width 0.6s;"></div></div>`;
+            bar.style.marginBottom = '10px';
+        }
         const sorted = entries.sort((a, b) => (b[1].score || 0) - (a[1].score || 0));
         list.innerHTML = sorted.map(([key, p], i) => {
             const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
@@ -111,7 +121,7 @@ if (roomCode) {
                 <div class="player-row" style="display: flex; align-items: center; gap: 8px; background: ${key === myId ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)'}; border-radius: 10px; padding: 6px 10px; animation: fadeIn 0.3s ease;">
                     <span style="width: 28px; text-align: center; font-size: 0.9em;">${medal}</span>
                     <img src="${escapeHtml(p.avatar || AVATARS[0])}" style="width: 30px; height: 30px; border-radius: 50%; border: 2px solid ${key === myId ? 'gold' : '#10b981'}; background: #fff;">
-                    <div style="flex-grow: 1; font-size: 0.9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(p.name)}${key === myId ? ' <span style="color:#a0aec0;font-size:0.8em;">(أنت)</span>' : ''}${p.hasFinished ? ' ✅' : ''}</div>
+                    <div style="flex-grow: 1; font-size: 0.9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.team ? (p.team === 'red' ? '🔴 ' : '🔵 ') : ''}${escapeHtml(p.name)}${key === myId ? ' <span style="color:#a0aec0;font-size:0.8em;">(أنت)</span>' : ''}${p.hasFinished ? ' ✅' : ''}</div>
                     <div style="font-size: 0.75em; color: #a0aec0;">${progress}</div>
                     <div style="font-weight: bold; color: gold; min-width: 24px; text-align: center;">${p.score || 0}</div>
                 </div>`;

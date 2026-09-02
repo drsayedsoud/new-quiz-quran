@@ -892,6 +892,8 @@ function openModal(type, title) {
       <div class="set-group">
         <div class="set-label">✨ خيارات إضافية</div>
         <label class="switch-row"><span><b>الترتيب المباشر أثناء اللعب</b><small>يرى اللاعبون نقاط بعضهم لحظة بلحظة</small></span><input type="checkbox" id="opt-showlive" checked onchange="mpUpdateSummary()"><i></i></label>
+        <label class="switch-row"><span><b>👨‍🏫 نمط المعلّم: سؤال بسؤال</b><small>الجميع يرى نفس السؤال معاً، وأنت تُظهر الإجابة وتنتقل للتالي (للفصول وحلقات التحفيظ)</small></span><input type="checkbox" id="opt-sync" onchange="if(this.checked) setMultiMode('questions'); mpUpdateSummary()"><i></i></label>
+        <label class="switch-row"><span><b>🔴🔵 فريقان</b><small>يُقسَّم اللاعبون تلقائياً إلى الفريق الأحمر والأزرق ويُحسب مجموع كل فريق</small></span><input type="checkbox" id="opt-teams" onchange="mpUpdateSummary()"><i></i></label>
         <input id="opt-roomname" class="set-input" maxlength="24" placeholder="اسم الغرفة (اختياري) مثل: تحدي العائلة" oninput="mpUpdateSummary()">
       </div>
 
@@ -1332,6 +1334,7 @@ function showMultiSettings(category) {
 function hideMultiSettings() { mpShowStep('category'); }
 
 function setMultiMode(mode) {
+    if (mode === 'time' && document.getElementById('opt-sync') && document.getElementById('opt-sync').checked) document.getElementById('opt-sync').checked = false;
     currentMultiMode = mode === 'time' ? 'time' : 'questions';
     const q = currentMultiMode === 'questions';
     document.getElementById('btn-mode-questions').classList.toggle('active', q);
@@ -1360,6 +1363,8 @@ function mpCollectSettings() {
         qTime: chipValue('chips-qtime', 30),
         maxPlayers: chipValue('chips-max', 10),
         showLive: document.getElementById('opt-showlive').checked,
+        sync: document.getElementById('opt-sync').checked,
+        teams: document.getElementById('opt-teams').checked,
         roomName: document.getElementById('opt-roomname').value.trim().slice(0, 24)
     };
 }
@@ -1374,6 +1379,8 @@ function mpApplySavedSettings() {
     if (saved.qTime) chipPick('chips-qtime', saved.qTime);
     if (saved.maxPlayers) chipPick('chips-max', saved.maxPlayers);
     if (typeof saved.showLive === 'boolean') document.getElementById('opt-showlive').checked = saved.showLive;
+    if (typeof saved.sync === 'boolean') document.getElementById('opt-sync').checked = saved.sync;
+    if (typeof saved.teams === 'boolean') document.getElementById('opt-teams').checked = saved.teams;
 }
 
 function mpUpdateSummary() {
@@ -1384,7 +1391,7 @@ function mpUpdateSummary() {
     const name = s.roomName ? '«' + s.roomName + '» ' : '';
     document.getElementById('mp-summary').innerHTML =
         'غرفة ' + name + 'في <b>' + mpCategoryLabel(tempMultiCategory) + '</b> · <b>' + what + '</b> · ' +
-        '<b>' + s.qTime + ' ث</b> لكل سؤال · حتى <b>' + s.maxPlayers + '</b> لاعبين · الترتيب المباشر <b>' + (s.showLive ? 'ظاهر' : 'مخفي') + '</b>';
+        '<b>' + s.qTime + ' ث</b> لكل سؤال · حتى <b>' + s.maxPlayers + '</b> لاعبين · الترتيب المباشر <b>' + (s.showLive ? 'ظاهر' : 'مخفي') + '</b>' + (s.sync ? ' · <b>نمط المعلّم</b>' : '') + (s.teams ? ' · <b>فريقان</b>' : '');
 }
 
 function confirmMultiplayerRoom() {

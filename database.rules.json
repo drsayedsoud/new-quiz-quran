@@ -18,7 +18,9 @@
         "createdAt": { ".validate": "newData.isNumber() && newData.val() > 1700000000000" },
         "startedAt": { ".validate": "newData.isNumber()" },
         "round":     { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 1000" },
-        "currentQuestionIndex": { ".validate": "newData.isNumber()" },
+        "currentQuestionIndex": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000" },
+        "phase":     { ".validate": "newData.isString() && newData.val().matches(/^(question|reveal|done)$/)" },
+        "phaseAt":   { ".validate": "newData.isNumber()" },
 
         "settings": {
           ".validate": "newData.hasChildren(['category'])",
@@ -28,6 +30,8 @@
           "qTime":         { ".validate": "newData.isNumber() && newData.val() >= 5 && newData.val() <= 180" },
           "maxPlayers":    { ".validate": "newData.isNumber() && newData.val() >= 2 && newData.val() <= 50" },
           "showLive":      { ".validate": "newData.isBoolean()" },
+          "sync":          { ".validate": "newData.isBoolean()" },
+          "teams":         { ".validate": "newData.isBoolean()" },
           "roomName":      { ".validate": "newData.isString() && newData.val().length <= 24" },
           "questionCount": { ".validate": "newData.isNumber()" },
           "$other":        { ".validate": false }
@@ -42,11 +46,62 @@
             "answered":    { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
             "hasFinished": { ".validate": "newData.isBoolean()" },
             "joinedAt":    { ".validate": "newData.isNumber()" },
+            "team":        { ".validate": "newData.isString() && newData.val().matches(/^(red|blue)$/)" },
+            "answers": {
+              "$idx": {
+                ".validate": "$idx.matches(/^[0-9]{1,4}$/) && newData.hasChildren(['ok'])",
+                "c":  { ".validate": "newData.isString() && newData.val().length <= 300" },
+                "ok": { ".validate": "newData.isBoolean()" },
+                "t":  { ".validate": "newData.isNumber()" },
+                "$other": { ".validate": false }
+              }
+            },
             "$other":      { ".validate": false }
           }
         },
 
         "$other": { ".validate": false }
+      }
+    },
+
+    "leaderboard": {
+      ".read": true,
+      "$week": {
+        ".validate": "$week.matches(/^[0-9]{4}-W[0-9]{2}$/)",
+        ".indexOn": ["score"],
+        "$uid": {
+          ".write": "$uid.length <= 64 && (!data.exists() || newData.child('score').val() >= data.child('score').val())",
+          ".validate": "newData.hasChildren(['name', 'score', 'total', 'at'])",
+          "name":  { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30" },
+          "score": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+          "total": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100" },
+          "at":    { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+
+    "stats": {
+      ".read": true,
+      "daily": {
+        "$date": {
+          ".write": "$date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)",
+          "sessions": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "correct":  { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "answered": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "byType":   { "$t": { ".validate": "$t.length <= 40 && newData.isNumber() && newData.val() >= 0" } },
+          "$other":   { ".validate": false }
+        }
+      },
+      "questions": {
+        ".indexOn": ["wrong"],
+        "$hash": {
+          ".write": "$hash.matches(/^[a-z0-9]{1,16}$/)",
+          "text":  { ".validate": "newData.isString() && newData.val().length <= 300" },
+          "type":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "wrong": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "$other": { ".validate": false }
+        }
       }
     }
   }

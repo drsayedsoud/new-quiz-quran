@@ -98,7 +98,8 @@ function renderRoomInfo() {
     $('mode-desc').textContent = modeDescription(s.mode, s.val);
     const chips = $('chip-mode').closest('.chips');
     if (chips && !$('chip-extra')) {
-        chips.insertAdjacentHTML('beforeend', `<span class="chip" id="chip-extra">⏳ <b>${parseInt(s.qTime) || 30} ث</b> لكل سؤال</span><span class="chip" id="chip-max">👥 حتى <b>${parseInt(s.maxPlayers) || 10}</b> لاعبين</span>`);
+        chips.insertAdjacentHTML('beforeend', `<span class="chip" id="chip-extra">⏳ <b>${parseInt(s.qTime) || 30} ث</b> لكل سؤال</span><span class="chip" id="chip-max">👥 حتى <b>${parseInt(s.maxPlayers) || 10}</b> لاعبين</span>${s.sync ? '<span class="chip">👨‍🏫 <b>نمط المعلّم</b></span>' : ''}${s.teams ? '<span class="chip">🔴🔵 <b>فريقان</b></span>' : ''}`);
+        if (s.sync) $('mode-desc').textContent = 'المعلّم يعرض سؤالاً واحداً للجميع، يُظهر الإجابة، ثم ينتقل للتالي';
     }
     if (s.roomName) {
         const h = $('lobby-title');
@@ -115,13 +116,15 @@ function renderPlayers() {
     entries.forEach(([id, p]) => {
         const card = document.createElement('div');
         const host = id === room.hostId;
-        card.className = 'player-card' + (host ? ' is-host' : '') + (id === myId ? ' is-me' : '');
+        card.className = 'player-card' + (host ? ' is-host' : '') + (id === myId ? ' is-me' : '') + (p.team ? ' team-' + p.team : '');
+        if (p.team && id === myId && room.status === 'waiting') { card.title = 'اضغط لتبديل فريقك'; card.style.cursor = 'pointer'; card.onclick = () => update(ref(db, `rooms/${roomCode}/players/${myId}`), { team: p.team === 'red' ? 'blue' : 'red' }); }
         card.innerHTML = `
             ${host ? '<div class="crown">👑</div>' : ''}
             ${(isHost && id !== myId && room.status === 'waiting') ? '<button class="kick-btn" data-kick="' + escapeHtml(id) + '" title="إزالة اللاعب">✖</button>' : ''}
             <img src="${escapeHtml(p.avatar || AVATARS[0])}" alt="">
             <div class="name">${escapeHtml(p.name)}</div>
             <div class="tag">${host ? 'المضيف' : ''}${id === myId ? (host ? ' • أنت' : 'أنت') : ''}</div>
+            ${p.team ? '<div class="team-badge ' + p.team + '">' + (p.team === 'red' ? '🔴 الأحمر' : '🔵 الأزرق') + '</div>' : ''}
         `;
         list.appendChild(card);
     });
@@ -199,9 +202,13 @@ async function joinRoom() {
     }
     $('join-btn').disabled = true;
     try {
-        await set(ref(db, `rooms/${roomCode}/players/${myId}`), {
-            name, avatar: selectedAvatar, score: 0, answered: 0, hasFinished: false, joinedAt: Date.now()
-        });
+        const player = { name, avatar: selectedAvatar, score: 0, answered: 0, hasFinished: false, joinedAt: Date.now() };
+        if (room.settings && room.settings.teams) {
+            const ps = Object.values(room.players || {});
+            const reds = ps.filter(p => p.team === 'red').length, blues = ps.filter(p => p.team === 'blue').length;
+            player.team = reds <= blues ? 'red' : 'blue';
+        }
+        await set(ref(db, `rooms/${roomCode}/players/${myId}`), player);
         localStorage.setItem('mp_playerName', name);
         localStorage.setItem('mp_avatar', selectedAvatar);
         joined = true;

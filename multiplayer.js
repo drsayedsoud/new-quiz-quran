@@ -49,6 +49,8 @@ window.createMultiplayerRoomWithParams = async function(category, mode, val, ext
         qTime: Math.min(180, Math.max(5, parseInt(extra.qTime) || 30)),
         maxPlayers: Math.min(50, Math.max(2, parseInt(extra.maxPlayers) || 10)),
         showLive: extra.showLive !== false,
+        sync: extra.sync === true,
+        teams: extra.teams === true,
         roomName: String(extra.roomName || '').trim().slice(0, 24)
     };
 
@@ -63,6 +65,8 @@ window.createMultiplayerRoomWithParams = async function(category, mode, val, ext
             status: 'waiting',
             createdAt: Date.now(),
             round: 1,
+            currentQuestionIndex: 0,
+            phase: 'question',
             settings: Object.assign({ category: category, mode: mode, val: val }, settingsExtra),
             players: {}
         };

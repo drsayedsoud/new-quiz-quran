@@ -59,6 +59,16 @@ if (roomCode) {
         }
 
         let html = '';
+        const teamsOn = room && room.settings && room.settings.teams;
+        if (teamsOn) {
+            const red = sorted.filter(([, p]) => p.team === 'red').reduce((a, [, p]) => a + (p.score || 0), 0);
+            const blue = sorted.filter(([, p]) => p.team === 'blue').reduce((a, [, p]) => a + (p.score || 0), 0);
+            const verdict = !allFinished ? 'النتيجة الجارية' : red === blue ? '🤝 تعادل الفريقان' : (red > blue ? '🏆 فاز الفريق الأحمر' : '🏆 فاز الفريق الأزرق');
+            html += `<div style="background:rgba(255,255,255,0.05);border-radius:16px;padding:12px;margin:8px 0 14px;text-align:center;">
+                <div style="font-weight:900;font-size:1.15em;margin-bottom:8px;">${verdict}</div>
+                <div style="display:flex;justify-content:space-between;font-weight:800;"><span style="color:#f87171;">🔴 الأحمر ${red}</span><span style="color:#60a5fa;">🔵 الأزرق ${blue}</span></div>
+                <div style="height:12px;border-radius:999px;overflow:hidden;background:#3b82f6;margin-top:6px;"><div style="width:${red + blue ? Math.round(red / (red + blue) * 100) : 50}%;height:100%;background:#ef4444;"></div></div></div>`;
+        }
         if (allFinished) {
             html += '<div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin: 30px 0 20px; height: 210px;">';
             html += podiumSlot(sorted[1] && sorted[1][1], 2) + podiumSlot(sorted[0] && sorted[0][1], 1) + podiumSlot(sorted[2] && sorted[2][1], 3);
@@ -73,7 +83,7 @@ if (roomCode) {
                     <div style="display: flex; align-items: center; gap: 10px; background: ${key === myId ? 'rgba(16,185,129,0.18)' : 'rgba(0,0,0,0.3)'}; padding: 8px 10px; border-radius: 10px; border: 1px solid ${key === myId ? '#10b981' : 'transparent'};">
                         <div style="font-size: 1.1em; width: 30px; font-weight: bold; color: #a0aec0;">#${rank}</div>
                         <img src="${escapeHtml(p.avatar || AVATARS[0])}" style="width: 32px; height: 32px; border-radius: 50%; background: #fff;">
-                        <div style="flex-grow: 1; text-align: right;">${escapeHtml(p.name)}${key === myId ? ' <span style="color:#a0aec0;font-size:0.8em;">(أنت)</span>' : ''}</div>
+                        <div style="flex-grow: 1; text-align: right;">${p.team ? (p.team === 'red' ? '🔴 ' : '🔵 ') : ''}${escapeHtml(p.name)}${key === myId ? ' <span style="color:#a0aec0;font-size:0.8em;">(أنت)</span>' : ''}</div>
                         <div style="font-size: 0.8em; color: ${p.hasFinished ? '#10b981' : '#a0aec0'};">${p.hasFinished ? '✅ انتهى' : '⏳ يلعب'}</div>
                         <div style="font-weight: bold; color: gold; min-width: 40px; text-align: left;">${p.score || 0} نقطة</div>
                     </div>`;

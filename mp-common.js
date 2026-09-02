@@ -85,6 +85,8 @@ export function saveRoomToLocal(roomCode, room) {
     localStorage.setItem('mp_round', String(room.round || 1));
     localStorage.setItem('mp_qtime', String(parseInt(settings.qTime) || 30));
     localStorage.setItem('mp_showlive', settings.showLive === false ? 'false' : 'true');
+    localStorage.setItem('mp_sync', settings.sync === true ? 'true' : 'false');
+    localStorage.setItem('mp_teams', settings.teams === true ? 'true' : 'false');
     localStorage.setItem('quizType', settings.category || 'mixed');
     localStorage.setItem('quizTitle', '🔴 تحدي مباشر: ' + categoryLabel(settings.category));
     // Stale solo filters must not leak into the shared game
@@ -93,7 +95,7 @@ export function saveRoomToLocal(roomCode, room) {
 }
 
 export function clearMpState() {
-    ['mp_roomCode', 'mp_isHost', 'mp_mode', 'mp_val', 'mp_round'].forEach(k => localStorage.removeItem(k));
+    ['mp_roomCode', 'mp_isHost', 'mp_mode', 'mp_val', 'mp_round', 'mp_sync', 'mp_teams'].forEach(k => localStorage.removeItem(k));
 }
 
 export function isRoomExpired(room) {

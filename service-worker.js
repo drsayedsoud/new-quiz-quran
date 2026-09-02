@@ -1,7 +1,7 @@
 // Single service worker for the whole app.
 // Pages and scripts: network first (so updates show up immediately), cache as offline fallback.
 // Images / sounds: cache first. quran.json and Firebase are never touched (IndexedDB + realtime).
-const CACHE_NAME = 'quran-quiz-v7';
+const CACHE_NAME = 'quran-quiz-v8';
 const PRECACHE = [
   './index.html',
   './quiz.html',
@@ -14,6 +14,8 @@ const PRECACHE = [
   './wake-lock.js',
   './progress.js',
   './profile.html',
+  './sync-mode.js',
+  './finish-online.js',
   './mp-common.js',
   './script.js',
   './manifest.json',

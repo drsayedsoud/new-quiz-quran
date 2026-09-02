@@ -1,239 +1,186 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة - Quran Quiz</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
-    <script src="chart.min.js"></script>
-    <style>
-        :root {
-            --bg-color: #0f111a;
-            --sidebar-bg: #16192b;
-            --card-bg: #1e2235;
-            --text-main: #ffffff;
-            --text-muted: #a0aabf;
-            --accent-blue: #3b82f6;
-            --accent-green: #10b981;
-            --accent-purple: #8b5cf6;
-            --accent-red: #ef4444;
-            --border-color: #2a2f4c;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Cairo', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background-color: var(--sidebar-bg);
-            border-left: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            padding: 20px 0;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.5);
-        }
-
-        .sidebar-header {
-            text-align: center;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
-        }
-
-        .sidebar-header h2 { margin: 0; color: var(--accent-blue); letter-spacing: 2px; }
-
-        .nav-item {
-            padding: 15px 25px;
-            cursor: pointer;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background-color: rgba(59, 130, 246, 0.1);
-            color: var(--accent-blue);
-            border-right: 4px solid var(--accent-blue);
-        }
-
-        /* Main Content */
-        .main-content {
-            flex-grow: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
-
-        .header-title { margin-top: 0; font-size: 2em; margin-bottom: 30px; }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background-color: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0; right: 0; width: 100%; height: 4px;
-        }
-
-        .stat-card.blue::before { background: var(--accent-blue); }
-        .stat-card.green::before { background: var(--accent-green); }
-        .stat-card.purple::before { background: var(--accent-purple); }
-        .stat-card.red::before { background: var(--accent-red); }
-
-        .stat-title { color: var(--text-muted); font-size: 1em; margin-bottom: 10px; }
-        .stat-value { font-size: 2.5em; font-weight: 800; margin: 0; }
-
-        /* Charts Section */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .chart-card {
-            background-color: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-
-        /* Table Section */
-        .table-container {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            overflow-x: auto;
-        }
-
-        table { width: 100%; border-collapse: collapse; text-align: right; }
-        th, td { padding: 15px; border-bottom: 1px solid var(--border-color); }
-        th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-        tr:hover { background-color: rgba(255,255,255,0.02); }
-        
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: bold;
-        }
-        .status-playing { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
-        .status-waiting { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-
-        @media (max-width: 768px) {
-            body { flex-direction: column; height: auto; overflow: auto; }
-            .sidebar { width: 100%; border-left: none; border-bottom: 1px solid var(--border-color); padding: 10px 0; display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; }
-            .sidebar-header { border-bottom: none; margin-bottom: 0; padding-bottom: 0; margin-left: 15px; }
-            .nav-item { display: inline-block; padding: 10px 15px; margin: 5px; border-radius: 5px; }
-            .charts-grid { grid-template-columns: 1fr; }
-            .main-content { padding: 15px; }
-            .header-title { font-size: 1.5em; text-align: center; }
-            .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .stat-value { font-size: 1.8em; }
-            .table-container { padding: 10px; }
-            th, td { padding: 10px 5px; font-size: 0.9em; }
-        }
-        @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr; }
-            .sidebar-header h2 { font-size: 1.2em; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>لوحة الإدارة - Quran Quiz</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    :root { --bg: #1a1a2e; --card: #22223f; --border: #34345c; --text: #e6e6f0; --muted: #a0aec0; --green: #10b981; --blue: #4299e1; --gold: #f6c343; --red: #ef4444; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif; }
+    .wrap { max-width: 1100px; margin: auto; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .top h1 { margin: 0; font-size: 1.4em; }
+    .back { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 8px 14px; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: 0.9em; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; text-align: center; }
+    .kpi b { display: block; font-size: 1.8em; color: #fff; }
+    .kpi span { color: var(--muted); font-size: 0.8em; }
+    .two { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px; margin-bottom: 14px; }
+    h2 { font-size: 1.05em; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size: 0.82em; margin: 0 0 12px; }
+    .chart { position: relative; height: 240px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+    th, td { padding: 8px 6px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: right; }
+    th { color: var(--muted); font-weight: 700; font-size: 0.82em; }
+    .badge { padding: 3px 10px; border-radius: 999px; font-size: 0.78em; font-weight: 800; }
+    .waiting { background: rgba(246,195,67,0.15); color: var(--gold); } .playing { background: rgba(16,185,129,0.15); color: var(--green); } .finished { background: rgba(160,174,192,0.15); color: var(--muted); }
+    .btn { padding: 10px 16px; border-radius: 999px; border: none; color: #fff; font-family: inherit; font-weight: 800; cursor: pointer; }
+    .btn.green { background: var(--green); } .btn.blue { background: var(--blue); } .btn.red { background: var(--red); } .btn.ghost { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+    .drop { border: 2px dashed rgba(255,255,255,0.2); border-radius: 16px; padding: 22px; text-align: center; color: var(--muted); cursor: pointer; }
+    .drop:hover { border-color: var(--green); color: #fff; }
+    .log { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 10px 12px; font-size: 0.85em; line-height: 1.8; max-height: 260px; overflow: auto; white-space: pre-wrap; direction: rtl; }
+    .ok { color: #86efac; } .warn { color: #fde68a; } .err { color: #fca5a5; }
+    @media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
+<div class="wrap">
+  <div class="top"><h1>🛠️ لوحة الإدارة</h1><div><a class="back" href="index.html">🏠 الرئيسية</a></div></div>
 
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h2>👑 لوحة الإدارة</h2>
-            <p style="color: var(--text-muted); margin: 5px 0 0 0; font-size: 0.9em;">نظام الإحصائيات الذكي</p>
-        </div>
-        <div class="nav-item active">📊 نظرة عامة</div>
-        <div class="nav-item" onclick="window.location.href='index.html'">🏠 العودة للتطبيق</div>
+  <div class="grid">
+    <div class="kpi"><b id="k-today">–</b><span>مسابقات اليوم</span></div>
+    <div class="kpi"><b id="k-week">–</b><span>مسابقات آخر 7 أيام</span></div>
+    <div class="kpi"><b id="k-acc">–</b><span>نسبة الإجابات الصحيحة (7 أيام)</span></div>
+    <div class="kpi"><b id="k-rooms">–</b><span>غرف نشطة الآن</span></div>
+    <div class="kpi"><b id="k-players">–</b><span>لاعبون في الغرف الآن</span></div>
+  </div>
+
+  <div class="two">
+    <div class="card"><h2>📈 المسابقات يومياً</h2><p class="sub">آخر 14 يوماً، من كل الأجهزة</p><div class="chart"><canvas id="daily"></canvas></div></div>
+    <div class="card"><h2>🧩 الأقسام الأكثر لعباً</h2><p class="sub">آخر 14 يوماً</p><div class="chart"><canvas id="types"></canvas></div></div>
+  </div>
+
+  <div class="card">
+    <h2>❌ الأسئلة الأكثر خطأً</h2>
+    <p class="sub">تكشف الأسئلة المكتوبة بشكل مربك أو الإجابات الخاطئة في البنك</p>
+    <table><thead><tr><th>#</th><th>السؤال</th><th>القسم</th><th>مرات الخطأ</th></tr></thead><tbody id="missed"><tr><td colspan="4" style="text-align:center;color:var(--muted)">جاري التحميل...</td></tr></tbody></table>
+  </div>
+
+  <div class="card">
+    <h2>🎮 الغرف الحية</h2>
+    <p class="sub">تحديث لحظي من قاعدة البيانات</p>
+    <table><thead><tr><th>الكود</th><th>القسم</th><th>اللاعبون</th><th>الحالة</th><th>أُنشئت</th></tr></thead><tbody id="rooms"></tbody></table>
+  </div>
+
+  <div class="card">
+    <h2>📦 تحديث بنك الأسئلة من إكسيل</h2>
+    <p class="sub">ارفع ملف الإكسيل (نفس أسماء الأوراق: القران، سيرة، فقه، معاني، عامة). الأوراق الموجودة تُستبدل، وأقسام الأطفال والأوراق غير الموجودة تبقى كما هي. النتيجة ملف quran.zip جاهز للرفع إلى المستودع.</p>
+    <label class="drop" id="drop">📂 اضغط لاختيار ملف .xlsx<input type="file" id="xlsx" accept=".xlsx,.xls" style="display:none"></label>
+    <div class="log" id="log" style="margin-top:12px; display:none;"></div>
+    <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+      <button class="btn green" id="dl-btn" disabled>⬇️ تنزيل quran.zip الجديد</button>
+      <button class="btn ghost" id="cur-btn">🔎 عرض أعداد البنك الحالي</button>
     </div>
+  </div>
+</div>
 
-    <div class="main-content">
-        <h1 class="header-title">مرحباً بك أيها المدير 👋</h1>
+<script type="module">
+  import { db, ref, get, onValue, query, orderByChild, limitToLast } from './firebase-init.js';
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const LABELS = { mixed: 'القرآن', seerah: 'السيرة', fiqh: 'الفقه', general: 'معلومات', meanings: 'معاني', kids_1: 'أطفال 1', kids_2: 'أطفال 2', kids_3: 'أطفال 3', daily: 'تحدي اليوم', complete: 'أكمل الآية', review: 'مراجعة', favorites: 'المفضلة' };
+  const label = t => LABELS[String(t).split('_juz_')[0]] || t;
+  const dayKey = d => d.toISOString().slice(0, 10);
 
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card blue">
-                <div class="stat-title">الغرف النشطة حالياً</div>
-                <div class="stat-value" id="active-rooms-count">0</div>
-            </div>
-            <div class="stat-card green">
-                <div class="stat-title">إجمالي اللاعبين اليوم</div>
-                <div class="stat-value" id="total-players-count">0</div>
-            </div>
-            <div class="stat-card purple">
-                <div class="stat-title">الأسئلة المُجابة</div>
-                <div class="stat-value">14,235</div>
-            </div>
-            <div class="stat-card red">
-                <div class="stat-title">أداء السيرفر (Ping)</div>
-                <div class="stat-value">24<span style="font-size: 0.4em;">ms</span></div>
-            </div>
-        </div>
+  // ---- daily stats ----
+  (async () => {
+    const days = [];
+    for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push(dayKey(d)); }
+    let daily = {};
+    try { const s = await get(ref(db, 'stats/daily')); daily = s.val() || {}; } catch (e) { console.warn(e); }
+    const counts = days.map(k => (daily[k] && daily[k].sessions) || 0);
+    const last7 = days.slice(-7);
+    const sum = (arr, f) => arr.reduce((a, k) => a + ((daily[k] && daily[k][f]) || 0), 0);
+    $('k-today').textContent = counts[counts.length - 1];
+    $('k-week').textContent = sum(last7, 'sessions');
+    const ans = sum(last7, 'answered'); $('k-acc').textContent = ans ? Math.round(sum(last7, 'correct') / ans * 100) + '%' : '–';
+    new Chart($('daily'), { type: 'line', data: { labels: days.map(k => k.slice(5)), datasets: [{ data: counts, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.15)', fill: true, tension: 0.35, pointRadius: 3 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#a0aec0', font: { size: 10 } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: '#a0aec0', precision: 0 }, grid: { color: 'rgba(255,255,255,0.06)' } } } } });
+    const byType = {};
+    days.forEach(k => { const t = daily[k] && daily[k].byType; if (t) Object.entries(t).forEach(([n, v]) => { const l = label(n); byType[l] = (byType[l] || 0) + v; }); });
+    const entries = Object.entries(byType).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    new Chart($('types'), { type: 'doughnut', data: { labels: entries.map(e => e[0]), datasets: [{ data: entries.map(e => e[1]), backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#f59e0b', '#ec4899', '#14b8a6', '#a3e635'], borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { color: '#a0aec0', boxWidth: 12, font: { size: 11 } } } } } });
+  })();
 
-        <!-- Charts Grid -->
-        <div class="charts-grid">
-            <div class="chart-card">
-                <h3 style="margin-top: 0; color: var(--text-muted);">نشاط المستخدمين (آخر 7 أيام)</h3>
-                <canvas id="activityChart" height="100"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3 style="margin-top: 0; color: var(--text-muted);">شعبية الأقسام</h3>
-                <canvas id="categoryChart" height="200"></canvas>
-            </div>
-        </div>
+  // ---- most missed ----
+  (async () => {
+    try {
+      const snap = await get(query(ref(db, 'stats/questions'), orderByChild('wrong'), limitToLast(10)));
+      const rows = []; snap.forEach(c => rows.push(c.val())); rows.sort((a, b) => b.wrong - a.wrong);
+      $('missed').innerHTML = rows.length ? rows.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.text)}</td><td>${esc(label(r.type))}</td><td><b>${r.wrong}</b></td></tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--muted)">لا توجد بيانات بعد</td></tr>';
+    } catch (e) { $('missed').innerHTML = '<tr><td colspan="4" class="err">تعذر التحميل: تأكد من نشر قواعد قاعدة البيانات الجديدة</td></tr>'; }
+  })();
 
-        <!-- Live Rooms Table -->
-        <div class="table-container">
-            <h3 style="margin-top: 0; color: var(--text-muted); margin-bottom: 20px;">🎮 الغرف المباشرة (Live)</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>كود الغرفة</th>
-                        <th>التصنيف</th>
-                        <th>عدد اللاعبين</th>
-                        <th>الحالة</th>
-                    </tr>
-                </thead>
-                <tbody id="rooms-table-body">
-                    <tr>
-                        <td colspan="4" style="text-align: center; color: var(--text-muted);">جاري جلب البيانات...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+  // ---- live rooms ----
+  onValue(ref(db, 'rooms'), snap => {
+    const data = snap.val() || {};
+    const rows = Object.entries(data).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+    let players = 0, active = 0;
+    $('rooms').innerHTML = rows.map(([code, r]) => {
+      const n = Object.keys(r.players || {}).length; players += n; if (r.status === 'waiting' || r.status === 'playing') active++;
+      const st = r.status || 'waiting';
+      const badge = { waiting: 'في الانتظار', playing: 'جارٍ اللعب', finished: 'انتهت', closed: 'مغلقة' }[st] || st;
+      const age = r.createdAt ? Math.round((Date.now() - r.createdAt) / 60000) + ' د' : '';
+      return `<tr><td><b>${code}</b></td><td>${esc(label((r.settings || {}).category))}${(r.settings || {}).sync ? ' 👨‍🏫' : ''}${(r.settings || {}).teams ? ' 🔴🔵' : ''}</td><td>${n}</td><td><span class="badge ${st}">${badge}</span></td><td>${age}</td></tr>`;
+    }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted)">لا توجد غرف الآن</td></tr>';
+    $('k-rooms').textContent = active; $('k-players').textContent = players;
+  });
+</script>
 
-    </div>
+<script>
+  // ---- Excel -> quran.zip (client side) ----
+  const SHEETS = { quiz: ['القران', 'قرآن', 'القرآن', 'Quran', 'Sheet1'], sera: ['سيرة', 'السيرة'], sona: ['فقه', 'الفقه', 'سنن'], words: ['معاني', 'كلمات'], general: ['عامة', 'عام'] };
+  const KEYS = ['question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct_answer'];
+  const logEl = document.getElementById('log');
+  const log = (m, cls) => { logEl.style.display = 'block'; logEl.innerHTML += '<div class="' + (cls || '') + '">' + m + '</div>'; logEl.scrollTop = logEl.scrollHeight; };
+  let newZipBlob = null;
 
-    <script type="module" src="admin.js"></script>
+  async function loadCurrentBank() {
+    const r = await fetch('quran.zip', { cache: 'no-store' });
+    if (!r.ok) throw new Error('تعذر تحميل quran.zip الحالي');
+    const zip = await JSZip.loadAsync(await r.arrayBuffer());
+    return JSON.parse(await zip.file('quran.json').async('string'));
+  }
+  document.getElementById('cur-btn').onclick = async () => {
+    try { const d = await loadCurrentBank(); log('البنك الحالي: ' + Object.keys(d).filter(k => Array.isArray(d[k])).map(k => k + ' = ' + d[k].length).join(' | '), 'ok'); } catch (e) { log(e.message, 'err'); }
+  };
+  document.getElementById('xlsx').onchange = async (ev) => {
+    const file = ev.target.files[0]; if (!file) return;
+    logEl.innerHTML = ''; newZipBlob = null; document.getElementById('dl-btn').disabled = true;
+    try {
+      log('📖 قراءة ' + file.name + '...');
+      const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      log('الأوراق: ' + wb.SheetNames.join('، '));
+      const current = await loadCurrentBank();
+      let replaced = 0;
+      for (const [key, names] of Object.entries(SHEETS)) {
+        const name = names.find(n => wb.Sheets[n]);
+        if (!name) { log('• ' + key + ': لا توجد ورقة، أبقيت ' + (current[key] || []).length + ' سؤالاً', 'warn'); continue; }
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[name]);
+        const valid = rows.filter(q => KEYS.every(k => String(q[k] ?? '').trim() !== '') && [q.choice1, q.choice2, q.choice3, q.choice4].map(String).includes(String(q.correct_answer)));
+        log('• ' + key + ' (' + name + '): ' + rows.length + ' صف، صالح ' + valid.length + '، كان ' + (current[key] || []).length, valid.length ? 'ok' : 'err');
+        if (valid.length) { current[key] = valid; replaced++; }
+      }
+      if (!replaced) throw new Error('لم تُقرأ أي ورقة صالحة، تأكد من أسماء الأوراق والأعمدة (question, choice1..4, correct_answer)');
+      const zip = new JSZip();
+      zip.file('quran.json', JSON.stringify(current));
+      newZipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 9 } });
+      log('✅ جاهز: quran.zip بحجم ' + (newZipBlob.size / 1048576).toFixed(1) + ' ميجابايت. ضعه مكان الملف القديم في المستودع، وارفع رقم DATA_VERSION في script.js، ثم ارفع التعديل.', 'ok');
+      document.getElementById('dl-btn').disabled = false;
+    } catch (e) { log('❌ ' + e.message, 'err'); }
+  };
+  document.getElementById('dl-btn').onclick = () => {
+    if (!newZipBlob) return;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(newZipBlob); a.download = 'quran.zip'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  };
+</script>
 </body>
 </html>
