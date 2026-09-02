@@ -354,7 +354,7 @@ async function loadQuestions() {
   try {
     let data = await loadQuestionsFromIndexedDB();
     
-    if (!data || !data.kids || data.kids.length === 0) { console.log("Outdated DB, forcing refetch");
+    if (!data || !Array.isArray(data.kids_1) || data.kids_1.length === 0) { console.log("Outdated DB, forcing refetch");
         console.log("Not in IndexedDB, fetching from server...");
         if (loadingOverlay) loadingOverlay.innerHTML = "<div style='font-size:1.5em; text-align:center;'>جاري تنزيل الأسئلة (لأول مرة فقط)...<br>يرجى الانتظار قليلاً (حوالي 45 ميجابايت)</div>";
         
@@ -402,6 +402,7 @@ function processParsedJSON(jsonData) {
       else if (type === "meanings" && jsonData.words) source = source.concat(jsonData.words);
       else if (type === "kids" && jsonData.kids) source = source.concat(jsonData.kids);
       else if (type === "general" && jsonData.general) source = source.concat(jsonData.general);
+      else if (Array.isArray(jsonData[type])) source = source.concat(jsonData[type]);
       else if (jsonData.quiz) {
           const filtered = jsonData.quiz.filter(q => q.type === type);
           if (filtered) source = source.concat(filtered);
@@ -470,6 +471,8 @@ function processParsedJSON(jsonData) {
         const mpMode = localStorage.getItem('mp_mode') || 'questions';
         const mpVal = parseInt(localStorage.getItem('mp_val')) || 10;
         
+        const mpQTime = parseInt(localStorage.getItem('mp_qtime'));
+        if (mpQTime >= 5 && mpQTime <= 180) { questionTime = mpQTime; questionTimeLeft = questionTime; }
         if (mpMode === 'questions') {
             quizData = quizData.slice(0, mpVal);
         } else if (mpMode === 'time') {
@@ -535,6 +538,23 @@ function shuffle(array) {
 
 
 
+function finishQuiz() {
+  clearInterval(totalTimerInterval);
+  clearInterval(questionTimerInterval);
+  const email = localStorage.getItem("userEmail") || "غير معروف";
+  const session = {
+    date: new Date().toLocaleString("ar-EG"),
+    email: email,
+    score: correctCount,
+    total: currentIndex,
+    type: quizType
+  };
+  let sessions = JSON.parse(localStorage.getItem("userSessions") || "[]");
+  sessions.push(session);
+  localStorage.setItem("userSessions", JSON.stringify(sessions));
+  window.location.href = "finish.html";
+}
+
 function startTotalTimer() {
 
   updateTotalTimerDisplay();
@@ -561,7 +581,7 @@ function startTotalTimer() {
 
       }
 
-      window.location.href = "results.html";
+      finishQuiz();
 
     }
 
@@ -844,10 +864,12 @@ function handleAnswer(button, correctAnswer) {
 
 if (button.textContent === correctAnswer) {
     if (quizType.startsWith('kids')) {
-        let wowSound = new Audio('assets/wow.mp3');
-        wowSound.play().catch(e => console.log('Audio error:', e));
-        if (typeof showBalloonFestival === "function") {
-            showBalloonFestival();
+        if (window.KidsTheme) {
+            KidsTheme.correct(button);
+        } else {
+            let wowSound = new Audio('assets/wow.mp3');
+            wowSound.play().catch(e => console.log('Audio error:', e));
+            if (typeof showBalloonFestival === "function") showBalloonFestival();
         }
     } else {
         playSound(winSound);
@@ -857,7 +879,8 @@ if (button.textContent === correctAnswer) {
   const correctCounterElement = document.getElementById("correct-counter");
   if (correctCounterElement) correctCounterElement.textContent = correctCount;
 } else {
-  playSound(loseSound);
+  if (quizType.startsWith('kids') && window.KidsTheme) KidsTheme.wrong(button);
+  else playSound(loseSound);
 }
 
 

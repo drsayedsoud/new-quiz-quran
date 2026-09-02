@@ -1,94 +1,150 @@
-import { db, ref, get, update } from './firebase-init.js';
+// Multiplayer results: live leaderboard while others finish, podium when everyone is done, rematch loop
+import { db, ref, get, update, onValue } from './firebase-init.js';
+import { getLocalUserId, clearMpState, escapeHtml, AVATARS, categoryLabel, modeLabel } from './mp-common.js';
 
 const roomCode = localStorage.getItem('mp_roomCode');
-const localUserId = localStorage.getItem('mp_userId');
+const myId = getLocalUserId();
+const myRound = parseInt(localStorage.getItem('mp_round')) || 1;
 
-if (roomCode && localUserId) {
-    document.getElementById('mp-results').style.display = 'block';
-    
-    update(ref(db, `rooms/${roomCode}/players/${localUserId}`), { hasFinished: true }).catch(e=>console.error(e));
+if (roomCode) {
+    const $ = id => document.getElementById(id);
+    let room = null;
+    let leaving = false;
+    let allFinished = false;
 
-    get(ref(db, `rooms/${roomCode}/players`)).then((snapshot) => {
-        const players = snapshot.val();
-        if (players) {
-            const list = document.getElementById('mp-final-leaderboard');
-            const sortedPlayers = Object.values(players).sort((a, b) => b.score - a.score);
-            
-            let podiumHtml = '<div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin: 40px 0; height: 200px;">';
-            
-            // 2nd Place (Silver)
-            if (sortedPlayers[1]) {
-                podiumHtml += `
-                <div style="display: flex; flex-direction: column; items-align: center; width: 30%;">
-                    <img src="${sortedPlayers[1].avatar}" style="width: 60px; height: 60px; border-radius: 50%; border: 4px solid silver; margin: 0 auto -20px auto; position: relative; z-index: 10; background: #000;">
-                    <div style="background: linear-gradient(to top, #7f8c8d, #bdc3c7); height: 100px; border-radius: 10px 10px 0 0; text-align: center; padding-top: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                        <div style="font-size: 2em; margin-bottom: 5px;">🥈</div>
-                        <div style="color: white; font-weight: bold; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px;">${sortedPlayers[1].name}</div>
-                        <div style="color: #2c3e50; font-weight: 900;">${sortedPlayers[1].score}</div>
-                    </div>
-                </div>`;
-            }
+    // Solo-only bits are noise here
+    const topButtons = document.querySelector('.top-buttons');
+    if (topButtons) topButtons.style.display = 'none';
+    const emailLine = $('email-line');
+    if (emailLine) emailLine.style.display = 'none';
+    $('mp-results').style.display = 'block';
 
-            // 1st Place (Gold)
-            if (sortedPlayers[0]) {
-                podiumHtml += `
-                <div style="display: flex; flex-direction: column; items-align: center; width: 35%;">
-                    <img src="${sortedPlayers[0].avatar}" style="width: 80px; height: 80px; border-radius: 50%; border: 4px solid gold; margin: 0 auto -25px auto; position: relative; z-index: 10; background: #000;">
-                    <div style="background: linear-gradient(to top, #d35400, #f1c40f); height: 140px; border-radius: 10px 10px 0 0; text-align: center; padding-top: 30px; box-shadow: 0 4px 20px rgba(241,196,15,0.4);">
-                        <div style="font-size: 2.5em; margin-bottom: 5px;">👑</div>
-                        <div style="color: white; font-weight: bold; font-size: 1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px;">${sortedPlayers[0].name}</div>
-                        <div style="color: #8e44ad; font-weight: 900; font-size: 1.2em;">${sortedPlayers[0].score}</div>
-                    </div>
-                </div>`;
-            }
+    update(ref(db, `rooms/${roomCode}/players/${myId}`), { hasFinished: true }).catch(e => console.error(e));
 
-            // 3rd Place (Bronze)
-            if (sortedPlayers[2]) {
-                podiumHtml += `
-                <div style="display: flex; flex-direction: column; items-align: center; width: 30%;">
-                    <img src="${sortedPlayers[2].avatar}" style="width: 50px; height: 50px; border-radius: 50%; border: 4px solid #cd7f32; margin: 0 auto -15px auto; position: relative; z-index: 10; background: #000;">
-                    <div style="background: linear-gradient(to top, #8e44ad, #cd7f32); height: 80px; border-radius: 10px 10px 0 0; text-align: center; padding-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                        <div style="font-size: 1.5em; margin-bottom: 5px;">🥉</div>
-                        <div style="color: white; font-weight: bold; font-size: 0.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px;">${sortedPlayers[2].name}</div>
-                        <div style="color: #2c3e50; font-weight: 900;">${sortedPlayers[2].score}</div>
-                    </div>
-                </div>`;
-            }
-            
-            podiumHtml += '</div>';
+    function podiumSlot(p, place) {
+        const cfg = {
+            1: { emoji: '👑', color: 'linear-gradient(to top, #d35400, #f1c40f)', h: 140, w: 35, img: 80, border: 'gold' },
+            2: { emoji: '🥈', color: 'linear-gradient(to top, #7f8c8d, #bdc3c7)', h: 100, w: 30, img: 60, border: 'silver' },
+            3: { emoji: '🥉', color: 'linear-gradient(to top, #8e44ad, #cd7f32)', h: 80, w: 30, img: 50, border: '#cd7f32' }
+        }[place];
+        if (!p) return `<div style="width: ${cfg.w}%;"></div>`;
+        return `
+            <div style="display: flex; flex-direction: column; width: ${cfg.w}%;">
+                <img src="${escapeHtml(p.avatar || AVATARS[0])}" style="width: ${cfg.img}px; height: ${cfg.img}px; border-radius: 50%; border: 4px solid ${cfg.border}; margin: 0 auto -${cfg.img / 4}px auto; position: relative; z-index: 10; background: #fff; object-fit: cover;">
+                <div style="background: ${cfg.color}; height: ${cfg.h}px; border-radius: 10px 10px 0 0; text-align: center; padding-top: ${cfg.img / 4 + 8}px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                    <div style="font-size: ${place === 1 ? 2.2 : 1.6}em; line-height: 1;">${cfg.emoji}</div>
+                    <div style="color: white; font-weight: bold; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px;">${escapeHtml(p.name)}</div>
+                    <div style="color: #1a1a2e; font-weight: 900;">${p.score || 0}</div>
+                </div>
+            </div>`;
+    }
 
-            // Add remaining players (4th+)
-            if (sortedPlayers.length > 3) {
-                podiumHtml += '<div style="margin-top: 20px; border-top: 1px solid #444; padding-top: 15px;">';
-                for (let i = 3; i < sortedPlayers.length; i++) {
-                    podiumHtml += `
-                        <div style="display: flex; align-items: center; margin-bottom: 10px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px;">
-                            <div style="font-size: 1.2em; width: 30px; font-weight: bold; color: gray;">#${i+1}</div>
-                            <img src="${sortedPlayers[i].avatar}" style="width: 30px; height: 30px; border-radius: 50%; margin-left: 10px;">
-                            <div style="flex-grow: 1; font-size: 1em;">${sortedPlayers[i].name}</div>
-                            <div style="font-weight: bold; color: white;">${sortedPlayers[i].score} نقطة</div>
-                        </div>`;
-                }
-                podiumHtml += '</div>';
-            }
+    function renderPlayers(players) {
+        const entries = Object.entries(players || {});
+        const sorted = entries.sort((a, b) => (b[1].score || 0) - (a[1].score || 0) || (a[1].joinedAt || 0) - (b[1].joinedAt || 0));
+        const finishedCount = sorted.filter(([, p]) => p.hasFinished).length;
+        allFinished = sorted.length > 0 && finishedCount === sorted.length;
 
-            list.innerHTML = podiumHtml;
-
-            // Certificate Info
-            const myPlayer = sortedPlayers.find(p => p.name === localStorage.getItem("mp_playerName"));
-            if (myPlayer) {
-                document.getElementById('cert-name').innerText = myPlayer.name;
-                document.getElementById('cert-score').innerText = myPlayer.score;
-            } else if (sortedPlayers[0]) {
-                document.getElementById('cert-name').innerText = sortedPlayers[0].name;
-                document.getElementById('cert-score').innerText = sortedPlayers[0].score;
-            }
+        const status = $('mp-status');
+        if (allFinished) {
+            const winner = sorted[0][1];
+            const tie = sorted.length > 1 && (sorted[1][1].score || 0) === (winner.score || 0);
+            status.innerHTML = tie
+                ? '🤝 تعادل في الصدارة! نتيجة مشرفة للجميع'
+                : (sorted[0][0] === myId ? '🎉 مبروك! أنت الفائز بهذا التحدي' : `🏆 الفائز: <b>${escapeHtml(winner.name)}</b>`);
+            status.style.color = '#f6c343';
+        } else {
+            status.innerHTML = `⏳ انتهى ${finishedCount} من ${sorted.length} لاعبين... الترتيب يتحدث مباشرة`;
+            status.style.color = '#a0aec0';
         }
+
+        let html = '';
+        if (allFinished) {
+            html += '<div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin: 30px 0 20px; height: 210px;">';
+            html += podiumSlot(sorted[1] && sorted[1][1], 2) + podiumSlot(sorted[0] && sorted[0][1], 1) + podiumSlot(sorted[2] && sorted[2][1], 3);
+            html += '</div>';
+        }
+        const rest = allFinished ? sorted.slice(3) : sorted;
+        if (rest.length) {
+            html += '<div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">';
+            rest.forEach(([key, p], i) => {
+                const rank = allFinished ? i + 4 : i + 1;
+                html += `
+                    <div style="display: flex; align-items: center; gap: 10px; background: ${key === myId ? 'rgba(16,185,129,0.18)' : 'rgba(0,0,0,0.3)'}; padding: 8px 10px; border-radius: 10px; border: 1px solid ${key === myId ? '#10b981' : 'transparent'};">
+                        <div style="font-size: 1.1em; width: 30px; font-weight: bold; color: #a0aec0;">#${rank}</div>
+                        <img src="${escapeHtml(p.avatar || AVATARS[0])}" style="width: 32px; height: 32px; border-radius: 50%; background: #fff;">
+                        <div style="flex-grow: 1; text-align: right;">${escapeHtml(p.name)}${key === myId ? ' <span style="color:#a0aec0;font-size:0.8em;">(أنت)</span>' : ''}</div>
+                        <div style="font-size: 0.8em; color: ${p.hasFinished ? '#10b981' : '#a0aec0'};">${p.hasFinished ? '✅ انتهى' : '⏳ يلعب'}</div>
+                        <div style="font-weight: bold; color: gold; min-width: 40px; text-align: left;">${p.score || 0} نقطة</div>
+                    </div>`;
+            });
+            html += '</div>';
+        }
+        $('mp-final-leaderboard').innerHTML = html;
+
+        const me = players && players[myId];
+        if (me) {
+            $('cert-name').textContent = me.name;
+            $('cert-score').textContent = me.score || 0;
+        }
+        if (allFinished && room && room.hostId === myId && room.status === 'playing') {
+            update(ref(db, `rooms/${roomCode}`), { status: 'finished' }).catch(() => {});
+        }
+    }
+
+    onValue(ref(db, `rooms/${roomCode}`), (snapshot) => {
+        if (leaving) return;
+        const data = snapshot.val();
+        if (!data) {
+            $('mp-status').innerHTML = 'ℹ️ أغلق المضيف الغرفة. النتائج أدناه نهائية.';
+            $('mp-rematch-btn').style.display = 'none';
+            return;
+        }
+        room = data;
+        const s = data.settings || {};
+        $('mp-room-meta').textContent = `غرفة ${roomCode} • ${categoryLabel(s.category)} • ${modeLabel(s.mode, s.val)}`;
+
+        // Host started a new round: everyone goes back to the lobby
+        if (data.status === 'waiting' && (data.round || 1) > myRound) {
+            leaving = true;
+            localStorage.setItem('mp_round', String(data.round));
+            window.location.href = 'lobby.html?room=' + roomCode;
+            return;
+        }
+        const isHost = data.hostId === myId;
+        $('mp-rematch-btn').style.display = isHost ? 'inline-block' : 'none';
+        $('mp-guest-hint').style.display = isHost ? 'none' : 'block';
+        renderPlayers(data.players);
     });
+
+    $('mp-rematch-btn').onclick = async () => {
+        if (!room) return;
+        if (!allFinished && !confirm('لم ينتهِ الجميع بعد. هل تريد بدء جولة جديدة الآن؟')) return;
+        $('mp-rematch-btn').disabled = true;
+        try {
+            const updates = { status: 'waiting', round: (room.round || 1) + 1, startedAt: null };
+            Object.keys(room.players || {}).forEach(id => {
+                updates[`players/${id}/score`] = 0;
+                updates[`players/${id}/answered`] = 0;
+                updates[`players/${id}/hasFinished`] = false;
+            });
+            await update(ref(db, `rooms/${roomCode}`), updates);
+        } catch (e) {
+            console.error(e);
+            alert('تعذر بدء جولة جديدة');
+            $('mp-rematch-btn').disabled = false;
+        }
+    };
+
+    $('mp-home-btn').onclick = () => {
+        leaving = true;
+        clearMpState();
+        window.location.href = 'index.html';
+    };
 }
 
 window.generateCertificate = function() {
     const certArea = document.getElementById('certificate-area');
     certArea.style.display = 'block';
     setTimeout(() => { window.print(); }, 500);
-}
+};

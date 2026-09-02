@@ -3,62 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>غرفة الانتظار - Quran Quiz</title>
+    <title>غرفة الانتظار - مسابقة القرآن الكريم</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="/manifest.json">
     <style>
-        .lobby-container { text-align: center; margin-top: 50px; }
-        .room-code-box { font-size: 3em; font-weight: bold; color: var(--heading-color); letter-spacing: 5px; margin: 20px 0; padding: 20px; background: var(--card-bg-gradient-start); border-radius: 15px; border: 2px dashed var(--button-green); display: inline-block; }
-        .players-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 30px; }
-        .player-card { background: var(--card-bg-gradient-end); padding: 15px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center; width: 120px; }
-        .player-card img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--button-green); }
-        .player-card p { margin: 10px 0 0 0; font-weight: bold; }
-        #join-form { display: none; margin-top: 20px; }
-        .avatar-selection { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .avatar-option { width: 60px; height: 60px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; }
-        .avatar-option.selected { border-color: var(--button-green); }
-        @media (max-width: 768px) {
-            .lobby-container { margin-top: 20px; padding: 10px; }
-            .room-code-box { font-size: 2em; padding: 15px; }
-            .player-card { width: 40%; padding: 10px; }
-            .player-card img { width: 60px; height: 60px; }
-            .avatar-option { width: 50px; height: 50px; }
-            #player-name { width: 90%; }
+        :root {
+            --dark-bg: #1a1a2e;
+            --panel-bg: #2a2a4e;
+            --panel-border: #3b3b6b;
+            --text-color: #e0e0e0;
+            --muted: #a0aec0;
+            --green: #10b981;
+            --blue: #4299e1;
+            --red: #ef4444;
+            --gold: #f6c343;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 16px;
+            background: radial-gradient(circle at top, #23234a 0%, var(--dark-bg) 60%);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+        .lobby {
+            width: 100%;
+            max-width: 560px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+        .panel {
+            background: linear-gradient(145deg, var(--panel-bg), #16213e);
+            border: 1px solid var(--panel-border);
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .top-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .top-bar h1 { font-size: 1.25em; margin: 0; color: var(--green); }
+        .ghost-btn {
+            background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--muted);
+            padding: 8px 14px; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 0.9em;
+        }
+        .ghost-btn:hover { background: rgba(255,255,255,0.08); color: white; }
+
+        .code-panel { text-align: center; }
+        .code-label { color: var(--muted); font-size: 0.9em; margin-bottom: 6px; }
+        .room-code {
+            font-size: 2.8em; font-weight: 800; letter-spacing: 10px; color: white;
+            background: rgba(0,0,0,0.3); border: 2px dashed var(--green); border-radius: 14px;
+            padding: 8px 16px 8px 26px; display: inline-block; direction: ltr; cursor: pointer; user-select: all;
+        }
+        .share-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+        .share-btn {
+            display: inline-flex; align-items: center; gap: 8px; border: none; border-radius: 12px;
+            padding: 10px 16px; font-family: inherit; font-weight: 700; cursor: pointer; color: white; font-size: 0.95em;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: transform 0.15s;
+        }
+        .share-btn:hover { transform: translateY(-2px); }
+        .btn-whatsapp { background: #25D366; }
+        .btn-copy { background: var(--blue); }
+
+        .chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+        .chip {
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 999px; padding: 5px 14px; font-size: 0.9em; color: white;
+        }
+        .chip b { color: var(--gold); }
+        .mode-desc { color: var(--muted); font-size: 0.85em; text-align: center; margin-top: 10px; }
+
+        /* Identity form */
+        #identity-panel h2 { margin: 0 0 6px; font-size: 1.15em; color: white; text-align: center; }
+        #identity-panel p { margin: 0 0 12px; text-align: center; color: var(--muted); font-size: 0.9em; }
+        .avatars { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+        .avatar-option {
+            width: 62px; height: 62px; border-radius: 50%; object-fit: cover; cursor: pointer;
+            border: 3px solid transparent; background: #fff; transition: transform 0.15s, border-color 0.15s;
+        }
+        .avatar-option:hover { transform: scale(1.08); }
+        .avatar-option.selected { border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.35); transform: scale(1.1); }
+        #player-name {
+            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.3); color: white; font-family: inherit; font-size: 1.1em; text-align: center; outline: none;
+        }
+        #player-name:focus { border-color: var(--green); }
+        .primary-btn {
+            width: 100%; margin-top: 12px; padding: 14px; border: none; border-radius: 12px; font-family: inherit;
+            font-weight: 800; font-size: 1.1em; color: white; cursor: pointer; background: var(--green);
+            box-shadow: 0 6px 16px rgba(16,185,129,0.35); transition: transform 0.15s, opacity 0.2s;
+        }
+        .primary-btn:hover:not(:disabled) { transform: translateY(-2px); }
+        .primary-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+        .primary-btn.blue { background: var(--blue); box-shadow: 0 6px 16px rgba(66,153,225,0.35); }
+        .danger-btn { background: transparent; color: var(--red); border: 1px solid rgba(239,68,68,0.5); }
+        .danger-btn:hover { background: rgba(239,68,68,0.12); }
+
+        /* Players */
+        .players-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .players-header h3 { margin: 0; font-size: 1.05em; color: white; }
+        .players-count { color: var(--green); font-weight: 800; }
+        .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+        .player-card {
+            background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px;
+            padding: 12px 8px; text-align: center; position: relative; animation: pop 0.3s ease-out;
+        }
+        @keyframes pop { from { transform: scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
+        .player-card img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: #fff; border: 3px solid var(--blue); }
+        .player-card.is-host img { border-color: var(--gold); }
+        .player-card.is-me { border-color: var(--green); }
+        .player-card .name { margin-top: 8px; font-weight: 700; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .player-card .tag { font-size: 0.7em; color: var(--muted); }
+        .player-card .crown { position: absolute; top: -8px; right: 8px; font-size: 1.2em; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6)); }
+        .empty-slot {
+            border: 2px dashed rgba(255,255,255,0.15); border-radius: 14px; display: flex; align-items: center;
+            justify-content: center; color: var(--muted); font-size: 0.8em; min-height: 110px; padding: 8px; text-align: center;
+        }
+
+        .waiting { text-align: center; color: var(--muted); padding: 6px 0 0; font-size: 0.95em; }
+        .dots::after { content: ''; animation: dots 1.5s steps(4, end) infinite; }
+        @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+        .hint { color: var(--muted); font-size: 0.85em; text-align: center; margin-top: 8px; }
+
+        /* Countdown overlay */
+        #countdown-overlay {
+            position: fixed; inset: 0; background: rgba(10,10,30,0.92); display: none; align-items: center;
+            justify-content: center; flex-direction: column; z-index: 5000; color: white;
+        }
+        #countdown-overlay .num { font-size: 7em; font-weight: 800; color: var(--green); animation: beat 1s ease-in-out infinite; }
+        @keyframes beat { 0% { transform: scale(0.6); opacity: 0.3; } 40% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+
+        #toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #111; color: white;
+            padding: 10px 18px; border-radius: 10px; font-size: 0.9em; display: none; z-index: 6000; border: 1px solid var(--green);
+        }
+        @media (max-width: 480px) {
+            .room-code { font-size: 2.2em; letter-spacing: 7px; }
+            .avatar-option { width: 54px; height: 54px; }
         }
     </style>
+<link rel="stylesheet" href="kids-theme.css">
+<script src="kids-theme.js"></script>
 </head>
 <body>
-    <div class="lobby-container">
-        <h1 id="lobby-title">جاري التحميل...</h1>
-        <div id="host-view" style="display: none;">
-            <p>شارك هذا الكود مع أصدقائك لدخول الغرفة:</p>
-            <div class="room-code-box" id="display-room-code">-----</div>
-            <br>
-            <button id="whatsapp-invite-btn" style="background: #25D366; color: white; padding: 10px 20px; font-size: 1.1em; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12.031 0C5.46 0 0 5.45 0 12.016c0 2.115.553 4.182 1.6 6.002L.15 24l6.146-1.57A11.96 11.96 0 0012.031 24c6.571 0 12.031-5.45 12.031-12.016C24.062 5.45 18.602 0 12.031 0zM12.031 22.02c-1.848 0-3.655-.497-5.241-1.439l-.376-.223-3.89 1.012 1.036-3.818-.245-.39A10.027 10.027 0 011.982 12.016c0-5.523 4.498-10.035 10.05-10.035 5.54 0 10.048 4.512 10.048 10.035 0 5.525-4.509 10.004-10.049 10.004zM17.55 14.5c-.303-.153-1.792-.888-2.07-.988-.278-.101-.481-.153-.685.153-.203.305-.783.988-.959 1.19-.177.203-.354.229-.657.076-2.18-.956-3.782-2.314-4.839-4.32-.102-.202-.01-.311.141-.463.136-.137.304-.356.455-.534.153-.178.204-.305.304-.508.102-.203.05-.382-.025-.534-.076-.152-.685-1.65-.938-2.261-.247-.594-.497-.514-.685-.523-.177-.01-.381-.01-.584-.01-.203 0-.533.076-.811.381-.279.305-1.065 1.042-1.065 2.54 0 1.5 1.09 2.95 1.242 3.153.152.203 2.148 3.282 5.2 4.598 1.488.643 2.378 1.05 3.197 1.344 1.486.47 2.839.403 3.905.245 1.192-.176 3.662-1.498 4.168-2.946.508-1.447.508-2.69.356-2.945-.152-.254-.558-.407-.862-.559z"/></svg>
-                دعوة الأصدقاء عبر واتساب
-            </button>
-            <br>
-            <button id="start-game-btn" class="three-d-button" style="background: var(--button-green); color: white; display: none;">🚀 ابدأ المسابقة الآن</button>
+    <div class="lobby">
+        <div class="top-bar">
+            <h1 id="lobby-title">غرفة الانتظار</h1>
+            <button id="leave-btn" class="ghost-btn">🔙 خروج</button>
         </div>
 
-        <div id="join-form">
-            <h2>انضمام للغرفة</h2>
-            <p>اختر صورتك الرمزية:</p>
-            <div class="avatar-selection">
-                <img src="assets/hulkman.png" class="avatar-option selected" data-avatar="assets/hulkman.png">
-                <img src="assets/superman.png" class="avatar-option" data-avatar="assets/superman.png">
-                <img src="assets/patman.png" class="avatar-option" data-avatar="assets/patman.png">
-                <img src="assets/child.jpeg" class="avatar-option" data-avatar="assets/child.jpeg">
+        <div class="panel code-panel">
+            <div class="code-label">كود الغرفة (اضغط للنسخ)</div>
+            <div class="room-code" id="display-room-code" title="نسخ الكود">-----</div>
+            <div class="share-row">
+                <button id="whatsapp-invite-btn" class="share-btn btn-whatsapp">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12.031 0C5.46 0 0 5.45 0 12.016c0 2.115.553 4.182 1.6 6.002L.15 24l6.146-1.57A11.96 11.96 0 0012.031 24c6.571 0 12.031-5.45 12.031-12.016C24.062 5.45 18.602 0 12.031 0zM12.031 22.02c-1.848 0-3.655-.497-5.241-1.439l-.376-.223-3.89 1.012 1.036-3.818-.245-.39A10.027 10.027 0 011.982 12.016c0-5.523 4.498-10.035 10.05-10.035 5.54 0 10.048 4.512 10.048 10.035 0 5.525-4.509 10.004-10.049 10.004zM17.55 14.5c-.303-.153-1.792-.888-2.07-.988-.278-.101-.481-.153-.685.153-.203.305-.783.988-.959 1.19-.177.203-.354.229-.657.076-2.18-.956-3.782-2.314-4.839-4.32-.102-.202-.01-.311.141-.463.136-.137.304-.356.455-.534.153-.178.204-.305.304-.508.102-.203.05-.382-.025-.534-.076-.152-.685-1.65-.938-2.261-.247-.594-.497-.514-.685-.523-.177-.01-.381-.01-.584-.01-.203 0-.533.076-.811.381-.279.305-1.065 1.042-1.065 2.54 0 1.5 1.09 2.95 1.242 3.153.152.203 2.148 3.282 5.2 4.598 1.488.643 2.378 1.05 3.197 1.344 1.486.47 2.839.403 3.905.245 1.192-.176 3.662-1.498 4.168-2.946.508-1.447.508-2.69.356-2.945-.152-.254-.558-.407-.862-.559z"/></svg>
+                    دعوة عبر واتساب
+                </button>
+                <button id="copy-link-btn" class="share-btn btn-copy">🔗 نسخ رابط الغرفة</button>
             </div>
-            <input type="text" id="player-name" placeholder="اكتب اسمك هنا..." style="padding: 10px; width: 250px; text-align: center; border-radius: 5px; font-size: 1.1em;"><br><br>
-            <button id="join-btn" style="background: var(--button-blue); color: white; padding: 10px 30px; font-size: 1.2em; border: none; border-radius: 5px; cursor: pointer;">دخول الغرفة</button>
+            <div class="chips">
+                <span class="chip">📚 <b id="chip-category">...</b></span>
+                <span class="chip">🎯 <b id="chip-mode">...</b></span>
+            </div>
+            <div class="mode-desc" id="mode-desc"></div>
         </div>
 
-        <h3 style="margin-top: 40px; color: var(--text-color);">اللاعبون المتصلون: <span id="players-count">0</span></h3>
-        <div class="players-grid" id="players-list"></div>
+        <div class="panel" id="identity-panel" style="display: none;">
+            <h2>عرّف نفسك للاعبين</h2>
+            <p>اختر صورتك واكتب اسمك ثم ادخل الغرفة</p>
+            <div class="avatars" id="avatars"></div>
+            <input type="text" id="player-name" maxlength="20" placeholder="اكتب اسمك هنا..." autocomplete="off">
+            <button id="join-btn" class="primary-btn blue">✅ دخول الغرفة</button>
+        </div>
+
+        <div class="panel">
+            <div class="players-header">
+                <h3>👥 اللاعبون في الغرفة</h3>
+                <span class="players-count"><span id="players-count">0</span> لاعب</span>
+            </div>
+            <div class="players-grid" id="players-list"></div>
+
+            <div id="host-controls" style="display: none;">
+                <button id="start-game-btn" class="primary-btn" disabled>🚀 ابدأ المسابقة</button>
+                <div class="hint" id="start-hint">شارك الكود وانتظر انضمام لاعب واحد على الأقل</div>
+                <button id="cancel-room-btn" class="primary-btn danger-btn" style="margin-top: 10px;">🗑️ إلغاء الغرفة</button>
+            </div>
+            <div id="guest-controls" style="display: none;">
+                <div class="waiting">⏳ في انتظار المضيف لبدء المسابقة<span class="dots"></span></div>
+                <div class="hint">ستنتقل تلقائياً إلى المسابقة عند بدء المضيف</div>
+            </div>
+        </div>
     </div>
+
+    <div id="countdown-overlay">
+        <div style="font-size: 1.4em; color: #a0aec0; margin-bottom: 10px;">استعد! المسابقة تبدأ خلال</div>
+        <div class="num" id="countdown-num">3</div>
+    </div>
+    <div id="toast"></div>
+
     <script type="module" src="lobby.js"></script>
 </body>
 </html>

@@ -220,6 +220,7 @@
   </style>
     <style>
         @media (max-width: 768px) {
+            #mp-vertical-bars { display: none !important; }
             .mobile-leaderboard {
                 position: relative !important;
                 width: 90% !important;
@@ -236,6 +237,8 @@
             }
         }
     </style>
+<link rel="stylesheet" href="kids-theme.css">
+<script src="kids-theme.js"></script>
 </head>
 <body>
   <div id="loading-overlay" class="hidden"> فضلا انتظر قليلا للتحميل...</div>
@@ -313,7 +316,7 @@
     }
 
     function updateSoundIcon() {
-      soundToggle.textContent = isSoundEnabled() ? "🔊" : "🔇";
+      if (soundToggle) soundToggle.textContent = isSoundEnabled() ? "🔊" : "🔇";
     }
 
     function toggleSound() {
@@ -337,7 +340,7 @@
 
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
+      navigator.serviceWorker.register('./sw.js')
         .then((reg) => {
           console.log('✅ Service Worker مسجل:', reg);
         })

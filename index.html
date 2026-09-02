@@ -500,15 +500,15 @@ function openModal(type, title) {
                 "النصر", "المسد", "الإخلاص", "الفلق", "الناس"
             ];
 
-            const suraSelect = document.getElementById("sura-select");
+            const suraSelect = document.getElementById("sura-select") || document.createElement("select");
             suras.forEach(s => {
                 const option = document.createElement("option");
                 option.value = s;
                 option.textContent = s;
-                suraSelect.appendChild(option);
+                if (suraSelect) suraSelect.appendChild(option);
             });
 
-            const juzSelect = document.getElementById("juz-select");
+            const juzSelect = document.getElementById("juz-select") || document.createElement("select");
 
             suraSelect.addEventListener('change', () => {
                 if (suraSelect.value !== "") {
@@ -523,6 +523,8 @@ function openModal(type, title) {
             });
         });
     </script>
+<link rel="stylesheet" href="kids-theme.css">
+<script src="kids-theme.js"></script>
 </head>
 
 <body>
@@ -551,94 +553,413 @@ function openModal(type, title) {
 
     <audio id="hover-sound" src="/assets/hover_main.mp3" preload="auto"></audio>
 
-    <h1>اختر نوع المسابقة</h1>
+    <style>
+      .home-hero { text-align: center; margin: 44px 0 26px; animation: fadeIn 0.8s ease-out; }
+      .logo-badge { width: 104px; height: 104px; margin: 0 auto 12px; border-radius: 32px; display: flex; align-items: center; justify-content: center; background: linear-gradient(145deg, rgba(16,185,129,0.25), rgba(66,153,225,0.15)); border: 2px solid rgba(255,255,255,0.12); box-shadow: 0 15px 40px rgba(16,185,129,0.25), inset 0 0 30px rgba(255,255,255,0.05); animation: logoFloat 4s ease-in-out infinite; }
+      @keyframes logoFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+      .home-hero h1 { margin: 0 0 8px; font-size: 2.4em; }
+      .home-sub { color: #a0aec0; margin: 0 auto 16px; max-width: 520px; font-size: 1.05em; line-height: 1.7; }
+      .home-stats { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+      .home-stats span { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 999px; padding: 6px 14px; font-size: 0.85em; color: #e2e8f0; font-weight: 600; }
+      .home-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px; width: 100%; max-width: 760px; margin: 0 auto 34px; padding: 0 6px; }
+      .home-card { position: relative; overflow: hidden; border-radius: 28px; padding: 30px 22px 26px; text-align: center; cursor: pointer; user-select: none; -webkit-user-select: none; border: 2px solid rgba(255,255,255,0.14); box-shadow: 0 18px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.15); transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.35s; isolation: isolate; }
+      .home-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%); transform: translateX(-120%); transition: transform 0.9s ease; z-index: 0; }
+      .home-card:hover { transform: translateY(-10px) scale(1.02); }
+      .home-card:hover::before { transform: translateX(120%); }
+      .home-card:active { transform: translateY(-4px) scale(0.99); }
+      .home-card.solo { background: linear-gradient(160deg, #4c1d95 0%, #7c3aed 55%, #a855f7 130%); }
+      .home-card.multi { background: linear-gradient(160deg, #064e3b 0%, #059669 55%, #34d399 130%); }
+      .home-card > * { position: relative; z-index: 1; }
+      .hc-icon { width: 112px; height: 112px; margin: 0 auto 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.18); box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: transform 0.35s; }
+      .home-card:hover .hc-icon { transform: rotate(-6deg) scale(1.08); }
+      .hc-title { font-size: 1.75em; font-weight: 900; color: #fff; margin-bottom: 6px; text-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+      .hc-desc { color: rgba(255,255,255,0.85); font-size: 0.95em; line-height: 1.7; margin: 0 0 16px; }
+      .hc-cta { display: inline-block; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 999px; padding: 8px 20px; font-weight: 800; font-size: 0.95em; }
+      .hc-badge { position: absolute; top: 14px; left: 14px; background: #ef4444; color: #fff; font-size: 0.72em; font-weight: 800; padding: 4px 10px; border-radius: 999px; box-shadow: 0 0 0 4px rgba(239,68,68,0.25); animation: livePulse 1.6s ease-in-out infinite; }
+      @keyframes livePulse { 0%,100% { box-shadow: 0 0 0 3px rgba(239,68,68,0.25); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0.05); } }
+      .hc-orb { position: absolute; width: 180px; height: 180px; border-radius: 50%; filter: blur(30px); opacity: 0.55; z-index: 0; pointer-events: none; }
+      .quick { width: 100%; max-width: 760px; margin: 0 auto 26px; padding: 0 6px; }
+      .quick h2 { color: #e2e8f0; font-size: 1.15em; margin: 0 0 12px; text-align: right; display: flex; align-items: center; gap: 8px; }
+      .quick h2 small { color: #718096; font-weight: 500; font-size: 0.8em; }
+      .quick-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 12px; }
+      .quick-tile { --tile: #4299e1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 14px 8px 12px; cursor: pointer; font-family: 'Cairo', sans-serif; color: #e2e8f0; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: transform 0.25s, border-color 0.25s, background 0.25s; }
+      .quick-tile:hover { transform: translateY(-5px); border-color: var(--tile); background: rgba(255,255,255,0.09); }
+      .quick-icon { width: 58px; height: 58px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--tile) 22%, transparent); border: 1px solid color-mix(in srgb, var(--tile) 45%, transparent); box-shadow: 0 6px 16px color-mix(in srgb, var(--tile) 30%, transparent); }
+      .quick-label { font-weight: 800; font-size: 0.9em; }
+      .home-footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 6px 0 40px; }
+      .home-footer button { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); color: #e2e8f0; padding: 11px 18px; border-radius: 999px; font-weight: 700; font-family: 'Cairo', sans-serif; cursor: pointer; transition: 0.25s; font-size: 0.92em; }
+      .home-footer button:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+      .home-footer button.whats { color: #4ade80; border-color: rgba(37,211,102,0.4); }
+      .home-footer #contact-btn, .home-footer button { width: auto !important; max-width: none !important; margin: 0 !important; }
+      @media (max-width: 600px) {
+        .home-hero { margin: 54px 0 20px; }
+        .home-hero h1 { font-size: 1.9em; }
+        .logo-badge { width: 88px; height: 88px; }
+        .home-card { padding: 24px 18px 22px; }
+        .hc-icon { width: 96px; height: 96px; }
+        .hc-title { font-size: 1.5em; }
+        .quick-grid { grid-template-columns: repeat(3, 1fr); }
+      }
+    </style>
 
-<div class="quiz-options" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; width: 100%; max-width: 700px; margin: 30px auto;">
-    <!-- Luxurious Solo Play Card -->
-    <div class="card" onmousedown="startSoloPress()" onmouseup="cancelSoloPress(event)" onmouseleave="abortSoloPress(event)" ontouchstart="startSoloPress()" ontouchend="cancelSoloPress(event)" onmouseenter="playHover()" style="position: relative; border-radius: 25px; padding: 35px 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(135deg, rgba(74, 20, 140, 0.6) 0%, rgba(49, 27, 146, 0.8) 100%); backdrop-filter: blur(15px); border: 2px solid rgba(255, 255, 255, 0.15); box-shadow: 0 15px 35px rgba(49, 27, 146, 0.4), inset 0 0 20px rgba(255,255,255,0.05); overflow: hidden; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; user-select: none; -webkit-user-select: none;" onmouseover="this.style.transform='translateY(-10px) scale(1.03)'; this.style.boxShadow='0 20px 40px rgba(49, 27, 146, 0.6)';" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 15px 35px rgba(49, 27, 146, 0.4)';">
-        <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(156, 39, 176, 0.4) 0%, rgba(0,0,0,0) 70%); z-index: 0; pointer-events: none;"></div>
-        <div style="font-size: 4em; margin-bottom: 15px; z-index: 1; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));">👤</div>
-        <div class="card-header" style="color: #e9d8fd; font-size: 1.8em; font-weight: 900; z-index: 1; margin-bottom: 10px; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">لعبة فردية</div>
-        <p style="color: #b794f4; font-size: 0.95em; line-height: 1.6; text-align: center; margin: 0; z-index: 1; font-weight: 600;">تدرب واختبر معلوماتك بنفسك في أقسام المسابقة المختلفة.</p>
+    <header class="home-hero">
+      <div class="logo-badge"><svg viewBox="0 0 64 64" width="70" height="70"><defs><linearGradient id="gB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="gG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs><path d="M8 16c8-4 16-4 22 2v34c-6-6-14-6-22-2z" fill="url(#gB)"/><path d="M56 16c-8-4-16-4-22 2v34c6-6 14-6 22-2z" fill="#10b981"/><path d="M30 18c1-1 3-1 4 0v34c-1-1-3-1-4 0z" fill="#065f46"/><path d="M14 24h10M14 30h10M40 24h10M40 30h10M14 36h10M40 36h10" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round" opacity=".8"/><path d="M50 4l2.6 5.4 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L41.4 10.2l6-.8z" fill="url(#gG)"/></svg></div>
+      <h1>مسابقات القرآن الكريم</h1>
+      <p class="home-sub">تعلّم وتنافس في القرآن الكريم والسيرة والفقه ومعاني الكلمات، بمفردك أو مع أصدقائك في تحدٍّ مباشر.</p>
+      <div class="home-stats">
+        <span>📚 أكثر من 26 ألف سؤال</span>
+        <span>🎈 قسم خاص للأطفال</span>
+        <span>🔴 تحديات مباشرة مع الأصدقاء</span>
+      </div>
+    </header>
+
+    <div class="home-cards">
+      <div class="home-card solo" onmousedown="startSoloPress()" onmouseup="cancelSoloPress(event)" onmouseleave="abortSoloPress(event)" ontouchstart="startSoloPress()" ontouchend="cancelSoloPress(event)" onmouseenter="playHover()">
+        <div class="hc-orb" style="top: -60px; right: -60px; background: #f0abfc;"></div>
+        <div class="hc-icon"><svg viewBox="0 0 96 96" width="84" height="84"><defs><linearGradient id="sA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0abfc"/><stop offset="1" stop-color="#a855f7"/></linearGradient><linearGradient id="sB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c4b5fd"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><circle cx="48" cy="48" r="44" fill="rgba(255,255,255,0.08)"/><circle cx="48" cy="36" r="16" fill="url(#sA)"/><path d="M20 82c2-16 14-24 28-24s26 8 28 24z" fill="url(#sB)"/><path d="M70 14l2.4 5 5.6.7-4.1 3.9 1 5.5-4.9-2.7-4.9 2.7 1-5.5-4.1-3.9 5.6-.7z" fill="#fde68a"/><path d="M40 33c2 3 5 4 8 4s6-1 8-4" stroke="#4c1d95" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg></div>
+        <div class="hc-title">لعبة فردية</div>
+        <p class="hc-desc">تدرّب واختبر معلوماتك بنفسك في أي قسم تختاره، بوقتك وعلى راحتك.</p>
+        <span class="hc-cta">ابدأ الآن ←</span>
+      </div>
+      <div class="home-card multi" onclick="openMultiplayerModal()" onmouseenter="playHover()">
+        <span class="hc-badge">● مباشر</span>
+        <div class="hc-orb" style="bottom: -60px; left: -60px; background: #6ee7b7;"></div>
+        <div class="hc-icon"><svg viewBox="0 0 96 96" width="84" height="84"><defs><linearGradient id="mA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ee7b7"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="mB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#93c5fd"/><stop offset="1" stop-color="#2563eb"/></linearGradient><linearGradient id="mC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fdba74"/><stop offset="1" stop-color="#ea580c"/></linearGradient></defs><circle cx="48" cy="48" r="44" fill="rgba(255,255,255,0.08)"/><circle cx="26" cy="40" r="10" fill="url(#mB)"/><path d="M8 72c1-11 9-17 18-17s17 6 18 17z" fill="url(#mB)"/><circle cx="70" cy="40" r="10" fill="url(#mC)"/><path d="M52 72c1-11 9-17 18-17s17 6 18 17z" fill="url(#mC)"/><circle cx="48" cy="34" r="13" fill="url(#mA)"/><path d="M26 76c2-14 11-21 22-21s20 7 22 21z" fill="url(#mA)"/><path d="M40 12h16v6c0 5-4 8-8 8s-8-3-8-8z" fill="#fde68a"/><path d="M38 14h-4c0 5 2 8 6 9M58 14h4c0 5-2 8-6 9" stroke="#fbbf24" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg></div>
+        <div class="hc-title">تحدي الأصدقاء</div>
+        <p class="hc-desc">أنشئ غرفة، شارك الكود، ونافس أصدقاءك على نفس الأسئلة بنتائج لحظية.</p>
+        <span class="hc-cta">أنشئ غرفة أو انضم ←</span>
+      </div>
     </div>
 
-    <!-- Luxurious Multiplayer Card -->
-    <div class="card" onclick="openMultiplayerModal()" onmouseenter="playHover()" style="position: relative; border-radius: 25px; padding: 35px 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(135deg, rgba(0, 77, 64, 0.6) 0%, rgba(0, 105, 92, 0.8) 100%); backdrop-filter: blur(15px); border: 2px solid rgba(255, 255, 255, 0.15); box-shadow: 0 15px 35px rgba(0, 77, 64, 0.4), inset 0 0 20px rgba(255,255,255,0.05); overflow: hidden; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer;" onmouseover="this.style.transform='translateY(-10px) scale(1.03)'; this.style.boxShadow='0 20px 40px rgba(0, 77, 64, 0.6)';" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 15px 35px rgba(0, 77, 64, 0.4)';">
-        <div style="position: absolute; bottom: -50px; left: -50px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(0, 191, 165, 0.4) 0%, rgba(0,0,0,0) 70%); z-index: 0; pointer-events: none;"></div>
-        <div style="font-size: 4em; margin-bottom: 15px; z-index: 1; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));">👥</div>
-        <div class="card-header" style="color: #b2f5ea; font-size: 1.8em; font-weight: 900; z-index: 1; margin-bottom: 10px; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">متعدد اللاعبين</div>
-        <p style="color: #81e6d9; font-size: 0.95em; line-height: 1.6; text-align: center; margin: 0; z-index: 1; font-weight: 600;">تحدى أصدقاءك في غرفة خاصة واعرف من الأفضل!</p>
-    </div>
-</div>
+    <section class="quick">
+      <h2>⚡ ابدأ بسرعة <small>لعبة فردية في قسم محدد</small></h2>
+      <div class="quick-grid">
+        <button class="quick-tile" style="--tile:#10b981" onclick="openSoloMixModal(); showQuranOptions('solo')">
+          <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><path d="M6 12c6-3 12-3 17 1v26c-5-4-11-4-17-1z" fill="#34d399"/><path d="M42 12c-6-3-12-3-17 1v26c5-4 11-4 17-1z" fill="#059669"/><path d="M11 20h7M11 25h7M30 20h7M30 25h7" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <span class="quick-label">القرآن الكريم</span>
+        </button>
+        <button class="quick-tile" style="--tile:#f59e0b" onclick="startSingleQuiz('seerah', 'solo')">
+          <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><path d="M24 6c8 5 14 12 14 20H10c0-8 6-15 14-20z" fill="#fbbf24"/><rect x="8" y="26" width="32" height="14" rx="2" fill="#f59e0b"/><rect x="20" y="30" width="8" height="10" rx="4" fill="#78350f"/><rect x="4" y="12" width="4" height="28" rx="2" fill="#fde68a"/><rect x="40" y="12" width="4" height="28" rx="2" fill="#fde68a"/><circle cx="24" cy="5" r="2" fill="#fde68a"/></svg></span>
+          <span class="quick-label">السيرة النبوية</span>
+        </button>
+        <button class="quick-tile" style="--tile:#f97316" onclick="startSingleQuiz('fiqh', 'solo')">
+          <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><rect x="22" y="8" width="4" height="30" rx="2" fill="#fb923c"/><rect x="14" y="38" width="20" height="4" rx="2" fill="#ea580c"/><path d="M6 14h36" stroke="#fdba74" stroke-width="3" stroke-linecap="round"/><path d="M4 26l6-12 6 12z" fill="#fdba74"/><path d="M32 26l6-12 6 12z" fill="#fdba74"/><path d="M4 26a6 6 0 0 0 12 0zM32 26a6 6 0 0 0 12 0z" fill="#fb923c"/></svg></span>
+          <span class="quick-label">الفقه</span>
+        </button>
+        <button class="quick-tile" style="--tile:#a3e635" onclick="startSingleQuiz('general', 'solo')">
+          <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><path d="M24 4a14 14 0 0 0-8 25v5h16v-5a14 14 0 0 0-8-25z" fill="#fde047"/><rect x="17" y="36" width="14" height="4" rx="2" fill="#a3e635"/><rect x="19" y="41" width="10" height="3" rx="1.5" fill="#65a30d"/><path d="M20 18a5 5 0 0 1 8 0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
+          <span class="quick-label">معلومات قرآنية</span>
+        </button>
+        <button class="quick-tile" style="--tile:#a855f7" onclick="startSingleQuiz('meanings', 'solo')">
+          <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><path d="M6 10a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H20l-8 8v-8h-2a4 4 0 0 1-4-4z" fill="#c084fc"/><text x="24" y="26" text-anchor="middle" font-size="16" font-weight="700" fill="#fff" font-family="Cairo, sans-serif">أ ب</text></svg></span>
+          <span class="quick-label">معاني الكلمات</span>
+        </button>
+        <button class="quick-tile" style="--tile:#fb7185" onclick="openSoloMixModal(); showKidsOptions('solo')">
+          <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span>
+          <span class="quick-label">الأطفال</span>
+        </button>
+      </div>
+    </section>
 
-<div class="button-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 30px;">
-  <button class="three-d-button small-button" onclick="window.location.href='downloaddata.html'" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px 20px; border-radius: 12px; font-weight: bold; font-family: 'Cairo'; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
-    📦 تحميل الأسئلة
-  </button>
-  <button id="contact-btn" class="small-button" onclick="window.open('https://wa.me/201066415005', '_blank')" style="background: rgba(37, 211, 102, 0.2); border: 1px solid rgba(37, 211, 102, 0.5); color: #25D366; padding: 12px 20px; border-radius: 12px; font-weight: bold; font-family: 'Cairo'; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(37, 211, 102, 0.3)'" onmouseout="this.style.background='rgba(37, 211, 102, 0.2)'">
-    📱 تواصل مع المطور
-  </button>
-</div>
+    <div class="home-footer">
+      <button onclick="window.location.href='downloaddata.html'">📦 تحميل الأسئلة</button>
+      <button id="contact-btn" class="whats" onclick="window.open('https://wa.me/201066415005', '_blank')">📱 تواصل مع المطور</button>
     </div>
 
     <link rel="manifest" href="/manifest.json">
-    <!-- Multiplayer Modal --><div id="multiplayer-modal" class="modal"><div class="modal-content" style="max-width: 450px; padding: 20px; background: var(--modal-bg); border-radius: 20px;"><span class="close-button" onclick="closeMultiplayerModal()">&times;</span><h3 style="color: var(--button-green); margin-top: 0; text-align: center; margin-bottom: 15px; font-size: 1.4em;">غرفة تحدي جديدة</h3><div id="multi-categories-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 55vh; overflow-y: auto; padding-right: 5px;"><div class="category-card" onclick="showQuranOptions('multi')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.05)';"><span style="font-size: 2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">📖</span><div style="text-align: right; flex-grow: 1;"><div style="font-weight: 800; font-size: 1.1em; color: var(--button-green);">القرآن الكريم</div><div style="font-size: 0.75em; color: #a0aec0; margin-top: 2px;">مسابقة في أجزاء القرآن أو القرآن كاملاً</div></div></div><div class="category-card" onclick="showMultiSettings('seerah')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.05)';"><span style="font-size: 2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🕌</span><div style="text-align: right; flex-grow: 1;"><div style="font-weight: 800; font-size: 1.1em; color: #f6e05e;">السيرة النبوية</div></div></div><div class="category-card" onclick="showMultiSettings('fiqh')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.05)';"><span style="font-size: 2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">⚖️</span><div style="text-align: right; flex-grow: 1;"><div style="font-weight: 800; font-size: 1.1em; color: #f6ad55;">الفقه الإسلامي</div></div></div><div class="category-card" onclick="showMultiSettings('general')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.05)';"><span style="font-size: 2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">💡</span><div style="text-align: right; flex-grow: 1;"><div style="font-weight: 800; font-size: 1.1em; color: #68d391;">معلومات قرآنية</div></div></div><div class="category-card" onclick="showMultiSettings('meanings')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.05)';"><span style="font-size: 2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🔤</span><div style="text-align: right; flex-grow: 1;"><div style="font-weight: 800; font-size: 1.1em; color: #b794f4;">معاني الكلمات</div></div></div><div class="category-card" onclick="showKidsOptions('multi')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.05)';"><span style="font-size: 2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🎈</span><div style="text-align: right; flex-grow: 1;"><div style="font-weight: 800; font-size: 1.1em; color: #fc8181;">مسابقة الأطفال</div></div></div></div><div id="multi-quran-options" style="display: none; flex-direction: column; gap: 10px; margin-top: 5px;"><h4 style="color: white; margin: 0; text-align: center; font-size: 1.1em;">خيارات القرآن الكريم</h4><button onclick="showMultiSettings('mixed')" style="background-color: var(--button-green); color: white; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 1em; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">📖 مسابقة في القرآن كله</button><div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;"><select id="multi-juz-select" style="flex-grow: 1; padding: 12px; border-radius: 10px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); font-size: 1em; outline: none;"><option value="">-- أو اختر الجزء المحدد --</option><script>for (let i = 1; i <= 30; i++) {document.write('<option value="' + i + '">الجزء ' + i + '</option>');}</script></select><button onclick="let juz=document.getElementById('multi-juz-select').value; if(!juz){alert('الرجاء اختيار الجزء');return;} showMultiSettings('mixed_juz_' + juz)" style="background-color: var(--button-blue); color: white; padding: 12px 20px; border-radius: 10px; font-weight: bold; border: none; cursor: pointer;">ابدأ</button></div>
-<button onclick="hideQuranOptions('multi')" style="background: transparent; color: #a0aec0; border: none; cursor: pointer; margin-top: 5px; font-size: 0.9em; padding: 8px;">🔙 رجوع للأقسام</button></div>
-<div id="multi-kids-options" style="display: none; flex-direction: column; gap: 10px; margin-top: 5px;">
-    <h4 style="color: white; margin: 0; text-align: center; font-size: 1.1em;">اختر مستوى الأطفال</h4>
-    <button onclick="showMultiSettings('kids_1')" style="background-color: var(--button-green); color: white; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 1em; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">🎈 مستوى 1 (أسئلة سهلة)</button>
-    <button onclick="showMultiSettings('kids_2')" style="background-color: var(--button-blue); color: white; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 1em; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">🚀 مستوى 2 (10 سنوات فأكثر)</button>
-    <button onclick="hideKidsOptions('multi')" style="background: transparent; color: #a0aec0; border: none; cursor: pointer; margin-top: 5px; font-size: 0.9em; padding: 8px;">🔙 رجوع للأقسام</button>
-</div>
+    <!-- Multiplayer Modal -->
+<style>
+  .mp-step { display: none; flex-direction: column; gap: 10px; }
+  .mp-step.active { display: flex; }
+  .mp-stepper { display: flex; justify-content: center; gap: 6px; margin: 0 0 14px; font-size: 0.75em; color: #718096; }
+  .mp-stepper span { padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,0.05); }
+  .mp-stepper span.done { color: #10b981; }
+  .mp-stepper span.current { background: var(--button-green); color: white; font-weight: 800; }
+  .mp-choice { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 16px; cursor: pointer; text-align: right; transition: 0.2s; display: flex; align-items: center; gap: 14px; }
+  .mp-choice:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); border-color: var(--button-green); }
+  .mp-choice .big { font-size: 2.2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+  .mp-choice b { display: block; font-size: 1.1em; color: white; }
+  .mp-choice small { color: #a0aec0; font-size: 0.8em; }
+  .mp-cat { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 14px; border-radius: 12px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: 0.2s; }
+  .mp-cat:hover { background: rgba(255,255,255,0.1); border-color: var(--button-green); }
+  .mp-cat-icon { font-size: 1.9em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+  .mp-back { background: transparent !important; color: #a0aec0 !important; border: none !important; cursor: pointer; font-size: 0.9em !important; padding: 8px !important; box-shadow: none !important; }
+  .mp-primary { background: var(--button-blue) !important; color: white !important; padding: 14px !important; border-radius: 12px !important; border: none !important; font-weight: 800 !important; font-size: 1.05em !important; cursor: pointer; box-shadow: 0 4px 15px rgba(66,153,225,0.4) !important; }
+  .mp-primary:disabled { opacity: 0.5; cursor: wait; }
+  .mp-select { padding: 12px; border-radius: 10px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); font-size: 1em; outline: none; width: 100%; }
+  .mp-summary { background: rgba(16,185,129,0.12); border: 1px dashed var(--button-green); border-radius: 12px; padding: 10px; color: white; font-size: 0.95em; text-align: center; }
+  .mp-how { color: #718096; font-size: 0.78em; text-align: center; margin: 4px 0 0; line-height: 1.7; }
+  .modal.kids .modal-content { background: linear-gradient(180deg, #7ed6ff, #ffe9a8) !important; border: 5px solid #fff !important; border-radius: 30px !important; color: #2d2b55 !important; box-shadow: 0 10px 0 rgba(95,39,205,0.25), 0 20px 40px rgba(0,0,0,0.3) !important; }
+  .modal.kids #mp-modal-title { color: #5f27cd !important; font-size: 1.6em !important; }
+  .modal.kids .mp-stepper span { background: #fff; color: #6c63ff; font-weight: 800; }
+  .modal.kids .mp-stepper span.current { background: #ff9f43 !important; color: #fff !important; }
+  .modal.kids .mp-summary { background: #fff !important; border: 4px dashed #feca57 !important; border-radius: 20px !important; color: #e63946 !important; font-weight: 900; font-size: 1.15em !important; }
+  .modal.kids label { color: #5f27cd !important; font-weight: 800; font-size: 0.95em !important; }
+  .modal.kids .mp-select { background: #fff !important; color: #2d2b55 !important; border: 4px solid #c8b6ff !important; border-radius: 999px !important; font-weight: 800; font-size: 1.1em !important; }
+  .modal.kids #mp-summary { color: #5f27cd !important; font-weight: 800; }
+  .modal.kids #btn-mode-questions, .modal.kids #btn-mode-time { border-radius: 999px !important; font-size: 1em !important; }
+  .modal.kids .mp-primary { background: linear-gradient(90deg, #ff6b6b, #feca57, #1dd1a1, #54a0ff, #ff6b6b) !important; background-size: 200% 100% !important; animation: kids-rainbow 3s linear infinite; border: 4px solid #fff !important; border-radius: 999px !important; font-size: 1.2em !important; box-shadow: 0 6px 0 rgba(0,0,0,0.18) !important; }
+  .modal.kids .mp-back { color: #5f27cd !important; font-weight: 800; }
+  .modal.kids .close-button { color: #5f27cd !important; }
+  .mp-sub-btn { padding: 12px !important; border-radius: 10px !important; font-weight: bold !important; font-size: 1em !important; border: none !important; cursor: pointer; color: white !important; }
+</style>
+<div id="multiplayer-modal" class="modal">
+  <div class="modal-content" style="max-width: 450px; padding: 20px; background: var(--modal-bg); border-radius: 20px; text-align: right;">
+    <span class="close-button" onclick="closeMultiplayerModal()">&times;</span>
+    <h3 id="mp-modal-title" style="color: var(--button-green); margin: 0 0 10px; text-align: center; font-size: 1.4em;">🏆 تحدي الأصدقاء</h3>
+    <div id="mp-stepper" class="mp-stepper" style="display: none;">
+      <span data-step="category">1. القسم</span>
+      <span data-step="settings">2. الإعدادات</span>
+      <span data-step="lobby">3. الغرفة</span>
+    </div>
 
-  <div id="multi-settings-options" style="display: none; flex-direction: column; gap: 15px; margin-top: 5px;">
-      <h3 style="color: white; margin: 0; text-align: center; font-size: 1.3em;">إعدادات الغرفة</h3>
-      
-      <div style="display: flex; gap: 10px; justify-content: center; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 12px;">
-          <button id="btn-mode-questions" onclick="setMultiMode('questions')" style="flex: 1; padding: 10px; border-radius: 8px; border: none; background: var(--button-green); color: white; font-weight: bold; cursor: pointer; transition: 0.2s;">عدد الأسئلة</button>
-          <button id="btn-mode-time" onclick="setMultiMode('time')" style="flex: 1; padding: 10px; border-radius: 8px; border: none; background: transparent; color: #a0aec0; font-weight: bold; cursor: pointer; transition: 0.2s;">وقت محدد</button>
+    <!-- Step: home -->
+    <div id="mp-step-home" class="mp-step active">
+      <div class="mp-choice" onclick="mpShowStep('category')">
+        <span class="big">➕</span>
+        <div><b>إنشاء غرفة جديدة</b><small>اختر القسم والإعدادات ثم ادعُ أصدقاءك بالكود</small></div>
+      </div>
+      <div class="mp-choice" onclick="mpShowStep('join')">
+        <span class="big">🔑</span>
+        <div><b>الانضمام بكود</b><small>معك كود من صديق؟ أدخله وادخل غرفته</small></div>
+      </div>
+      <button id="mp-resume-btn" class="mp-back" style="display: none;" onclick="mpResumeLastRoom()">↩ العودة إلى غرفتك الأخيرة</button>
+      <p class="mp-how">أنشئ غرفة ← شارك الكود ← ابدأ عندما يكتمل الأصدقاء ← نفس الأسئلة للجميع والنتائج مباشرة</p>
+    </div>
+
+    <!-- Step: join -->
+    <div id="mp-step-join" class="mp-step">
+      <p style="color: #a0aec0; text-align: center; margin: 0; font-size: 0.9em;">أدخل كود الغرفة المكوّن من 5 أرقام</p>
+      <input type="text" id="join-room-code" inputmode="numeric" maxlength="5" placeholder="• • • • •" onkeydown="if(event.key==='Enter') joinMultiplayerRoom()" style="padding: 14px; width: 100%; box-sizing: border-box; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 1.6em; letter-spacing: 8px; direction: ltr; outline: none;">
+      <button id="mp-join-btn" class="mp-primary" onclick="joinMultiplayerRoom()">🚪 دخول الغرفة</button>
+      <button class="mp-back" onclick="mpShowStep('home')">🔙 رجوع</button>
+    </div>
+
+    <!-- Step: category -->
+    <div id="mp-step-category" class="mp-step">
+      <div id="multi-categories-list" class="cat-grid">
+        <div class="cat-card" style="--c:#10b981" onclick="showQuranOptions('multi')">
+          <span class="cat-icon"><svg viewBox="0 0 48 48"><path d="M6 12c6-3 12-3 17 1v26c-5-4-11-4-17-1z" fill="#34d399"/><path d="M42 12c-6-3-12-3-17 1v26c5-4 11-4 17-1z" fill="#059669"/><path d="M11 20h7M11 25h7M30 20h7M30 25h7" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <div class="cat-text"><div class="cat-title">القرآن الكريم</div><div class="cat-sub">الآية التالية · 19 ألف سؤال</div></div>
+          <span class="cat-arrow">‹</span>
+        </div>
+        <div class="cat-card" style="--c:#f59e0b" onclick="showMultiSettings('seerah')">
+          <span class="cat-icon"><svg viewBox="0 0 48 48"><path d="M24 6c8 5 14 12 14 20H10c0-8 6-15 14-20z" fill="#fbbf24"/><rect x="8" y="26" width="32" height="14" rx="2" fill="#f59e0b"/><rect x="20" y="30" width="8" height="10" rx="4" fill="#78350f"/><rect x="4" y="12" width="4" height="28" rx="2" fill="#fde68a"/><rect x="40" y="12" width="4" height="28" rx="2" fill="#fde68a"/><circle cx="24" cy="5" r="2" fill="#fde68a"/></svg></span>
+          <div class="cat-text"><div class="cat-title">السيرة النبوية</div><div class="cat-sub">حياة النبي ﷺ · 900 سؤال</div></div>
+          <span class="cat-arrow">‹</span>
+        </div>
+        <div class="cat-card" style="--c:#f97316" onclick="showMultiSettings('fiqh')">
+          <span class="cat-icon"><svg viewBox="0 0 48 48"><rect x="22" y="8" width="4" height="30" rx="2" fill="#fb923c"/><rect x="14" y="38" width="20" height="4" rx="2" fill="#ea580c"/><path d="M6 14h36" stroke="#fdba74" stroke-width="3" stroke-linecap="round"/><path d="M4 26l6-12 6 12z" fill="#fdba74"/><path d="M32 26l6-12 6 12z" fill="#fdba74"/><path d="M4 26a6 6 0 0 0 12 0zM32 26a6 6 0 0 0 12 0z" fill="#fb923c"/></svg></span>
+          <div class="cat-text"><div class="cat-title">الفقه الإسلامي</div><div class="cat-sub">العبادات والأحكام · 377 سؤالاً</div></div>
+          <span class="cat-arrow">‹</span>
+        </div>
+        <div class="cat-card" style="--c:#a3e635" onclick="showMultiSettings('general')">
+          <span class="cat-icon"><svg viewBox="0 0 48 48"><path d="M24 4a14 14 0 0 0-8 25v5h16v-5a14 14 0 0 0-8-25z" fill="#fde047"/><rect x="17" y="36" width="14" height="4" rx="2" fill="#a3e635"/><rect x="19" y="41" width="10" height="3" rx="1.5" fill="#65a30d"/><path d="M20 18a5 5 0 0 1 8 0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
+          <div class="cat-text"><div class="cat-title">معلومات قرآنية</div><div class="cat-sub">ثقافة عامة · 253 سؤالاً</div></div>
+          <span class="cat-arrow">‹</span>
+        </div>
+        <div class="cat-card" style="--c:#a855f7" onclick="showMultiSettings('meanings')">
+          <span class="cat-icon"><svg viewBox="0 0 48 48"><path d="M6 10a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H20l-8 8v-8h-2a4 4 0 0 1-4-4z" fill="#c084fc"/><text x="24" y="26" text-anchor="middle" font-size="16" font-weight="700" fill="#fff" font-family="Cairo, sans-serif">أ ب</text></svg></span>
+          <div class="cat-text"><div class="cat-title">معاني الكلمات</div><div class="cat-sub">تفسير المفردات · 4,900 سؤال</div></div>
+          <span class="cat-arrow">‹</span>
+        </div>
+        <div class="cat-card" style="--c:#fb7185" onclick="showKidsOptions('multi')">
+          <span class="cat-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span>
+          <div class="cat-text"><div class="cat-title">مسابقة الأطفال</div><div class="cat-sub">مستويان · حساب وإسلاميات</div></div>
+          <span class="cat-arrow">‹</span>
+        </div>
+      </div>
+      <div id="multi-quran-options" class="opt-panel" style="display: none;">
+        <div class="opt-head"><span class="cat-icon" style="--c:#10b981"><svg viewBox="0 0 48 48"><path d="M6 12c6-3 12-3 17 1v26c-5-4-11-4-17-1z" fill="#34d399"/><path d="M42 12c-6-3-12-3-17 1v26c5-4 11-4 17-1z" fill="#059669"/><path d="M11 20h7M11 25h7M30 20h7M30 25h7" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round"/></svg></span><div><div class="cat-title">القرآن الكريم</div><div class="cat-sub">اختر المدى الذي تريد التنافس فيه</div></div></div>
+        <button class="opt-big" style="--c:#10b981" onclick="showMultiSettings('mixed')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M6 12c6-3 12-3 17 1v26c-5-4-11-4-17-1z" fill="#34d399"/><path d="M42 12c-6-3-12-3-17 1v26c5-4 11-4 17-1z" fill="#059669"/><path d="M11 20h7M11 25h7M30 20h7M30 25h7" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round"/></svg></span><span><b>القرآن كاملاً</b><small>أسئلة من جميع السور</small></span></button>
+        <div class="opt-row">
+          <span class="opt-big-icon" style="--c:#f59e0b"><svg viewBox="0 0 48 48"><rect x="8" y="6" width="32" height="36" rx="4" fill="#10b981"/><rect x="12" y="10" width="24" height="28" rx="2" fill="#ecfdf5"/><path d="M16 17h16M16 23h16M16 29h10" stroke="#059669" stroke-width="2.5" stroke-linecap="round"/><rect x="30" y="4" width="8" height="12" rx="1" fill="#f59e0b"/></svg></span>
+          <select id="multi-juz-select" class="opt-select"><option value="">اختر جزءاً محدداً...</option><script>for (let i = 1; i <= 30; i++) { document.write('<option value="' + i + '">الجزء ' + i + '</option>'); }</script></select>
+          <button class="opt-go" onclick="startJuzQuiz('multi')">اختيار</button>
+        </div>
+        <button class="mp-back" onclick="hideQuranOptions('multi')">🔙 رجوع للأقسام</button>
+      </div>
+      <div id="multi-kids-options" class="opt-panel kids-panel" style="display: none;">
+        <div class="opt-head"><span class="cat-icon" style="--c:#fb7185"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><div><div class="cat-title">مسابقة الأطفال</div><div class="cat-sub">اختر المستوى المناسب لعمر الطفل</div></div></div>
+        <button class="level-card" style="--c:#fb7185" onclick="showMultiSettings('kids_1')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><span><b>المستوى الأول</b><small>حساب بسيط وأسئلة سهلة · حتى 9 سنوات</small></span><span class="level-badge">١</span></button>
+        <button class="level-card" style="--c:#38bdf8" onclick="showMultiSettings('kids_2')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر</small></span><span class="level-badge">٢</span></button>
+        <button class="mp-back" onclick="hideKidsOptions('multi')">🔙 رجوع للأقسام</button>
+      </div>
+      <button class="mp-back" onclick="mpShowStep('home')">🔙 رجوع</button>
+    </div>
+
+    <!-- Step: settings -->
+    <style>
+      #mp-step-settings { max-height: 72vh; overflow-y: auto; padding-left: 4px; gap: 12px; }
+      .set-group { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+      .set-label { font-weight: 800; color: #e2e8f0; font-size: 0.95em; display: flex; align-items: center; justify-content: space-between; }
+      .set-label small { color: #718096; font-weight: 500; font-size: 0.8em; }
+      .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .seg-btn { background: rgba(0,0,0,0.25) !important; border: 2px solid rgba(255,255,255,0.1) !important; border-radius: 14px !important; padding: 10px 8px !important; color: #a0aec0 !important; cursor: pointer; display: flex; flex-direction: column; gap: 2px; align-items: center; font-family: 'Cairo', sans-serif; transition: 0.2s !important; box-shadow: none !important; font-size: 1em !important; }
+      .seg-btn b { font-size: 1em; }
+      .seg-btn small { font-size: 0.72em; opacity: 0.8; }
+      .seg-btn.active { background: linear-gradient(135deg, #059669, #10b981) !important; border-color: #6ee7b7 !important; color: #fff !important; box-shadow: 0 6px 16px rgba(16,185,129,0.35) !important; }
+      .seg-btn.active.time { background: linear-gradient(135deg, #2563eb, #4299e1) !important; border-color: #93c5fd !important; box-shadow: 0 6px 16px rgba(66,153,225,0.35) !important; }
+      .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+      .chip-btn { background: rgba(0,0,0,0.25) !important; border: 2px solid rgba(255,255,255,0.1) !important; color: #cbd5e0 !important; border-radius: 999px !important; padding: 7px 14px !important; font-weight: 800 !important; font-size: 0.9em !important; cursor: pointer; font-family: 'Cairo', sans-serif; transition: 0.15s !important; box-shadow: none !important; flex: 1 1 auto; }
+      .chip-btn.active { background: var(--button-blue) !important; border-color: #93c5fd !important; color: #fff !important; transform: scale(1.05); }
+      .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; }
+      .switch-row > span { display: flex; flex-direction: column; text-align: right; }
+      .switch-row b { color: #e2e8f0; font-size: 0.92em; }
+      .switch-row small { color: #718096; font-size: 0.75em; }
+      .switch-row input { display: none; }
+      .switch-row i { width: 46px; height: 26px; border-radius: 999px; background: rgba(255,255,255,0.15); position: relative; flex-shrink: 0; transition: 0.2s; }
+      .switch-row i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: 0.2s; }
+      .switch-row input:checked + i { background: var(--button-green); }
+      .switch-row input:checked + i::after { left: 23px; }
+      .set-input { width: 100%; box-sizing: border-box; padding: 11px 14px; border-radius: 12px; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid rgba(255,255,255,0.15); font-family: 'Cairo', sans-serif; font-size: 0.95em; outline: none; }
+      .set-input:focus { border-color: var(--button-blue); }
+      .set-summary { background: rgba(16,185,129,0.1); border: 1px dashed rgba(16,185,129,0.5); border-radius: 14px; padding: 10px 12px; color: #e2e8f0; font-size: 0.88em; text-align: center; line-height: 1.7; }
+      .set-summary b { color: #6ee7b7; }
+      .modal.kids .set-group { background: rgba(255,255,255,0.7); border-color: #fff; }
+      .modal.kids .set-label, .modal.kids .switch-row b { color: #5f27cd !important; }
+      .modal.kids .set-label small, .modal.kids .switch-row small { color: #5f6c7b; }
+      .modal.kids .chip-btn { background: #fff !important; color: #5f27cd !important; border-color: #c8b6ff !important; }
+      .modal.kids .chip-btn.active { background: #ff9f43 !important; color: #fff !important; border-color: #fff !important; }
+      .modal.kids .seg-btn { background: #fff !important; color: #6c63ff !important; border-color: #c8b6ff !important; }
+      .modal.kids .seg-btn.active { background: linear-gradient(135deg, #1dd1a1, #10b981) !important; color: #fff !important; }
+      .modal.kids .set-input { background: #fff; color: #2d2b55; border: 3px solid #c8b6ff; border-radius: 999px; font-weight: 700; }
+      .modal.kids .set-summary { background: #fff; border: 3px dashed #feca57; color: #2d2b55; font-weight: 700; }
+      .modal.kids .set-summary b { color: #e63946; }
+    </style>
+    <div id="mp-step-settings" class="mp-step">
+      <div class="mp-summary" id="mp-selected-category">📚 ...</div>
+
+      <div class="set-group">
+        <div class="set-label">🏁 نمط التحدي</div>
+        <div class="seg">
+          <button id="btn-mode-questions" class="seg-btn active" onclick="setMultiMode('questions')"><b>عدد الأسئلة</b><small>نفس الأسئلة للجميع</small></button>
+          <button id="btn-mode-time" class="seg-btn time" onclick="setMultiMode('time')"><b>وقت محدد</b><small>من يجيب أكثر يفوز</small></button>
+        </div>
       </div>
 
-      <!-- Questions Selection -->
-      <div id="multi-settings-questions" style="display: flex; flex-direction: column; gap: 5px;">
-          <label style="color: #a0aec0; font-size: 0.9em;">اختر عدد الأسئلة:</label>
-          <select id="multi-qcount-val" style="padding: 12px; border-radius: 10px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); font-size: 1.1em; outline: none;">
-              <option value="5">5 أسئلة</option>
-              <option value="10" selected>10 أسئلة</option>
-              <option value="20">20 سؤال</option>
-              <option value="30">30 سؤال</option>
-              <option value="50">50 سؤال</option>
-          </select>
+      <div class="set-group" id="multi-settings-questions">
+        <div class="set-label">🎯 عدد الأسئلة <small>الأعلى نقاطاً يفوز</small></div>
+        <div class="chips" id="chips-qcount" data-value="10"><button type="button" class="chip-btn" data-v="5" onclick="chipPick('chips-qcount', '5')">5</button><button type="button" class="chip-btn active" data-v="10" onclick="chipPick('chips-qcount', '10')">10</button><button type="button" class="chip-btn" data-v="15" onclick="chipPick('chips-qcount', '15')">15</button><button type="button" class="chip-btn" data-v="20" onclick="chipPick('chips-qcount', '20')">20</button><button type="button" class="chip-btn" data-v="30" onclick="chipPick('chips-qcount', '30')">30</button><button type="button" class="chip-btn" data-v="50" onclick="chipPick('chips-qcount', '50')">50</button></div>
+      </div>
+      <div class="set-group" id="multi-settings-time" style="display: none;">
+        <div class="set-label">⏱️ مدة التحدي <small>بالدقائق</small></div>
+        <div class="chips" id="chips-time" data-value="3"><button type="button" class="chip-btn" data-v="1" onclick="chipPick('chips-time', '1')">دقيقة</button><button type="button" class="chip-btn" data-v="2" onclick="chipPick('chips-time', '2')">دقيقتان</button><button type="button" class="chip-btn active" data-v="3" onclick="chipPick('chips-time', '3')">3 دقائق</button><button type="button" class="chip-btn" data-v="5" onclick="chipPick('chips-time', '5')">5 دقائق</button><button type="button" class="chip-btn" data-v="10" onclick="chipPick('chips-time', '10')">10 دقائق</button></div>
       </div>
 
-      <!-- Time Selection -->
-      <div id="multi-settings-time" style="display: none; flex-direction: column; gap: 5px;">
-          <label style="color: #a0aec0; font-size: 0.9em;">اختر مدة التحدي (بالدقائق):</label>
-          <select id="multi-time-val" style="padding: 12px; border-radius: 10px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); font-size: 1.1em; outline: none;">
-              <option value="1">دقيقة واحدة</option>
-              <option value="2">دقيقتان</option>
-              <option value="3" selected>3 دقائق</option>
-              <option value="5">5 دقائق</option>
-          </select>
+      <div class="set-group">
+        <div class="set-label">⏳ وقت كل سؤال <small>بالثواني</small></div>
+        <div class="chips" id="chips-qtime" data-value="30"><button type="button" class="chip-btn" data-v="15" onclick="chipPick('chips-qtime', '15')">15</button><button type="button" class="chip-btn" data-v="20" onclick="chipPick('chips-qtime', '20')">20</button><button type="button" class="chip-btn active" data-v="30" onclick="chipPick('chips-qtime', '30')">30</button><button type="button" class="chip-btn" data-v="45" onclick="chipPick('chips-qtime', '45')">45</button><button type="button" class="chip-btn" data-v="60" onclick="chipPick('chips-qtime', '60')">60</button></div>
       </div>
 
-      <button onclick="confirmMultiplayerRoom()" style="background: var(--button-blue); color: white; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 1.1em; cursor: pointer; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); margin-top: 10px;">🚀 إنشاء الغرفة الآن</button>
-      
-      <button onclick="hideMultiSettings()" style="background: transparent; color: #a0aec0; border: none; cursor: pointer; margin-top: 5px; font-size: 0.9em; padding: 8px;">🔙 رجوع لاختيار القسم</button>
+      <div class="set-group">
+        <div class="set-label">👥 أقصى عدد لاعبين</div>
+        <div class="chips" id="chips-max" data-value="10"><button type="button" class="chip-btn" data-v="2" onclick="chipPick('chips-max', '2')">2</button><button type="button" class="chip-btn" data-v="3" onclick="chipPick('chips-max', '3')">3</button><button type="button" class="chip-btn" data-v="4" onclick="chipPick('chips-max', '4')">4</button><button type="button" class="chip-btn" data-v="6" onclick="chipPick('chips-max', '6')">6</button><button type="button" class="chip-btn active" data-v="10" onclick="chipPick('chips-max', '10')">10</button><button type="button" class="chip-btn" data-v="20" onclick="chipPick('chips-max', '20')">20</button></div>
+      </div>
+
+      <div class="set-group">
+        <div class="set-label">✨ خيارات إضافية</div>
+        <label class="switch-row"><span><b>الترتيب المباشر أثناء اللعب</b><small>يرى اللاعبون نقاط بعضهم لحظة بلحظة</small></span><input type="checkbox" id="opt-showlive" checked onchange="mpUpdateSummary()"><i></i></label>
+        <input id="opt-roomname" class="set-input" maxlength="24" placeholder="اسم الغرفة (اختياري) مثل: تحدي العائلة" oninput="mpUpdateSummary()">
+      </div>
+
+      <div id="mp-summary" class="set-summary"></div>
+      <button id="mp-create-btn" class="mp-primary" onclick="confirmMultiplayerRoom()">🚀 إنشاء الغرفة ودعوة الأصدقاء</button>
+      <button class="mp-back" onclick="mpShowStep('category')">🔙 رجوع لاختيار القسم</button>
+    </div>
   </div>
-
-
-            
-            <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;"><h3 style="color: #a0aec0; text-align: center; font-size: 1.1em; margin-top: 0;">الانضمام لغرفة سابقة</h3><div style="display: flex; gap: 10px; justify-content: center;"><input type="text" id="join-room-code" placeholder="أدخل الكود" style="padding: 10px; width: 60%; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 1.1em;"><button onclick="joinMultiplayerRoom()" style="background-color: var(--button-green); color: white; border: none; border-radius: 10px; padding: 0 15px; font-weight: bold; cursor: pointer;">انضمام</button></div></div></div>
-<!-- Solo Mix Modal --><div id="solo-mix-modal" class="modal"><div class="modal-content" style="max-width: 450px; padding: 20px; background: var(--modal-bg); border-radius: 20px;"><span class="close-button" onclick="closeSoloMixModal()">&times;</span><h3 style="color: var(--button-blue); margin-top: 0; text-align: center; margin-bottom: 15px; font-size: 1.5em;">اختر قسم المسابقة</h3><div id="solo-categories-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 65vh; overflow-y: auto; padding-right: 5px;"><div class="category-card" onclick="showQuranOptions('solo')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.05)';"><span style="font-size: 2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">📖</span><div style="text-align: right; flex-grow: 1;"><div style="font-weight: 800; font-size: 1.1em; color: var(--button-blue);">القرآن الكريم</div><div style="font-size: 0.75em; color: #a0aec0; margin-top: 2px;">مسابقة في أجزاء القرآن أو القرآن كاملاً</div></div></div><div class="category-card" onclick="startSingleQuiz('seerah', 'solo')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.05)';"><span style="font-size: 2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🕌</span><div style="text-align: right; flex-grow: 1;"><div style="font-weight: 800; font-size: 1.1em; color: #f6e05e;">السيرة النبوية</div></div></div><div class="category-card" onclick="startSingleQuiz('fiqh', 'solo')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.05)';"><span style="font-size: 2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">⚖️</span><div style="text-align: right; flex-grow: 1;"><div style="font-weight: 800; font-size: 1.1em; color: #f6ad55;">الفقه الإسلامي</div></div></div><div class="category-card" onclick="startSingleQuiz('general', 'solo')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.05)';"><span style="font-size: 2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">💡</span><div style="text-align: right; flex-grow: 1;"><div style="font-weight: 800; font-size: 1.1em; color: #68d391;">معلومات قرآنية</div></div></div><div class="category-card" onclick="startSingleQuiz('meanings', 'solo')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.05)';"><span style="font-size: 2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🔤</span><div style="text-align: right; flex-grow: 1;"><div style="font-weight: 800; font-size: 1.1em; color: #b794f4;">معاني الكلمات</div></div></div><div class="category-card" onclick="showKidsOptions('solo')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.05)';"><span style="font-size: 2em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🎈</span><div style="text-align: right; flex-grow: 1;"><div style="font-weight: 800; font-size: 1.1em; color: #fc8181;">مسابقة الأطفال</div></div></div></div><div id="solo-quran-options" style="display: none; flex-direction: column; gap: 10px; margin-top: 5px;"><h4 style="color: white; margin: 0; text-align: center; font-size: 1.1em;">خيارات القرآن الكريم</h4><button onclick="startSingleQuiz('mixed', 'solo', 'all')" style="background-color: var(--button-green); color: white; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 1em; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">📖 مسابقة في القرآن كله</button><div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;"><select id="solo-juz-select" style="flex-grow: 1; padding: 12px; border-radius: 10px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); font-size: 1em; outline: none;"><option value="">-- أو اختر الجزء المحدد --</option><script>for (let i = 1; i <= 30; i++) {document.write('<option value="' + i + '">الجزء ' + i + '</option>');}</script></select><button onclick="startJuzQuiz('solo')" style="background-color: var(--button-blue); color: white; padding: 12px 20px; border-radius: 10px; font-weight: bold; border: none; cursor: pointer;">ابدأ</button></div>
-<button onclick="hideQuranOptions('solo')" style="background: transparent; color: #a0aec0; border: none; cursor: pointer; margin-top: 5px; font-size: 0.9em; padding: 8px;">🔙 رجوع للأقسام</button></div>
-<div id="solo-kids-options" style="display: none; flex-direction: column; gap: 10px; margin-top: 5px;">
-    <h4 style="color: white; margin: 0; text-align: center; font-size: 1.1em;">اختر مستوى الأطفال</h4>
-    <button onclick="startSingleQuiz('kids_1', 'solo')" style="background-color: var(--button-green); color: white; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 1em; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">🎈 مستوى 1 (أسئلة سهلة)</button>
-    <button onclick="startSingleQuiz('kids_2', 'solo')" style="background-color: var(--button-blue); color: white; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 1em; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">🚀 مستوى 2 (10 سنوات فأكثر)</button>
-    <button onclick="hideKidsOptions('solo')" style="background: transparent; color: #a0aec0; border: none; cursor: pointer; margin-top: 5px; font-size: 0.9em; padding: 8px;">🔙 رجوع للأقسام</button>
 </div>
-</div></div>
+<!-- Solo Mix Modal -->
+<style>
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 62vh; overflow-y: auto; padding: 4px 2px; }
+  .cat-card { --c: #4299e1; position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 16px 10px 14px; border-radius: 20px; cursor: pointer; background: linear-gradient(160deg, color-mix(in srgb, var(--c) 18%, rgba(255,255,255,0.04)), rgba(255,255,255,0.03)); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; overflow: hidden; }
+  .cat-card::after { content: ''; position: absolute; width: 120px; height: 120px; border-radius: 50%; background: var(--c); opacity: 0.12; filter: blur(30px); top: -50px; right: -40px; pointer-events: none; }
+  .cat-card:hover { transform: translateY(-4px); border-color: var(--c); box-shadow: 0 12px 25px color-mix(in srgb, var(--c) 30%, transparent); }
+  .cat-card:active { transform: scale(0.97); }
+  .cat-icon { width: 60px; height: 60px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--c) 22%, transparent); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); box-shadow: 0 6px 16px color-mix(in srgb, var(--c) 30%, transparent); flex-shrink: 0; }
+  .cat-icon svg { width: 36px; height: 36px; }
+  .cat-text { min-width: 0; }
+  .cat-title { font-weight: 800; font-size: 1.02em; color: #fff; }
+  .cat-sub { font-size: 0.72em; color: #a0aec0; margin-top: 2px; line-height: 1.5; }
+  .cat-arrow { display: none; }
+  .opt-panel { display: flex; flex-direction: column; gap: 10px; }
+  .opt-head { display: flex; align-items: center; gap: 12px; text-align: right; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 10px 12px; }
+  .opt-big, .level-card { --c: #10b981; display: flex; align-items: center; gap: 12px; text-align: right; width: 100%; padding: 12px 14px !important; border-radius: 18px !important; cursor: pointer; font-family: 'Cairo', sans-serif; color: #fff !important; background: linear-gradient(135deg, color-mix(in srgb, var(--c) 85%, #000), var(--c)) !important; border: 1px solid rgba(255,255,255,0.2) !important; box-shadow: 0 8px 20px color-mix(in srgb, var(--c) 35%, transparent) !important; transition: transform 0.2s !important; font-size: 1em !important; }
+  .opt-big:hover, .level-card:hover { transform: translateY(-3px); }
+  .opt-big > span:not(.opt-big-icon), .level-card > span:not(.opt-big-icon):not(.level-badge) { display: flex; flex-direction: column; flex-grow: 1; }
+  .opt-big b, .level-card b { font-size: 1.1em; font-weight: 900; }
+  .opt-big small, .level-card small { font-size: 0.75em; opacity: 0.85; font-weight: 600; }
+  .opt-big-icon { width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.18); flex-shrink: 0; }
+  .opt-big-icon svg { width: 30px; height: 30px; }
+  .opt-row { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 8px; }
+  .opt-row .opt-big-icon { background: color-mix(in srgb, var(--c) 22%, transparent); }
+  .opt-select { flex-grow: 1; min-width: 0; padding: 11px 10px !important; border-radius: 12px !important; background: rgba(0,0,0,0.3) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2) !important; font-size: 0.95em !important; outline: none; font-family: 'Cairo', sans-serif; }
+  .opt-go { background: var(--button-blue) !important; color: #fff !important; border: none !important; border-radius: 12px !important; padding: 11px 16px !important; font-weight: 800 !important; cursor: pointer; font-family: 'Cairo', sans-serif; }
+  .level-badge { width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #2d2b55; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 1.1em; flex-shrink: 0; box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
+  .kids-panel .level-card { border: 3px solid #fff !important; border-radius: 999px !important; }
+  .modal.kids-look .modal-content { background: linear-gradient(180deg, #7ed6ff, #ffe9a8) !important; border: 5px solid #fff !important; border-radius: 30px !important; }
+  .modal.kids-look .cat-title, .modal.kids-look h3 { color: #5f27cd !important; }
+  .modal.kids-look .cat-sub { color: #5f6c7b !important; font-weight: 700; }
+  .modal.kids-look .opt-head { background: rgba(255,255,255,0.75); border-color: #fff; }
+  .modal.kids-look .mp-back { color: #5f27cd !important; font-weight: 800; }
+  .modal.kids-look .close-button { color: #5f27cd !important; }
+  @media (max-width: 380px) { .cat-grid { grid-template-columns: 1fr; } .cat-card { flex-direction: row; text-align: right; padding: 10px 12px; } .cat-icon { width: 50px; height: 50px; } }
+</style>
+<div id="solo-mix-modal" class="modal">
+  <div class="modal-content" style="max-width: 480px; padding: 20px; background: var(--modal-bg); border-radius: 24px; text-align: right;">
+    <span class="close-button" onclick="closeSoloMixModal()">&times;</span>
+    <h3 id="solo-modal-title" style="color: var(--button-blue); margin: 0 0 2px; text-align: center; font-size: 1.4em;">🎯 اختر قسم المسابقة</h3>
+    <p id="solo-modal-sub" style="color: #a0aec0; text-align: center; margin: 0 0 14px; font-size: 0.85em;">لعبة فردية · اختر القسم الذي تريد التدرّب عليه</p>
+    <div id="solo-categories-list" class="cat-grid">
+        <div class="cat-card" style="--c:#10b981" onclick="showQuranOptions('solo')">
+          <span class="cat-icon"><svg viewBox="0 0 48 48"><path d="M6 12c6-3 12-3 17 1v26c-5-4-11-4-17-1z" fill="#34d399"/><path d="M42 12c-6-3-12-3-17 1v26c5-4 11-4 17-1z" fill="#059669"/><path d="M11 20h7M11 25h7M30 20h7M30 25h7" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <div class="cat-text"><div class="cat-title">القرآن الكريم</div><div class="cat-sub">الآية التالية · 19 ألف سؤال</div></div>
+          <span class="cat-arrow">‹</span>
+        </div>
+        <div class="cat-card" style="--c:#f59e0b" onclick="startSingleQuiz('seerah', 'solo')">
+          <span class="cat-icon"><svg viewBox="0 0 48 48"><path d="M24 6c8 5 14 12 14 20H10c0-8 6-15 14-20z" fill="#fbbf24"/><rect x="8" y="26" width="32" height="14" rx="2" fill="#f59e0b"/><rect x="20" y="30" width="8" height="10" rx="4" fill="#78350f"/><rect x="4" y="12" width="4" height="28" rx="2" fill="#fde68a"/><rect x="40" y="12" width="4" height="28" rx="2" fill="#fde68a"/><circle cx="24" cy="5" r="2" fill="#fde68a"/></svg></span>
+          <div class="cat-text"><div class="cat-title">السيرة النبوية</div><div class="cat-sub">حياة النبي ﷺ · 900 سؤال</div></div>
+          <span class="cat-arrow">‹</span>
+        </div>
+        <div class="cat-card" style="--c:#f97316" onclick="startSingleQuiz('fiqh', 'solo')">
+          <span class="cat-icon"><svg viewBox="0 0 48 48"><rect x="22" y="8" width="4" height="30" rx="2" fill="#fb923c"/><rect x="14" y="38" width="20" height="4" rx="2" fill="#ea580c"/><path d="M6 14h36" stroke="#fdba74" stroke-width="3" stroke-linecap="round"/><path d="M4 26l6-12 6 12z" fill="#fdba74"/><path d="M32 26l6-12 6 12z" fill="#fdba74"/><path d="M4 26a6 6 0 0 0 12 0zM32 26a6 6 0 0 0 12 0z" fill="#fb923c"/></svg></span>
+          <div class="cat-text"><div class="cat-title">الفقه الإسلامي</div><div class="cat-sub">العبادات والأحكام · 377 سؤالاً</div></div>
+          <span class="cat-arrow">‹</span>
+        </div>
+        <div class="cat-card" style="--c:#a3e635" onclick="startSingleQuiz('general', 'solo')">
+          <span class="cat-icon"><svg viewBox="0 0 48 48"><path d="M24 4a14 14 0 0 0-8 25v5h16v-5a14 14 0 0 0-8-25z" fill="#fde047"/><rect x="17" y="36" width="14" height="4" rx="2" fill="#a3e635"/><rect x="19" y="41" width="10" height="3" rx="1.5" fill="#65a30d"/><path d="M20 18a5 5 0 0 1 8 0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
+          <div class="cat-text"><div class="cat-title">معلومات قرآنية</div><div class="cat-sub">ثقافة عامة · 253 سؤالاً</div></div>
+          <span class="cat-arrow">‹</span>
+        </div>
+        <div class="cat-card" style="--c:#a855f7" onclick="startSingleQuiz('meanings', 'solo')">
+          <span class="cat-icon"><svg viewBox="0 0 48 48"><path d="M6 10a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H20l-8 8v-8h-2a4 4 0 0 1-4-4z" fill="#c084fc"/><text x="24" y="26" text-anchor="middle" font-size="16" font-weight="700" fill="#fff" font-family="Cairo, sans-serif">أ ب</text></svg></span>
+          <div class="cat-text"><div class="cat-title">معاني الكلمات</div><div class="cat-sub">تفسير المفردات · 4,900 سؤال</div></div>
+          <span class="cat-arrow">‹</span>
+        </div>
+        <div class="cat-card" style="--c:#fb7185" onclick="showKidsOptions('solo')">
+          <span class="cat-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span>
+          <div class="cat-text"><div class="cat-title">مسابقة الأطفال</div><div class="cat-sub">مستويان · حساب وإسلاميات</div></div>
+          <span class="cat-arrow">‹</span>
+        </div>
+      </div>
+    <div id="solo-quran-options" class="opt-panel" style="display: none;">
+        <div class="opt-head"><span class="cat-icon" style="--c:#10b981"><svg viewBox="0 0 48 48"><path d="M6 12c6-3 12-3 17 1v26c-5-4-11-4-17-1z" fill="#34d399"/><path d="M42 12c-6-3-12-3-17 1v26c5-4 11-4 17-1z" fill="#059669"/><path d="M11 20h7M11 25h7M30 20h7M30 25h7" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round"/></svg></span><div><div class="cat-title">القرآن الكريم</div><div class="cat-sub">اختر المدى الذي تريد التنافس فيه</div></div></div>
+        <button class="opt-big" style="--c:#10b981" onclick="startSingleQuiz('mixed', 'solo', 'all')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M6 12c6-3 12-3 17 1v26c-5-4-11-4-17-1z" fill="#34d399"/><path d="M42 12c-6-3-12-3-17 1v26c5-4 11-4 17-1z" fill="#059669"/><path d="M11 20h7M11 25h7M30 20h7M30 25h7" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round"/></svg></span><span><b>القرآن كاملاً</b><small>أسئلة من جميع السور</small></span></button>
+        <div class="opt-row">
+          <span class="opt-big-icon" style="--c:#f59e0b"><svg viewBox="0 0 48 48"><rect x="8" y="6" width="32" height="36" rx="4" fill="#10b981"/><rect x="12" y="10" width="24" height="28" rx="2" fill="#ecfdf5"/><path d="M16 17h16M16 23h16M16 29h10" stroke="#059669" stroke-width="2.5" stroke-linecap="round"/><rect x="30" y="4" width="8" height="12" rx="1" fill="#f59e0b"/></svg></span>
+          <select id="solo-juz-select" class="opt-select"><option value="">اختر جزءاً محدداً...</option><script>for (let i = 1; i <= 30; i++) { document.write('<option value="' + i + '">الجزء ' + i + '</option>'); }</script></select>
+          <button class="opt-go" onclick="startJuzQuiz('solo')">ابدأ</button>
+        </div>
+        <button class="mp-back" onclick="hideQuranOptions('solo')">🔙 رجوع للأقسام</button>
+      </div>
+    <div id="solo-kids-options" class="opt-panel kids-panel" style="display: none;">
+        <div class="opt-head"><span class="cat-icon" style="--c:#fb7185"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><div><div class="cat-title">مسابقة الأطفال</div><div class="cat-sub">اختر المستوى المناسب لعمر الطفل</div></div></div>
+        <button class="level-card" style="--c:#fb7185" onclick="startSingleQuiz('kids_1', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><span><b>المستوى الأول</b><small>حساب بسيط وأسئلة سهلة · حتى 9 سنوات</small></span><span class="level-badge">١</span></button>
+        <button class="level-card" style="--c:#38bdf8" onclick="startSingleQuiz('kids_2', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر</small></span><span class="level-badge">٢</span></button>
+        <button class="mp-back" onclick="hideKidsOptions('solo')">🔙 رجوع للأقسام</button>
+      </div>
+  </div>
+</div>
     <script type="module" src="multiplayer.js"></script>
 
     <!-- Admin Settings Gear -->
@@ -783,26 +1104,31 @@ function openModal(type, title) {
     }
     
     
+function modalFor(mode) { return document.getElementById(mode === 'solo' ? 'solo-mix-modal' : 'multiplayer-modal'); }
 function showKidsOptions(mode) {
     document.getElementById(mode + '-categories-list').style.display = 'none';
     document.getElementById(mode + '-kids-options').style.display = 'flex';
+    modalFor(mode).classList.add('kids-look');
+    if (window.KidsTheme) KidsTheme.play('join');
 }
 function hideKidsOptions(mode) {
-    document.getElementById(mode + '-categories-list').style.display = 'flex';
+    document.getElementById(mode + '-categories-list').style.display = 'grid';
     document.getElementById(mode + '-kids-options').style.display = 'none';
+    modalFor(mode).classList.remove('kids-look');
 }
 function showQuranOptions(mode) {
-        document.getElementById(mode + '-categories-list').style.display = 'none';
-        document.getElementById(mode + '-quran-options').style.display = 'flex';
-    }
-    
-    function hideQuranOptions(mode) {
-        document.getElementById(mode + '-categories-list').style.display = 'flex';
-        document.getElementById(mode + '-quran-options').style.display = 'none';
-    }
+    document.getElementById(mode + '-categories-list').style.display = 'none';
+    document.getElementById(mode + '-quran-options').style.display = 'flex';
+}
+function hideQuranOptions(mode) {
+    document.getElementById(mode + '-categories-list').style.display = 'grid';
+    document.getElementById(mode + '-quran-options').style.display = 'none';
+}
 
-    function startSingleQuiz(category, mode, juz) {
+function startSingleQuiz(category, mode, juz) {
         if(mode === 'solo') {
+            localStorage.removeItem("mp_roomCode");
+            localStorage.removeItem("mp_isHost");
             localStorage.setItem("quizType", category);
             if (juz) {
                 if (juz === 'all') {
@@ -815,12 +1141,11 @@ function showQuranOptions(mode) {
             }
             window.location.href = "quiz.html";
         } else if (mode === 'multi') {
-            let qSelect = document.getElementById('mp-questions-count'); let qCount = qSelect ? parseInt(qSelect.value) : 10;
             let roomCategory = category;
             if (juz && juz !== 'all') {
                 roomCategory = category + "_juz_" + juz;
             }
-            window.createMultiplayerRoomWithParams(roomCategory, qCount);
+            showMultiSettings(roomCategory);
         }
     }
 
@@ -839,54 +1164,132 @@ function showQuranOptions(mode) {
 <script>
 let tempMultiCategory = '';
 let currentMultiMode = 'questions';
+const MP_CATEGORY_LABELS = { mixed: 'القرآن الكريم كاملاً', seerah: 'السيرة النبوية', fiqh: 'الفقه الإسلامي', general: 'معلومات قرآنية', meanings: 'معاني الكلمات', kids_1: 'الأطفال - مستوى 1', kids_2: 'الأطفال - مستوى 2' };
+
+function mpCategoryLabel(cat) {
+    if (!cat) return '';
+    if (cat.includes('_juz_')) return 'القرآن الكريم - الجزء ' + cat.split('_juz_')[1];
+    return MP_CATEGORY_LABELS[cat] || cat;
+}
+
+function openMultiplayerModal() {
+    mpShowStep('home');
+    document.getElementById('multiplayer-modal').style.display = 'flex';
+}
+function closeMultiplayerModal() { document.getElementById('multiplayer-modal').style.display = 'none'; }
+
+function mpShowStep(step) {
+    if (step === 'home' || step === 'category') document.getElementById('multiplayer-modal').classList.remove('kids');
+    document.querySelectorAll('#multiplayer-modal .mp-step').forEach(el => el.classList.remove('active'));
+    document.getElementById('mp-step-' + step).classList.add('active');
+
+    const titles = { home: '🏆 تحدي الأصدقاء', join: '🔑 الانضمام بكود', category: '📚 اختر قسم التحدي', settings: '⚙️ إعدادات الغرفة' };
+    document.getElementById('mp-modal-title').textContent = titles[step] || titles.home;
+
+    const stepper = document.getElementById('mp-stepper');
+    const order = ['category', 'settings', 'lobby'];
+    const idx = order.indexOf(step);
+    stepper.style.display = idx >= 0 ? 'flex' : 'none';
+    stepper.querySelectorAll('span').forEach((s, i) => {
+        s.classList.toggle('current', i === idx);
+        s.classList.toggle('done', i < idx);
+    });
+
+    if (step === 'category') {
+        document.getElementById('multiplayer-modal').classList.remove('kids-look');
+        document.getElementById('multi-categories-list').style.display = 'grid';
+        document.getElementById('multi-quran-options').style.display = 'none';
+        document.getElementById('multi-kids-options').style.display = 'none';
+    }
+    if (step === 'join') setTimeout(() => document.getElementById('join-room-code').focus(), 50);
+    if (step === 'home') {
+        const last = localStorage.getItem('mp_roomCode');
+        const resume = document.getElementById('mp-resume-btn');
+        resume.style.display = last ? 'block' : 'none';
+        if (last) resume.textContent = '↩ العودة إلى غرفتك الأخيرة (' + last + ')';
+    }
+}
+
+function mpResumeLastRoom() {
+    const last = localStorage.getItem('mp_roomCode');
+    if (!last) return;
+    document.getElementById('join-room-code').value = last;
+    joinMultiplayerRoom();
+}
 
 function showMultiSettings(category) {
     tempMultiCategory = category;
-    document.getElementById('multi-categories-list').style.display = 'none';
-    document.getElementById('multi-quran-options').style.display = 'none';
-    document.getElementById('multi-kids-options').style.display = 'none';
-    document.getElementById('multi-settings-options').style.display = 'flex';
+    document.getElementById('multiplayer-modal').classList.toggle('kids', String(category).startsWith('kids'));
+    document.getElementById('mp-create-btn').textContent = String(category).startsWith('kids') ? '🎈 جهّز غرفة الأبطال الصغار!' : '🚀 إنشاء الغرفة ودعوة الأصدقاء';
+    if (String(category).startsWith('kids') && window.KidsTheme) KidsTheme.play('join');
+    document.getElementById('mp-selected-category').textContent = '📚 ' + mpCategoryLabel(category);
+    mpShowStep('settings');
+    mpApplySavedSettings();
+    mpUpdateSummary();
 }
-
-function hideMultiSettings() {
-    document.getElementById('multi-settings-options').style.display = 'none';
-    document.getElementById('multi-categories-list').style.display = 'flex';
-}
+function hideMultiSettings() { mpShowStep('category'); }
 
 function setMultiMode(mode) {
-    currentMultiMode = mode;
-    const btnQ = document.getElementById('btn-mode-questions');
-    const btnT = document.getElementById('btn-mode-time');
-    const secQ = document.getElementById('multi-settings-questions');
-    const secT = document.getElementById('multi-settings-time');
-    
-    if (mode === 'questions') {
-        btnQ.style.background = 'var(--button-green)';
-        btnQ.style.color = 'white';
-        btnT.style.background = 'transparent';
-        btnT.style.color = '#a0aec0';
-        secQ.style.display = 'flex';
-        secT.style.display = 'none';
-    } else {
-        btnT.style.background = 'var(--button-blue)';
-        btnT.style.color = 'white';
-        btnQ.style.background = 'transparent';
-        btnQ.style.color = '#a0aec0';
-        secT.style.display = 'flex';
-        secQ.style.display = 'none';
-    }
+    currentMultiMode = mode === 'time' ? 'time' : 'questions';
+    const q = currentMultiMode === 'questions';
+    document.getElementById('btn-mode-questions').classList.toggle('active', q);
+    document.getElementById('btn-mode-time').classList.toggle('active', !q);
+    document.getElementById('multi-settings-questions').style.display = q ? 'flex' : 'none';
+    document.getElementById('multi-settings-time').style.display = q ? 'none' : 'flex';
+    mpUpdateSummary();
+}
+
+function chipPick(groupId, value) {
+    const group = document.getElementById(groupId);
+    group.dataset.value = value;
+    group.querySelectorAll('.chip-btn').forEach(b => b.classList.toggle('active', b.dataset.v === String(value)));
+    mpUpdateSummary();
+}
+function chipValue(groupId, fallback) { return parseInt(document.getElementById(groupId).dataset.value) || fallback; }
+
+function mpCurrentValue() {
+    return currentMultiMode === 'questions' ? chipValue('chips-qcount', 10) : chipValue('chips-time', 3);
+}
+
+function mpCollectSettings() {
+    return {
+        mode: currentMultiMode,
+        val: mpCurrentValue(),
+        qTime: chipValue('chips-qtime', 30),
+        maxPlayers: chipValue('chips-max', 10),
+        showLive: document.getElementById('opt-showlive').checked,
+        roomName: document.getElementById('opt-roomname').value.trim().slice(0, 24)
+    };
+}
+
+function mpApplySavedSettings() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('mp_lastSettings') || 'null'); } catch (e) {}
+    if (!saved) return;
+    if (saved.mode) setMultiMode(saved.mode);
+    if (saved.mode === 'time' && saved.val) chipPick('chips-time', saved.val);
+    if (saved.mode === 'questions' && saved.val) chipPick('chips-qcount', saved.val);
+    if (saved.qTime) chipPick('chips-qtime', saved.qTime);
+    if (saved.maxPlayers) chipPick('chips-max', saved.maxPlayers);
+    if (typeof saved.showLive === 'boolean') document.getElementById('opt-showlive').checked = saved.showLive;
+}
+
+function mpUpdateSummary() {
+    const s = mpCollectSettings();
+    const what = s.mode === 'questions'
+        ? s.val + ' ' + (s.val > 10 ? 'سؤال' : 'أسئلة')
+        : (s.val === 1 ? 'دقيقة واحدة' : s.val === 2 ? 'دقيقتان' : s.val + ' دقائق');
+    const name = s.roomName ? '«' + s.roomName + '» ' : '';
+    document.getElementById('mp-summary').innerHTML =
+        'غرفة ' + name + 'في <b>' + mpCategoryLabel(tempMultiCategory) + '</b> · <b>' + what + '</b> · ' +
+        '<b>' + s.qTime + ' ث</b> لكل سؤال · حتى <b>' + s.maxPlayers + '</b> لاعبين · الترتيب المباشر <b>' + (s.showLive ? 'ظاهر' : 'مخفي') + '</b>';
 }
 
 function confirmMultiplayerRoom() {
-    if (typeof createMultiplayerRoomWithParams !== 'undefined') {
-        let val;
-        if (currentMultiMode === 'questions') {
-            val = parseInt(document.getElementById('multi-qcount-val').value) || 10;
-        } else {
-            val = parseInt(document.getElementById('multi-time-val').value) || 3;
-        }
-        createMultiplayerRoomWithParams(tempMultiCategory, currentMultiMode, val);
-    }
+    if (typeof createMultiplayerRoomWithParams !== 'function') { alert('جاري تحميل النظام، حاول مرة أخرى'); return; }
+    const s = mpCollectSettings();
+    try { localStorage.setItem('mp_lastSettings', JSON.stringify(s)); } catch (e) {}
+    createMultiplayerRoomWithParams(tempMultiCategory, s.mode, s.val, s);
 }
 </script>
 

@@ -89,10 +89,35 @@
       button, a { font-size: 14px; }
     }
   </style>
+<link rel="stylesheet" href="kids-theme.css">
+<script src="kids-theme.js"></script>
 </head>
 <body>
 
 <div class="container">
+
+  <!-- Multiplayer Results -->
+  <div id="mp-results" style="display: none; margin-bottom: 25px; background: linear-gradient(145deg, #2a2a4e, #16213e); padding: 18px; border-radius: 14px; border: 2px solid #f6c343; text-align: center;">
+    <h2 style="color: #f6c343; margin: 0 0 4px;">🏆 نتائج التحدي المباشر</h2>
+    <div id="mp-room-meta" style="color: #a0aec0; font-size: 0.85em; margin-bottom: 12px;"></div>
+    <div id="mp-status" style="font-size: 1.1em; font-weight: bold; margin-bottom: 10px; color: #a0aec0;">⏳ جاري تحميل النتائج...</div>
+    <div id="mp-final-leaderboard" style="text-align: right; max-width: 420px; margin: auto;"></div>
+    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 18px;">
+      <button id="mp-rematch-btn" style="display: none; background: #10b981; color: white; font-weight: bold;">🔁 جولة جديدة بنفس الأصدقاء</button>
+      <button id="mp-home-btn" style="background: #4299e1; color: white; font-weight: bold;">🏠 الرئيسية</button>
+      <button onclick="generateCertificate()" style="background: transparent; color: #f6c343; border: 1px solid #f6c343;">📜 شهادة</button>
+    </div>
+    <div id="mp-guest-hint" style="display: none; color: #a0aec0; font-size: 0.85em; margin-top: 10px;">إذا بدأ المضيف جولة جديدة ستنتقل إلى الغرفة تلقائياً</div>
+    <div id="certificate-area" style="display:none; margin-top: 20px; padding: 20px; background: white; color: black; border: 10px solid #d4af37; border-radius: 10px;">
+      <h1 style="color: #d4af37; margin-bottom: 5px;">شهادة تفوق</h1>
+      <h3 style="margin-top: 0;">مسابقة القرآن الكريم</h3>
+      <p>يُشهد بأن المتسابق:</p>
+      <h2 id="cert-name" style="color: #2e8b57;">---</h2>
+      <p>قد شارك في التحدي المباشر وحصل على:</p>
+      <h1 id="cert-score" style="color: #e74c3c;">---</h1>
+      <p style="font-size: 0.8em; color: gray;">Quran Quiz App</p>
+    </div>
+  </div>
   <div class="top-buttons">
     <button onclick="retryQuiz()" class="btn-orange">🔁 أعد المحاولة</button>
     <a href="index.html" class="btn-green">🏠 العودة للرئيسية</a>
@@ -100,7 +125,7 @@
   </div>
 
   <h1>🎉 نتيجتك في المسابقة</h1>
-  <p>البريد الإلكتروني: <span id="email"></span></p>
+  <p id="email-line">البريد الإلكتروني: <span id="email"></span></p>
   <p>إجابات صحيحة: <span id="score"></span> من <span id="total"></span></p>
   <p>النسبة المئوية: <span id="percent"></span>%</p>
 
@@ -239,15 +264,15 @@
 
   // مشاركة النتيجة عبر الواتساب
   function shareResult() {
-    const message = `لقد حصلت على نتيجة ${score} من ${total} (${percentage}%) في تطبيق مسابقة القرآن الكريم.\n\nوهذا رابط الموقع: https://quranquiz.pythonanywhere.com/`;
+    const message = `لقد حصلت على نتيجة ${score} من ${total} (${percentage}%) في تطبيق مسابقة القرآن الكريم.\n\nوهذا رابط الموقع: https://new-quiz-quran.vercel.app/`;
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
   }
 
   // مشاركة النتيجة عبر الفيسبوك
   function shareResultFB() {
-    const message = `لقد حصلت على نتيجة ${score} من ${total} (${percentage}%) في تطبيق مسابقة القرآن الكريم.\n\nوهذا رابط الموقع: https://quranquiz.pythonanywhere.com/`;
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=https://quranquiz.pythonanywhere.com/&quote=${encodeURIComponent(message)}`;
+    const message = `لقد حصلت على نتيجة ${score} من ${total} (${percentage}%) في تطبيق مسابقة القرآن الكريم.\n\nوهذا رابط الموقع: https://new-quiz-quran.vercel.app/`;
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=https://new-quiz-quran.vercel.app/&quote=${encodeURIComponent(message)}`;
     window.open(facebookUrl, "_blank");
   }
 </script>
@@ -255,7 +280,7 @@
 
 <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js')
+    navigator.serviceWorker.register('./sw.js')
       .then((reg) => {
         console.log('✅ Service Worker مسجل:', reg);
       })
@@ -265,21 +290,6 @@
   }
 </script>
 
-    <!-- Multiplayer Results -->
-    <div id="mp-results" style="display: none; margin-top: 30px; background: var(--card-bg-gradient-start); padding: 20px; border-radius: 10px; border: 2px solid gold;">
-        <h2 style="color: gold;">🏆 النتائج النهائية للمنافسة</h2>
-        <div id="mp-final-leaderboard" style="text-align: right; max-width: 400px; margin: auto;"></div>
-        <button onclick="generateCertificate()" style="background: var(--button-blue); color: white; padding: 10px 20px; font-size: 1.1em; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">📜 إصدار شهادة الفوز</button>
-        <div id="certificate-area" style="display:none; margin-top: 20px; padding: 20px; background: white; color: black; border: 10px solid #d4af37; border-radius: 10px;">
-            <h1 style="color: #d4af37; margin-bottom: 5px;">شهادة تفوق</h1>
-            <h3 style="margin-top: 0;">مسابقة القرآن الكريم</h3>
-            <p>يُشهد بأن المتسابق:</p>
-            <h2 id="cert-name" style="color: #2e8b57;">---</h2>
-            <p>قد شارك في التحدي المباشر وحصل على سكور:</p>
-            <h1 id="cert-score" style="color: #e74c3c;">---</h1>
-            <p style="font-size: 0.8em; color: gray;">Quran Quiz App</p>
-        </div>
-    </div>
     <script type="module" src="multiplayer-finish.js"></script>
 </body>
 </html>

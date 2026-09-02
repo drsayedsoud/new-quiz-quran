@@ -1,59 +1,58 @@
-const CACHE_NAME = 'quran-quiz-cache-v1';
-const urlsToCache = [
-  '/',                  // الصفحة الرئيسية
-  '/index.html',
-  '/quiz.html',
-  '/login.html',
-  '/downloaddata.html',
-  '/style.css',
-  '/script.js',
-  '/finish.html',
-  '/favicon.ico',
-  '/manifest.json',
-  '/assets/win.mp3',
-  '/assets/lose.mp3',
-  '/quran.json'
+// Single service worker for the whole app.
+// Pages and scripts: network first (so updates show up immediately), cache as offline fallback.
+// Images / sounds: cache first. quran.json and Firebase are never touched (IndexedDB + realtime).
+const CACHE_NAME = 'quran-quiz-v3';
+const PRECACHE = [
+  './index.html',
+  './quiz.html',
+  './finish.html',
+  './lobby.html',
+  './style.css',
+  './script.js',
+  './manifest.json',
+  './assets/icon-192.png',
+  './assets/icon-512.png'
 ];
 
-// تثبيت الكاش عند أول تحميل
 self.addEventListener('install', event => {
-  console.log('[Service Worker] التثبيت...');
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      console.log('[Service Worker] تخزين الملفات في الكاش...');
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => Promise.allSettled(PRECACHE.map(url => cache.add(url))))
+      .then(() => self.skipWaiting())
   );
 });
 
-// تفعيل Service Worker وحذف الكاشات القديمة
 self.addEventListener('activate', event => {
-  console.log('[Service Worker] التفعيل...');
   event.waitUntil(
-    caches.keys().then(cacheNames =>
-      Promise.all(
-        cacheNames.filter(name => name !== CACHE_NAME)
-          .map(name => caches.delete(name))
-      )
-    )
+    caches.keys()
+      .then(names => Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n))))
+      .then(() => self.clients.claim())
   );
-  return self.clients.claim();
 });
 
-// التعامل مع الطلبات
 self.addEventListener('fetch', event => {
+  const url = event.request.url;
+  if (event.request.method !== 'GET') return;
+  if (url.includes('quran.json') || url.includes('firebase') || url.includes('gstatic') || url.includes('googleapis')) return;
+
+  const isAsset = /\.(png|jpe?g|gif|svg|mp3|woff2?)$/i.test(url.split('?')[0]);
+  if (isAsset) {
+    event.respondWith(
+      caches.match(event.request).then(cached => cached || fetch(event.request).then(resp => {
+        if (resp.ok) caches.open(CACHE_NAME).then(c => c.put(event.request, resp.clone()));
+        return resp;
+      }))
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // إذا نجح الاتصال، رجّع الملف من الإنترنت
-        return response;
-      })
-      .catch(() => {
-        // إذا فشل الاتصال، استخدم الكاش
-        return caches.match(event.request)
-          .then(cachedResponse => {
-            return cachedResponse || caches.match('/index.html');
-          });
-      })
+    fetch(event.request).then(resp => {
+      if (resp.ok && new URL(url).origin === self.location.origin) {
+        const copy = resp.clone();
+        caches.open(CACHE_NAME).then(c => c.put(event.request, copy));
+      }
+      return resp;
+    }).catch(() => caches.match(event.request).then(cached => cached || caches.match('./index.html')))
   );
 });
