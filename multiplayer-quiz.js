@@ -1,5 +1,5 @@
 // Live layer on top of quiz.html for multiplayer rooms: synced questions, live scores, room watchdog
-import { db, ref, onValue, update } from './firebase-init.js';
+import { db, ref, get, onValue, update } from './firebase-init.js';
 import { getLocalUserId, clearMpState, escapeHtml, AVATARS } from './mp-common.js';
 
 const roomCode = localStorage.getItem('mp_roomCode');
@@ -127,6 +127,24 @@ if (roomCode) {
                 </div>`;
         }).join('');
     });
+
+    // ---- Reconnect: pick up where this player stopped (not in teacher mode, which is driven by the room) ----
+    if (localStorage.getItem('mp_sync') !== 'true') {
+        const firstDisplay = window.displayQuestion;
+        let restored = false;
+        window.displayQuestion = function () {
+            if (restored || !quizData || !quizData.length) { firstDisplay(); return; }
+            restored = true;
+            get(ref(db, `rooms/${roomCode}/players/${myId}`)).then(snap => {
+                const me = snap.val();
+                if (me && me.answered > 0 && me.answered < quizData.length && mpMode === 'questions') {
+                    currentIndex = me.answered; correctCount = me.score || 0; answered = me.answered;
+                    const c = document.getElementById('correct-counter'); if (c) c.textContent = correctCount;
+                }
+                firstDisplay();
+            }).catch(() => firstDisplay());
+        };
+    }
 
     // ---- Push my score after every answer ----
     let answered = 0;

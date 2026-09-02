@@ -658,6 +658,11 @@ function openModal(type, title) {
           <span class="quick-label">تحدي اليوم</span>
           <span class="daily-badge" id="daily-badge">10 أسئلة جديدة</span>
         </button>
+        <button class="quick-tile" id="resume-tile" style="--tile:#38bdf8; display: none;" onclick="resumeQuiz()">
+          <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><circle cx="24" cy="24" r="18" fill="#bae6fd"/><path d="M19 15l14 9-14 9z" fill="#0284c7"/></svg></span>
+          <span class="quick-label">متابعة المسابقة</span>
+          <span class="daily-badge" id="resume-badge" style="background: rgba(56,189,248,0.15); color: #7dd3fc;"></span>
+        </button>
         <button class="quick-tile" id="review-tile" style="--tile:#f87171; display: none;" onclick="startReview()">
           <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><rect x="10" y="6" width="28" height="36" rx="4" fill="#fecaca"/><path d="M16 16h16M16 23h16M16 30h10" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/><path d="M30 30l4 4 8-9" stroke="#16a34a" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           <span class="quick-label">مراجعة أخطائي</span>
@@ -905,6 +910,8 @@ function openModal(type, title) {
 </div>
 <!-- Solo Mix Modal -->
 <style>
+  .solo-opt { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 999px; padding: 5px 12px; font-size: 0.85em; color: #cbd5e0; cursor: pointer; }
+  .solo-opt input { accent-color: #10b981; }
   .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 62vh; overflow-y: auto; padding: 4px 2px; }
   .cat-card { --c: #4299e1; position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 16px 10px 14px; border-radius: 20px; cursor: pointer; background: linear-gradient(160deg, color-mix(in srgb, var(--c) 18%, rgba(255,255,255,0.04)), rgba(255,255,255,0.03)); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; overflow: hidden; }
   .cat-card::after { content: ''; position: absolute; width: 120px; height: 120px; border-radius: 50%; background: var(--c); opacity: 0.12; filter: blur(30px); top: -50px; right: -40px; pointer-events: none; }
@@ -943,7 +950,11 @@ function openModal(type, title) {
   <div class="modal-content" style="max-width: 480px; padding: 20px; background: var(--modal-bg); border-radius: 24px; text-align: right;">
     <span class="close-button" onclick="closeSoloMixModal()">&times;</span>
     <h3 id="solo-modal-title" style="color: var(--button-blue); margin: 0 0 2px; text-align: center; font-size: 1.4em;">🎯 اختر قسم المسابقة</h3>
-    <p id="solo-modal-sub" style="color: #a0aec0; text-align: center; margin: 0 0 14px; font-size: 0.85em;">لعبة فردية · اختر القسم الذي تريد التدرّب عليه</p>
+    <p id="solo-modal-sub" style="color: #a0aec0; text-align: center; margin: 0 0 10px; font-size: 0.85em;">لعبة فردية · اختر القسم الذي تريد التدرّب عليه</p>
+    <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px;">
+      <label class="solo-opt"><input type="checkbox" id="opt-notimer" onchange="localStorage.setItem('opt_notimer', this.checked ? '1' : '0')"> ⏱️ بلا وقت</label>
+      <label class="solo-opt"><input type="checkbox" id="opt-autoexplain" onchange="localStorage.setItem('opt_autoexplain', this.checked ? '1' : '0')"> 💡 التفسير بعد كل إجابة</label>
+    </div>
     <div id="solo-categories-list" class="cat-grid">
         <div class="cat-card" style="--c:#10b981" onclick="showQuranOptions('solo')">
           <span class="cat-icon"><svg viewBox="0 0 48 48"><path d="M6 12c6-3 12-3 17 1v26c-5-4-11-4-17-1z" fill="#34d399"/><path d="M42 12c-6-3-12-3-17 1v26c5-4 11-4 17-1z" fill="#059669"/><path d="M11 20h7M11 25h7M30 20h7M30 25h7" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round"/></svg></span>
@@ -1206,6 +1217,28 @@ function startSingleQuiz(category, mode, juz) {
         }
     }
 
+    function resumeQuiz() {
+        let r = null; try { r = JSON.parse(localStorage.getItem('soloResume') || 'null'); } catch (e) {}
+        if (!r) return;
+        localStorage.removeItem("mp_roomCode"); localStorage.removeItem("mp_isHost");
+        localStorage.setItem("quizType", r.type || "mixed");
+        localStorage.setItem("quizTitle", r.title || "");
+        localStorage.setItem("resumeNow", "1");
+        window.location.href = "quiz.html";
+    }
+    (function () {
+        try {
+            const r = JSON.parse(localStorage.getItem('soloResume') || 'null');
+            const tile = document.getElementById('resume-tile');
+            if (r && Array.isArray(r.questions) && r.index < r.questions.length && r.index > 0 && tile) {
+                tile.style.display = 'flex';
+                document.getElementById('resume-badge').textContent = r.index + '/' + r.questions.length + ' · ' + (r.title || '').replace(/^[^\u0600-\u06FF]+/, '');
+            }
+            const nt = document.getElementById('opt-notimer'), ae = document.getElementById('opt-autoexplain');
+            if (nt) nt.checked = localStorage.getItem('opt_notimer') === '1';
+            if (ae) ae.checked = localStorage.getItem('opt_autoexplain') === '1';
+        } catch (e) {}
+    })();
     function startReview() {
         localStorage.removeItem("mp_roomCode"); localStorage.removeItem("mp_isHost"); localStorage.removeItem("selectedJuz");
         localStorage.setItem("quizType", "review");

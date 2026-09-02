@@ -363,8 +363,67 @@ async function downloadCategory(cat, onProgress) {
   return all[cat] || [];
 }
 
+// ---------- Resume a long solo quiz exactly where it stopped ----------
+const isMultiplayerGame = () => !!localStorage.getItem('mp_roomCode');
+function saveResume() {
+  if (isMultiplayerGame() || !quizData || !quizData.length) return;
+  try {
+    localStorage.setItem('soloResume', JSON.stringify({
+      type: quizType, title: localStorage.getItem('quizTitle') || '', questions: quizData, index: currentIndex + 1,
+      correct: correctCount, answered: answeredCount, streak, bestStreak, wrong: wrongAnswers, totalTime, at: Date.now()
+    }));
+  } catch (e) { /* storage full */ }
+}
+function clearResume() { localStorage.removeItem('soloResume'); localStorage.removeItem('resumeNow'); }
+function tryResume() {
+  if (localStorage.getItem('resumeNow') !== '1') return false;
+  localStorage.removeItem('resumeNow');
+  let r = null;
+  try { r = JSON.parse(localStorage.getItem('soloResume') || 'null'); } catch (e) {}
+  if (!r || !Array.isArray(r.questions) || !r.questions.length || r.index >= r.questions.length) return false;
+  quizData = r.questions; currentIndex = r.index; correctCount = r.correct || 0; answeredCount = r.answered || 0;
+  streak = r.streak || 0; bestStreak = r.bestStreak || 0; wrongAnswers = Array.isArray(r.wrong) ? r.wrong : [];
+  if (r.totalTime) totalTime = r.totalTime;
+  quizType = r.type || quizType;
+  const c = document.getElementById('correct-counter'); if (c) c.textContent = correctCount;
+  return true;
+}
+
+function applySoloOptions() {
+  if (isMultiplayerGame()) return;
+  if (localStorage.getItem('opt_notimer') === '1') {
+    questionTime = 3600; questionTimeLeft = questionTime; totalTime = 6 * 3600;
+    const tb = document.querySelector('.timer-box');
+    if (tb) { [...tb.childNodes].filter(n => n.nodeType === 3).forEach(n => n.remove()); ['total-timer', 'question-timer'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; }); }
+    const bar = document.querySelector('.progress-bar-container-3d'); if (bar) bar.style.display = 'none';
+    const hint = document.createElement('div'); hint.style.cssText = 'font-size:0.85em;color:#a0aec0;'; hint.textContent = '🧘 وضع بلا وقت: خذ راحتك';
+    if (tb) tb.prepend(hint);
+  }
+}
+
+function showInlineExplanation(text) {
+  let box = document.getElementById('inline-explanation');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'inline-explanation';
+    box.style.cssText = 'margin-top:12px;background:rgba(66,153,225,0.12);border:1px solid rgba(66,153,225,0.5);border-radius:14px;padding:10px 14px;font-size:0.95em;line-height:1.7;text-align:right;color:inherit;';
+    const opts = document.querySelector('.options');
+    if (opts) opts.after(box); else return;
+  }
+  box.textContent = '💡 ' + text;
+  box.style.display = 'block';
+}
+function hideInlineExplanation() { const b = document.getElementById('inline-explanation'); if (b) b.style.display = 'none'; }
+
 async function loadQuestions() {
   const loadingOverlay = document.getElementById("loading-overlay");
+  applySoloOptions();
+  if (tryResume()) {
+    if (loadingOverlay) loadingOverlay.classList.add("hidden");
+    displayQuestion();
+    return;
+  }
+  clearResume();
   const show = html => { if (loadingOverlay) { loadingOverlay.classList.remove("hidden"); loadingOverlay.innerHTML = html; } };
   show("<div style='font-size:1.5em;'>جاري التجهيز...</div>");
   try {
@@ -666,6 +725,7 @@ function shuffle(array) {
 
 
 function finishQuiz() {
+  clearResume();
   clearInterval(totalTimerInterval);
   clearInterval(questionTimerInterval);
   const email = localStorage.getItem("userEmail") || "غير معروف";
@@ -681,6 +741,7 @@ function finishQuiz() {
   };
   let sessions = JSON.parse(localStorage.getItem("userSessions") || "[]");
   sessions.push(session);
+  clearResume();
   localStorage.setItem("userSessions", JSON.stringify(sessions));
   recordDaily(session);
   if (window.Progress) { try { Progress.onSessionSaved(session); } catch (e) { console.error(e); } }
@@ -821,7 +882,8 @@ function displayQuestion() {
 
     sessions.push(session);
 
-    localStorage.setItem("userSessions", JSON.stringify(sessions));
+    clearResume();
+  localStorage.setItem("userSessions", JSON.stringify(sessions));
   recordDaily(session);
   if (window.Progress) { try { Progress.onSessionSaved(session); } catch (e) { console.error(e); } }
 
@@ -1055,13 +1117,14 @@ if (isCorrectChoice(button, correctAnswer)) {
 
 
 
+  saveResume();
+  const explainNow = !isMultiplayerGame() && localStorage.getItem('opt_autoexplain') === '1' && (quizData[currentIndex] || {}).explanation;
+  if (explainNow) showInlineExplanation(quizData[currentIndex].explanation);
   setTimeout(() => {
-
+    hideInlineExplanation();
     currentIndex++;
-
     displayQuestion();
-
-  }, 3000);
+  }, explainNow ? 6500 : 3000);
 
 }
 
@@ -1072,6 +1135,7 @@ async function checkIndexedDB() { /* replaced by the per-category loader */ }
 
 
 function endQuiz() {
+  clearResume();
 
   clearInterval(totalTimerInterval);
 
@@ -1113,6 +1177,7 @@ function endQuiz() {
 
   sessions.push(session);
 
+  clearResume();
   localStorage.setItem("userSessions", JSON.stringify(sessions));
   recordDaily(session);
   if (window.Progress) { try { Progress.onSessionSaved(session); } catch (e) { console.error(e); } }

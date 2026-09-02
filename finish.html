@@ -178,6 +178,7 @@
       <button class="sh-wa" onclick="shareResult()">واتساب</button>
       <button class="sh-fb" onclick="shareResultFB()">فيسبوك</button>
       <button class="sh-copy" onclick="copyResult()">📋 نسخ النص</button>
+      <button class="sh-img" onclick="shareImage()" style="grid-column: span 2; background: linear-gradient(135deg, #7c3aed, #a855f7);">🖼️ صورة النتيجة للمشاركة</button>
     </div>
     <button class="danger-link" onclick="clearHistory()">🗑️ مسح سجل المسابقات من هذا الهاتف</button>
   </section>
@@ -302,6 +303,38 @@
   function shareResult() { window.open('https://wa.me/?text=' + encodeURIComponent(shareText()), '_blank'); }
   function shareResultFB() { window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(appUrl) + '&quote=' + encodeURIComponent(shareText()), '_blank', 'width=600,height=500'); }
   function copyResult() { navigator.clipboard.writeText(shareText()).then(() => toast('تم نسخ النتيجة ✅')).catch(() => toast('تعذر النسخ')); }
+  function drawResultImage() {
+    const c = document.createElement('canvas'); c.width = 1080; c.height = 1080;
+    const g = c.getContext('2d');
+    const grad = g.createLinearGradient(0, 0, 1080, 1080);
+    if (isKids) { grad.addColorStop(0, '#7ed6ff'); grad.addColorStop(1, '#ffe9a8'); } else { grad.addColorStop(0, '#1a1a2e'); grad.addColorStop(1, '#2d2b6b'); }
+    g.fillStyle = grad; g.fillRect(0, 0, 1080, 1080);
+    const ink = isKids ? '#2d2b55' : '#ffffff', muted = isKids ? '#5f6c7b' : '#a0aec0', accent = isKids ? '#ff9f43' : '#10b981';
+    g.textAlign = 'center'; g.direction = 'rtl';
+    g.fillStyle = ink; g.font = '900 64px Cairo, sans-serif'; g.fillText('مسابقة القرآن الكريم', 540, 130);
+    g.fillStyle = muted; g.font = '600 38px Cairo, sans-serif'; g.fillText(typeLabel || 'مسابقة', 540, 200);
+    g.beginPath(); g.arc(540, 500, 220, 0, Math.PI * 2); g.strokeStyle = isKids ? '#e2dbff' : 'rgba(255,255,255,0.12)'; g.lineWidth = 36; g.stroke();
+    g.beginPath(); g.arc(540, 500, 220, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * percentage / 100); g.strokeStyle = accent; g.lineCap = 'round'; g.lineWidth = 36; g.stroke();
+    g.fillStyle = ink; g.font = '900 150px Cairo, sans-serif'; g.fillText(percentage + '%', 540, 545);
+    g.fillStyle = muted; g.font = '700 40px Cairo, sans-serif'; g.fillText(score + ' إجابة صحيحة من ' + total, 540, 620);
+    g.fillStyle = accent; g.font = '900 52px Cairo, sans-serif'; g.fillText(document.getElementById('motiv-text').textContent, 540, 820);
+    const name = localStorage.getItem('mp_playerName');
+    if (name) { g.fillStyle = ink; g.font = '700 44px Cairo, sans-serif'; g.fillText(name, 540, 900); }
+    g.fillStyle = muted; g.font = '600 32px Cairo, sans-serif'; g.fillText(appUrl.replace(/^https?:\/\//, ''), 540, 1010);
+    return c;
+  }
+  async function shareImage() {
+    try { await document.fonts.load('900 64px Cairo'); } catch (e) {}
+    const canvas = drawResultImage();
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'natijati.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: 'نتيجتي في مسابقة القرآن الكريم', text: shareText() }); return; } catch (e) { if (e.name === 'AbortError') return; }
+      }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'natijati.png'; document.body.appendChild(a); a.click(); a.remove();
+      toast('تم حفظ الصورة');
+    }, 'image/png');
+  }
   function shareNative() { navigator.share({ title: 'مسابقة القرآن الكريم', text: shareText(), url: appUrl }).catch(() => {}); }
   if (navigator.share) document.getElementById('sh-native').style.display = 'flex';
 </script>
