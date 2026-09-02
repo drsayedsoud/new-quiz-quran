@@ -795,13 +795,14 @@ function openModal(type, title) {
       .set-label { font-weight: 800; color: #e2e8f0; font-size: 0.95em; display: flex; align-items: center; justify-content: space-between; }
       .set-label small { color: #718096; font-weight: 500; font-size: 0.8em; }
       .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      .seg-btn { background: rgba(0,0,0,0.25) !important; border: 2px solid rgba(255,255,255,0.1) !important; border-radius: 14px !important; padding: 10px 8px !important; color: #a0aec0 !important; cursor: pointer; display: flex; flex-direction: column; gap: 2px; align-items: center; font-family: 'Cairo', sans-serif; transition: 0.2s !important; box-shadow: none !important; font-size: 1em !important; }
+      .seg-btn { width: 100% !important; margin: 0 !important; background: rgba(0,0,0,0.25) !important; border: 2px solid rgba(255,255,255,0.1) !important; border-radius: 14px !important; padding: 10px 8px !important; color: #a0aec0 !important; cursor: pointer; display: flex; flex-direction: column; gap: 2px; align-items: center; font-family: 'Cairo', sans-serif; transition: 0.2s !important; box-shadow: none !important; font-size: 1em !important; }
+      .seg-btn b, .seg-btn small { display: block; }
       .seg-btn b { font-size: 1em; }
       .seg-btn small { font-size: 0.72em; opacity: 0.8; }
       .seg-btn.active { background: linear-gradient(135deg, #059669, #10b981) !important; border-color: #6ee7b7 !important; color: #fff !important; box-shadow: 0 6px 16px rgba(16,185,129,0.35) !important; }
       .seg-btn.active.time { background: linear-gradient(135deg, #2563eb, #4299e1) !important; border-color: #93c5fd !important; box-shadow: 0 6px 16px rgba(66,153,225,0.35) !important; }
-      .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-      .chip-btn { background: rgba(0,0,0,0.25) !important; border: 2px solid rgba(255,255,255,0.1) !important; color: #cbd5e0 !important; border-radius: 999px !important; padding: 7px 14px !important; font-weight: 800 !important; font-size: 0.9em !important; cursor: pointer; font-family: 'Cairo', sans-serif; transition: 0.15s !important; box-shadow: none !important; flex: 1 1 auto; }
+      .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(56px, 1fr)); gap: 8px; }
+      .chip-btn { background: rgba(0,0,0,0.25) !important; border: 2px solid rgba(255,255,255,0.1) !important; color: #cbd5e0 !important; border-radius: 999px !important; padding: 7px 14px !important; font-weight: 800 !important; font-size: 0.9em !important; cursor: pointer; font-family: 'Cairo', sans-serif; transition: 0.15s !important; box-shadow: none !important; width: 100% !important; margin: 0 !important; }
       .chip-btn.active { background: var(--button-blue) !important; border-color: #93c5fd !important; color: #fff !important; transform: scale(1.05); }
       .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; }
       .switch-row > span { display: flex; flex-direction: column; text-align: right; }
