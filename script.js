@@ -62,6 +62,29 @@ let currentIndex = 0;
 
 
 let heroPosition = 0;
+let streak = 0;
+let bestStreak = 0;
+let wrongAnswers = [];
+let answeredCount = 0;
+
+function vibrate(pattern) {
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
+}
+
+function showStreakToast(count) {
+  let el = document.getElementById('streak-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'streak-toast';
+    el.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%) scale(0.8);background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;font-weight:900;font-family:Cairo,sans-serif;padding:10px 22px;border-radius:999px;box-shadow:0 8px 20px rgba(239,68,68,0.4);z-index:9000;opacity:0;transition:all 0.25s;pointer-events:none;font-size:1.05em;';
+    document.body.appendChild(el);
+  }
+  el.textContent = '🔥 ' + count + ' إجابات صحيحة متتالية!';
+  el.style.opacity = '1';
+  el.style.transform = 'translateX(-50%) scale(1)';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(-50%) scale(0.8)'; }, 1600);
+}
 let quizType = localStorage.getItem("quizType") || "mixed";
 
 
@@ -360,7 +383,14 @@ async function loadQuestions() {
         
         const response = await fetch('./quran.json');
         if (!response.ok) throw new Error("Could not fetch quran.json from server");
-        data = await response.json();
+        data = await readJsonWithProgress(response, (pct, mb) => {
+            if (!loadingOverlay) return;
+            const bar = pct === null ? '' : '<div style="width:100%;height:14px;background:rgba(255,255,255,0.15);border-radius:999px;overflow:hidden;margin:14px 0 8px;"><div style="width:' + pct + '%;height:100%;background:linear-gradient(90deg,#10b981,#34d399);transition:width 0.3s;"></div></div>';
+            loadingOverlay.innerHTML = '<div style="text-align:center;max-width:320px;padding:0 16px;">' +
+                '<div style="font-size:1.3em;font-weight:800;">⬇️ جاري تنزيل الأسئلة (لأول مرة فقط)</div>' + bar +
+                '<div style="font-size:0.95em;color:#cbd5e0;">' + (pct === null ? '' : pct + '% · ') + mb + ' ميجابايت</div>' +
+                '<div style="font-size:0.8em;color:#a0aec0;margin-top:8px;">تُحفظ الأسئلة على جهازك ولن تُنزَّل مرة أخرى</div></div>';
+        });
         
         try {
            if (loadingOverlay) loadingOverlay.innerHTML = "<div style='font-size:1.5em;'>جاري حفظ الأسئلة في جهازك...</div>";
@@ -377,7 +407,72 @@ async function loadQuestions() {
       alert("تعذر تحميل الأسئلة. يرجى التأكد من اتصالك بالإنترنت.");
     }
   } catch (err) {
-    alert("خطأ في قراءة البيانات: " + err.message);
+    console.error(err);
+    if (loadingOverlay) {
+      loadingOverlay.classList.remove("hidden");
+      loadingOverlay.innerHTML = '<div style="text-align:center;max-width:320px;padding:0 16px;">' +
+        '<div style="font-size:2.5em;">📡</div><div style="font-size:1.2em;font-weight:800;margin:6px 0;">تعذر تحميل الأسئلة</div>' +
+        '<div style="font-size:0.9em;color:#cbd5e0;">تأكد من اتصالك بالإنترنت ثم أعد المحاولة</div>' +
+        '<button onclick="location.reload()" style="margin-top:16px;padding:12px 26px;border:none;border-radius:999px;background:#10b981;color:#fff;font-weight:800;font-family:inherit;font-size:1em;cursor:pointer;">🔄 إعادة المحاولة</button>' +
+        '<br><button onclick="location.href=\'index.html\'" style="margin-top:10px;background:transparent;border:none;color:#a0aec0;font-family:inherit;cursor:pointer;">الرئيسية</button></div>';
+    } else {
+      alert("خطأ في قراءة البيانات: " + err.message);
+    }
+  }
+}
+
+// Reads a JSON body chunk by chunk so the first-time download can show real progress
+async function readJsonWithProgress(response, onProgress) {
+  if (!response.body || !response.body.getReader) return response.json();
+  const total = parseInt(response.headers.get('Content-Length')) || 0;
+  const reader = response.body.getReader();
+  const chunks = [];
+  let received = 0, lastTick = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    received += value.length;
+    if (Date.now() - lastTick > 150) {
+      lastTick = Date.now();
+      onProgress(total ? Math.min(99, Math.round(received / total * 100)) : null, (received / 1048576).toFixed(1));
+    }
+  }
+  onProgress(100, (received / 1048576).toFixed(1));
+  const all = new Uint8Array(received);
+  let offset = 0;
+  for (const c of chunks) { all.set(c, offset); offset += c.length; }
+  return JSON.parse(new TextDecoder().decode(all));
+}
+
+// Strips numbering artefacts such as "Q(462): " from imported questions
+function cleanQuestionText(text) {
+  return String(text || '').replace(/^\s*Q\s*\(\s*\d+\s*\)\s*[:：\-]?\s*/i, '').replace(/^\s*س\s*\d+\s*[:：\-]\s*/, '').trim();
+}
+
+// Daily challenge: same 10 questions for everyone on a given day
+function dailyQuestions(jsonData) {
+  const pool = [].concat(jsonData.sera || [], jsonData.sona || [], jsonData.general || []);
+  const dayKey = new Date().toISOString().slice(0, 10);
+  let seed = 0;
+  for (let i = 0; i < dayKey.length; i++) seed = (seed * 31 + dayKey.charCodeAt(i)) % 233280;
+  const picked = [];
+  const used = new Set();
+  while (picked.length < 10 && used.size < pool.length) {
+    seed = (seed * 9301 + 49297) % 233280;
+    const idx = Math.floor(seed / 233280 * pool.length);
+    if (!used.has(idx)) { used.add(idx); picked.push(pool[idx]); }
+  }
+  return picked;
+}
+
+function recordDaily(session) {
+  if (session.type !== 'daily') return;
+  const dayKey = new Date().toISOString().slice(0, 10);
+  let best = null;
+  try { best = JSON.parse(localStorage.getItem('daily_best') || 'null'); } catch (e) {}
+  if (!best || best.date !== dayKey || session.score > best.score) {
+    localStorage.setItem('daily_best', JSON.stringify({ date: dayKey, score: session.score, total: session.total }));
   }
 }
 
@@ -402,6 +497,7 @@ function processParsedJSON(jsonData) {
       else if (type === "meanings" && jsonData.words) source = source.concat(jsonData.words);
       else if (type === "kids" && jsonData.kids) source = source.concat(jsonData.kids);
       else if (type === "general" && jsonData.general) source = source.concat(jsonData.general);
+      else if (type === "daily") source = source.concat(dailyQuestions(jsonData));
       else if (Array.isArray(jsonData[type])) source = source.concat(jsonData[type]);
       else if (jsonData.quiz) {
           const filtered = jsonData.quiz.filter(q => q.type === type);
@@ -482,6 +578,7 @@ function processParsedJSON(jsonData) {
     } else {
         // For solo, let's just cap it at 20 to prevent infinite games, unless it's a specific Juz maybe?
         // Actually, we'll leave it as is or cap to 30.
+        if (quizType === 'daily') quizData = quizData.slice(0, 10);
         if (quizData.length > 50) {
             quizData = quizData.slice(0, 50); // Cap solo games to 50 max
         }
@@ -546,12 +643,16 @@ function finishQuiz() {
     date: new Date().toLocaleString("ar-EG"),
     email: email,
     score: correctCount,
-    total: currentIndex,
-    type: quizType
+    total: Math.max(answeredCount, currentIndex),
+    type: quizType,
+    wrong: wrongAnswers.slice(0, 60),
+    bestStreak: bestStreak,
+    title: localStorage.getItem("quizTitle") || ""
   };
   let sessions = JSON.parse(localStorage.getItem("userSessions") || "[]");
   sessions.push(session);
   localStorage.setItem("userSessions", JSON.stringify(sessions));
+  recordDaily(session);
   window.location.href = "finish.html";
 }
 
@@ -673,9 +774,15 @@ function displayQuestion() {
 
       score: correctCount,
 
-      total: currentIndex,
+      total: Math.max(answeredCount, currentIndex),
 
-      type: quizType
+      type: quizType,
+
+      wrong: wrongAnswers.slice(0, 60),
+
+      bestStreak: bestStreak,
+
+      title: localStorage.getItem("quizTitle") || ""
 
     };
 
@@ -684,6 +791,7 @@ function displayQuestion() {
     sessions.push(session);
 
     localStorage.setItem("userSessions", JSON.stringify(sessions));
+  recordDaily(session);
 
     window.location.href = "finish.html";
 
@@ -703,9 +811,9 @@ function displayQuestion() {
 
 
 
-  if (q.question.startsWith("ما الآية التالية")) {
+  if (q.question.includes("ما الآية التالية")) {
 
-    const ayaText = q.question.replace("ما الآية التالية لهذه الآية؟", "").trim();
+    const ayaText = q.question.replace("ما الآية التالية لهذه الآية؟", "").replace(/^\s*الآية\s*[:：]\s*/, "").trim();
 
     questionTextElement.innerHTML = `
 
@@ -721,7 +829,7 @@ function displayQuestion() {
 
   } else {
 
-    questionTextElement.textContent = q.question;
+    questionTextElement.textContent = cleanQuestionText(q.question);
 
   }
 
@@ -875,10 +983,25 @@ if (button.textContent === correctAnswer) {
         playSound(winSound);
     }
 
+  answeredCount++;
   correctCount++;
+  streak++;
+  if (streak > bestStreak) bestStreak = streak;
+  if (streak >= 3) showStreakToast(streak);
+  vibrate(40);
   const correctCounterElement = document.getElementById("correct-counter");
   if (correctCounterElement) correctCounterElement.textContent = correctCount;
 } else {
+  answeredCount++;
+  streak = 0;
+  vibrate([60, 40, 60]);
+  const currentQ = quizData[currentIndex] || {};
+  wrongAnswers.push({
+    question: cleanQuestionText(currentQ.question),
+    chosen: button ? button.textContent : '',
+    correct: String(correctAnswer),
+    explanation: currentQ.explanation ? String(currentQ.explanation) : ''
+  });
   if (quizType.startsWith('kids') && window.KidsTheme) KidsTheme.wrong(button);
   else playSound(loseSound);
 }
@@ -965,9 +1088,15 @@ function endQuiz() {
 
     score: correctCount,
 
-    total: currentIndex,
+    total: Math.max(answeredCount, currentIndex),
 
-    type: quizType
+    type: quizType,
+
+    wrong: wrongAnswers.slice(0, 60),
+
+    bestStreak: bestStreak,
+
+    title: localStorage.getItem("quizTitle") || ""
 
   };
 
@@ -976,6 +1105,7 @@ function endQuiz() {
   sessions.push(session);
 
   localStorage.setItem("userSessions", JSON.stringify(sessions));
+  recordDaily(session);
 
   window.location.href = "finish.html";
 

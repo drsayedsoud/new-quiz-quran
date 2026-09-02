@@ -118,11 +118,20 @@ function renderPlayers() {
         card.className = 'player-card' + (host ? ' is-host' : '') + (id === myId ? ' is-me' : '');
         card.innerHTML = `
             ${host ? '<div class="crown">👑</div>' : ''}
+            ${(isHost && id !== myId && room.status === 'waiting') ? '<button class="kick-btn" data-kick="' + escapeHtml(id) + '" title="إزالة اللاعب">✖</button>' : ''}
             <img src="${escapeHtml(p.avatar || AVATARS[0])}" alt="">
             <div class="name">${escapeHtml(p.name)}</div>
             <div class="tag">${host ? 'المضيف' : ''}${id === myId ? (host ? ' • أنت' : 'أنت') : ''}</div>
         `;
         list.appendChild(card);
+    });
+    list.querySelectorAll('.kick-btn').forEach(btn => btn.onclick = async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.kick;
+        const p = players[id];
+        if (!p) return;
+        if (!(await uiConfirm('إزالة ' + p.name + ' من الغرفة؟', 'نعم، إزالة'))) return;
+        try { await remove(ref(db, `rooms/${roomCode}/players/${id}`)); toast('تمت إزالة ' + p.name); } catch (err) { console.error(err); }
     });
     if (entries.length < 2) {
         const slot = document.createElement('div');
@@ -271,6 +280,15 @@ $('display-room-code').textContent = roomCode;
 $('display-room-code').onclick = () => navigator.clipboard?.writeText(roomCode).then(() => toast('تم نسخ الكود ✅'));
 $('copy-link-btn').onclick = () => navigator.clipboard?.writeText(lobbyUrl(roomCode)).then(() => toast('تم نسخ الرابط ✅'));
 $('whatsapp-invite-btn').onclick = () => window.open(whatsappInviteUrl(roomCode), '_blank');
+$('qr-btn').onclick = () => {
+    const box = $('qr-box');
+    const visible = box.style.display !== 'none';
+    box.style.display = visible ? 'none' : 'block';
+    if (!visible && !box.dataset.ready && window.QRCode) {
+        new QRCode($('qr-code'), { text: lobbyUrl(roomCode), width: 170, height: 170, correctLevel: QRCode.CorrectLevel.M });
+        box.dataset.ready = '1';
+    }
+};
 $('join-btn').onclick = joinRoom;
 $('player-name').value = localStorage.getItem('mp_playerName') || '';
 $('player-name').addEventListener('keydown', e => { if (e.key === 'Enter') joinRoom(); });
@@ -300,7 +318,7 @@ unsubscribeRoom = onValue(ref(db, `rooms/${roomCode}`), (snapshot) => {
     }
     if (wasJoined && !joined && !starting) {
         // We got removed (e.g. presence cleanup after a reconnect race): let the user re-join
-        toast('انقطع الاتصال، يرجى الدخول مرة أخرى');
+        toast('تمت إزالتك من الغرفة أو انقطع الاتصال، يمكنك الدخول مرة أخرى');
     }
 
     if (data.status === 'playing') {

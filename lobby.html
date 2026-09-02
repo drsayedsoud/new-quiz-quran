@@ -6,6 +6,7 @@
     <title>غرفة الانتظار - مسابقة القرآن الكريم</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
             --dark-bg: #1a1a2e;
@@ -119,6 +120,9 @@
         .player-card.is-me { border-color: var(--green); }
         .player-card .name { margin-top: 8px; font-weight: 700; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .player-card .tag { font-size: 0.7em; color: var(--muted); }
+        .kick-btn { position: absolute; top: 6px; left: 6px; width: 24px; height: 24px; border-radius: 50%; border: none; background: rgba(239,68,68,0.85); color: #fff; font-size: 0.8em; cursor: pointer; line-height: 1; font-family: inherit; }
+        .kick-btn:hover { background: #ef4444; }
+        body.kids-mode .kick-btn { width: 28px; height: 28px; border: 2px solid #fff; }
         .player-card .crown { position: absolute; top: -8px; right: 8px; font-size: 1.2em; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6)); }
         .empty-slot {
             border: 2px dashed rgba(255,255,255,0.15); border-radius: 14px; display: flex; align-items: center;
@@ -167,6 +171,11 @@
                     دعوة عبر واتساب
                 </button>
                 <button id="copy-link-btn" class="share-btn btn-copy">🔗 نسخ رابط الغرفة</button>
+                <button id="qr-btn" class="share-btn" style="background: #6b46c1;">📷 رمز QR</button>
+            </div>
+            <div id="qr-box" style="display: none; margin-top: 14px;">
+                <div id="qr-code" style="display: inline-block; background: #fff; padding: 10px; border-radius: 14px;"></div>
+                <div style="color: var(--muted); font-size: 0.85em; margin-top: 6px;">امسح الرمز بكاميرا الهاتف للانضمام مباشرة</div>
             </div>
             <div class="chips">
                 <span class="chip">📚 <b id="chip-category">...</b></span>

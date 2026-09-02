@@ -131,6 +131,13 @@
   <p>النسبة المئوية: <span id="percent"></span>%</p>
 
   <div class="motiv" id="motiv-text"></div>
+  <div id="extra-stats" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 6px 0 4px;"></div>
+
+  <div id="review-section" style="display: none; text-align: right; margin-top: 26px;">
+    <h2 style="color: #fbbf24; margin: 0 0 4px;">📝 مراجعة الأخطاء</h2>
+    <p style="color: #a0aec0; font-size: 0.9em; margin: 0 0 12px;">راجع ما أخطأت فيه لتثبيت المعلومة</p>
+    <div id="review-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+  </div>
 
   <h2 style="margin-top:40px; color:#00e676;">📊 إحصائيات الأداء</h2>
   <div style="max-width:100%; overflow-x:auto; margin-top: 20px;">
@@ -167,6 +174,32 @@
   else if (percentage >= 70) motiv.textContent = "أداء جيد جدًا! اقتربت من التميز 👏";
   else if (percentage >= 50) motiv.textContent = "لست بعيدًا عن الأفضل! واصل المذاكرة ✨";
   else motiv.textContent = "لا تيأس، البداية دائمًا صعبة! واصل التدريب 🚀";
+
+  // ---- extra stats + wrong answers review ----
+  (function () {
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const chip = (t) => '<span style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:999px;padding:5px 12px;font-size:0.85em;">' + t + '</span>';
+    const stats = [];
+    if (session.title) stats.push(chip('📚 ' + esc(session.title)));
+    if (session.bestStreak >= 2) stats.push(chip('🔥 أفضل سلسلة: ' + session.bestStreak));
+    if (session.type === 'daily') {
+      let best = null; try { best = JSON.parse(localStorage.getItem('daily_best') || 'null'); } catch (e) {}
+      if (best) stats.push(chip('⭐ أفضل نتيجة اليوم: ' + best.score + '/' + best.total));
+    }
+    document.getElementById('extra-stats').innerHTML = stats.join('');
+
+    const wrong = Array.isArray(session.wrong) ? session.wrong : [];
+    if (wrong.length) {
+      document.getElementById('review-section').style.display = 'block';
+      document.getElementById('review-list').innerHTML = wrong.map((w, i) => `
+        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 12px 14px;">
+          <div style="font-weight: 800; margin-bottom: 8px; line-height: 1.7;">${i + 1}. ${esc(w.question)}</div>
+          <div style="font-size: 0.9em; color: #fca5a5;">❌ إجابتك: ${esc(w.chosen || '—')}</div>
+          <div style="font-size: 0.9em; color: #86efac;">✅ الصحيح: ${esc(w.correct)}</div>
+          ${w.explanation ? '<div style="font-size: 0.85em; color: #a0aec0; margin-top: 6px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">💡 ' + esc(w.explanation) + '</div>' : ''}
+        </div>`).join('');
+    }
+  })();
 
   new Chart(document.getElementById('chart'), {
     type: 'bar',

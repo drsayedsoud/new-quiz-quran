@@ -17,5 +17,36 @@
       "sizes": "512x512",
       "type": "image/png"
     }
+  ],
+  "description": "مسابقات في القرآن الكريم والسيرة والفقه ومعاني الكلمات، بمفردك أو مع أصدقائك، مع قسم للأطفال",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": [
+    "education",
+    "games"
+  ],
+  "shortcuts": [
+    {
+      "name": "تحدي الأصدقاء",
+      "short_name": "تحدي",
+      "url": "./index.html?open=multi",
+      "icons": [
+        {
+          "src": "assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "مسابقة الأطفال",
+      "short_name": "الأطفال",
+      "url": "./index.html?open=kids",
+      "icons": [
+        {
+          "src": "assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }
