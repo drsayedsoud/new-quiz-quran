@@ -123,6 +123,8 @@ if (roomCode) {
         }
         const isHost = data.hostId === myId;
         $('mp-rematch-btn').style.display = isHost ? 'inline-block' : 'none';
+        const hasAnswers = Object.values(data.players || {}).some(p => p.answers);
+        $('mp-report-btn').style.display = (isHost && hasAnswers) ? 'inline-block' : 'none';
         $('mp-guest-hint').style.display = isHost ? 'none' : 'block';
         renderPlayers(data.players);
     });
@@ -145,6 +147,47 @@ if (roomCode) {
             $('mp-rematch-btn').disabled = false;
         }
     };
+
+    // ---- session report (host): one row per player, one column per question ----
+    function buildReportCsv() {
+        const players = Object.entries((room && room.players) || {}).sort((a, b) => (b[1].score || 0) - (a[1].score || 0));
+        const qs = (room && room.qs) || {};
+        const idxs = new Set(Object.keys(qs).map(Number));
+        players.forEach(([, p]) => Object.keys(p.answers || {}).forEach(i => idxs.add(Number(i))));
+        const order = [...idxs].sort((a, b) => a - b);
+        const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+        const s = (room && room.settings) || {};
+        const lines = [];
+        lines.push([esc('تقرير الجلسة'), esc(s.roomName || ('غرفة ' + roomCode)), esc(categoryLabel(s.category)), esc(new Date().toLocaleString('ar-EG'))].join(','));
+        lines.push('');
+        lines.push([esc('#'), esc('الطالب'), esc('الفريق'), esc('النقاط'), esc('أجاب'), ...order.map(i => esc('س' + (i + 1)))].join(','));
+        players.forEach(([, p], n) => {
+            const cells = order.map(i => { const a = p.answers && p.answers[i]; return esc(!a ? '—' : (a.ok ? '✓ ' : '✗ ') + (a.c || 'بلا إجابة')); });
+            lines.push([n + 1, esc(p.name), esc(p.team ? (p.team === 'red' ? 'الأحمر' : 'الأزرق') : ''), p.score || 0, p.answered || 0, ...cells].join(','));
+        });
+        lines.push('');
+        lines.push([esc('السؤال'), esc('النص'), esc('الإجابة الصحيحة'), esc('أجاب صحيحاً'), esc('أجاب خطأً')].join(','));
+        order.forEach(i => {
+            const ok = players.filter(([, p]) => p.answers && p.answers[i] && p.answers[i].ok).length;
+            const bad = players.filter(([, p]) => p.answers && p.answers[i] && !p.answers[i].ok).length;
+            lines.push([esc('س' + (i + 1)), esc(qs[i] ? qs[i].q : ''), esc(qs[i] ? qs[i].a : ''), ok, bad].join(','));
+        });
+        return '\ufeff' + lines.join('\r\n');
+    }
+    function downloadReport() {
+        const blob = new Blob([buildReportCsv()], { type: 'text/csv;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'تقرير-الجلسة-' + roomCode + '.csv';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+    const reportBtn = document.createElement('button');
+    reportBtn.id = 'mp-report-btn';
+    reportBtn.textContent = '📥 تقرير الجلسة (Excel)';
+    reportBtn.style.cssText = 'display:none;background:#6b46c1;color:#fff;font-weight:bold;';
+    reportBtn.onclick = downloadReport;
+    $('mp-home-btn').parentElement.appendChild(reportBtn);
 
     $('mp-home-btn').onclick = () => {
         leaving = true;

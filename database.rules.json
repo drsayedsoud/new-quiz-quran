@@ -37,6 +37,15 @@
           "$other":        { ".validate": false }
         },
 
+        "qs": {
+          "$idx": {
+            ".validate": "$idx.matches(/^[0-9]{1,4}$/)",
+            "q": { ".validate": "newData.isString() && newData.val().length <= 300" },
+            "a": { ".validate": "newData.isString() && newData.val().length <= 300" },
+            "$other": { ".validate": false }
+          }
+        },
+
         "players": {
           "$uid": {
             ".validate": "$uid.length <= 64 && newData.hasChildren(['name', 'avatar'])",

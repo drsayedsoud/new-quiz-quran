@@ -97,7 +97,15 @@ if (enabled) {
         const phase = room.phase || 'question';
         if (phase === 'done' || idx >= quizData.length) { ended = true; hide(); bar.style.display = 'none'; try { speechSynthesis && speechSynthesis.cancel(); } catch (e) {} if (typeof finishQuiz === 'function') finishQuiz(); return; }
         if (phase === 'reveal') { clearInterval(questionTimerInterval); showReveal(); return; }
-        if (shownIdx !== idx) { shownIdx = idx; currentIndex = idx; hide(); origDisplay(); return; }
+        if (shownIdx !== idx) {
+            shownIdx = idx; currentIndex = idx; hide(); origDisplay();
+            if (isHost && quizData[idx] && !(room.qs && room.qs[idx])) {
+                const q = quizData[idx];
+                const text = (typeof cleanQuestionText === 'function' ? cleanQuestionText(q.question) : String(q.question || '')).slice(0, 300);
+                update(ref(db, `rooms/${roomCode}/qs/${idx}`), { q: text, a: String(q.correct_answer || '').slice(0, 300) }).catch(() => {});
+            }
+            return;
+        }
         if (answeredIdx === idx || currentIndex !== idx) showWait(); else hide();
     }
 
