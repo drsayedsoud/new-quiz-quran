@@ -37,7 +37,22 @@
     .drop:hover { border-color: var(--green); color: #fff; }
     .log { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 10px 12px; font-size: 0.85em; line-height: 1.8; max-height: 260px; overflow: auto; white-space: pre-wrap; direction: rtl; }
     .ok { color: #86efac; } .warn { color: #fde68a; } .err { color: #fca5a5; }
-    @media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+    .card.lib { background: linear-gradient(160deg, #1f2a44 0%, #172033 100%); border-color: #2f4a6b; }
+    .lib-head h2 { font-size: 1.25em; color: #7dd3fc; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 6px; }
+    .step { display: flex; gap: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(125,211,252,0.18); border-radius: 16px; padding: 14px; }
+    .step-n { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; background: #0ea5e9; color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+    .step-body { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+    .step-body > b { color: #fff; font-size: 1em; }
+    .step-body > span { color: var(--muted); font-size: 0.82em; line-height: 1.6; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+    .step .drop { margin-top: 4px; padding: 16px; font-size: 0.9em; }
+    .setup { margin-top: 12px; background: rgba(0,0,0,0.25); border-radius: 14px; padding: 10px 14px; }
+    .setup summary { cursor: pointer; color: var(--muted); font-size: 0.9em; font-weight: 700; }
+    .setup-body { font-size: 0.85em; color: var(--muted); line-height: 1.8; margin-top: 8px; }
+    .setup-body a { color: #7dd3fc; font-weight: 800; }
+    #gh-token { flex: 1; min-width: 220px; padding: 9px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; font-family: inherit; }
+    @media (max-width: 760px) { .two { grid-template-columns: 1fr; } .steps { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -69,31 +84,52 @@
     <table><thead><tr><th>الكود</th><th>القسم</th><th>اللاعبون</th><th>الحالة</th><th>أُنشئت</th></tr></thead><tbody id="rooms"></tbody></table>
   </div>
 
-  <div class="card">
-    <h2>📦 بنك الأسئلة: تنزيل، تعديل في إكسيل، ثم نشر بضغطة</h2>
-    <p class="sub">1) نزّل البنك الحالي كملف إكسيل. 2) عدّل أو أضف الأسئلة في الأوراق (question, choice1..choice4, correct_answer, explanation). 3) ارفع الملف هنا وسيُنشر تلقائياً إلى GitHub ثم إلى الموقع خلال دقيقة، ويحصل كل جهاز على الأسئلة الجديدة عند أول مسابقة.</p>
-    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
-      <button class="btn blue" id="dl-xlsx">⬇️ تنزيل البنك الحالي (Excel)</button>
-      <button class="btn ghost" id="cur-btn">🔎 أعداد البنك الحالي</button>
+  <div class="card lib">
+    <div class="lib-head"><h2>📚 مكتبة الأسئلة</h2><p class="sub">نزّل، عدّل في إكسيل، ثم انشر بضغطة واحدة. الأعمدة المطلوبة: question, choice1, choice2, choice3, choice4, correct_answer (والتفسير explanation اختياري).</p></div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <b>نزّل مكتبة الأسئلة الحالية</b>
+          <span>ملف إكسيل فيه ورقة لكل قسم، عدّل فيه أو أضف صفوفاً</span>
+          <div class="row"><button class="btn blue" id="dl-xlsx">⬇️ تنزيل (Excel)</button><button class="btn ghost" id="cur-btn">🔎 أعداد الأسئلة الحالية</button></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <b>ارفع الملف المعدّل</b>
+          <span>الأوراق الموجودة في الملف تُستبدل، وما لم تُرفع يبقى كما هو</span>
+          <label class="drop" id="drop">📂 اضغط لاختيار ملف الإكسيل (.xlsx)<input type="file" id="xlsx" accept=".xlsx,.xls" style="display:none"></label>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-body">
+          <b>انشر إلى الموقع</b>
+          <span>يُرفع إلى GitHub تلقائياً ويتحدث الموقع خلال دقيقة، ويحصل كل جهاز على الأسئلة الجديدة عند أول مسابقة</span>
+          <div class="row"><button class="btn green" id="publish-btn" disabled>🚀 نشر إلى الموقع الآن</button><button class="btn ghost" id="dl-btn" disabled>⬇️ تنزيل quran.zip بدلاً من النشر</button></div>
+        </div>
+      </div>
     </div>
-    <details style="margin-bottom:12px;">
-      <summary style="cursor:pointer; color:var(--muted); font-size:0.9em;">🔑 إعداد النشر التلقائي (مرة واحدة)</summary>
-      <div style="font-size:0.85em; color:var(--muted); line-height:1.8; margin-top:8px;">
-        ثلاث خطوات فقط: <b>1)</b> اضغط <a href="https://github.com/settings/tokens/new?scopes=repo&description=Quran%20Quiz%20Admin" target="_blank" style="color:#7dd3fc; font-weight:800;">هذا الرابط</a> (الإعدادات معبّأة مسبقاً) وانزل لأسفل الصفحة واضغط الزر الأخضر <b>Generate token</b>. <b>2)</b> انسخ الرمز الذي يظهر (يبدأ بـ ghp_). <b>3)</b> الصقه هنا واضغط "حفظ الرمز". يُحفظ في هذا المتصفح فقط.
-        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-          <input type="password" id="gh-token" placeholder="github_pat_..." style="flex:1; min-width:220px; padding:9px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit;">
+
+    <div class="log" id="log" style="margin-top:12px; display:none;"></div>
+
+    <details class="setup">
+      <summary>🔑 إعداد النشر التلقائي (مرة واحدة) <span id="gh-badge"></span></summary>
+      <div class="setup-body">
+        ثلاث خطوات فقط: <b>1)</b> اضغط <a href="https://github.com/settings/tokens/new?scopes=repo&description=Quran%20Quiz%20Admin" target="_blank">هذا الرابط</a> (الإعدادات معبّأة مسبقاً) وانزل لأسفل الصفحة واضغط الزر الأخضر <b>Generate token</b>. <b>2)</b> انسخ الرمز الذي يظهر (يبدأ بـ ghp_). <b>3)</b> الصقه هنا واضغط "حفظ الرمز". يُحفظ في هذا المتصفح فقط.
+        <div class="row" style="margin-top:8px;">
+          <input type="password" id="gh-token" placeholder="ghp_...">
           <button class="btn ghost" id="gh-save">حفظ الرمز</button>
           <button class="btn ghost" id="gh-test">اختبار الاتصال</button>
         </div>
         <div id="gh-status" style="margin-top:6px;"></div>
       </div>
     </details>
-    <label class="drop" id="drop">📂 اضغط لاختيار ملف الإكسيل الجديد (.xlsx)<input type="file" id="xlsx" accept=".xlsx,.xls" style="display:none"></label>
-    <div class="log" id="log" style="margin-top:12px; display:none;"></div>
-    <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
-      <button class="btn green" id="publish-btn" disabled>🚀 نشر إلى الموقع الآن</button>
-      <button class="btn ghost" id="dl-btn" disabled>⬇️ تنزيل quran.zip بدلاً من النشر</button>
-    </div>
   </div>
 </div>
 
@@ -172,7 +208,7 @@
     return JSON.parse(await zip.file('quran.json').async('string'));
   }
   document.getElementById('cur-btn').onclick = async () => {
-    try { const d = await loadCurrentBank(); log('البنك الحالي: ' + Object.keys(d).filter(k => Array.isArray(d[k])).map(k => k + ' = ' + d[k].length).join(' | '), 'ok'); } catch (e) { log(e.message, 'err'); }
+    try { const d = await loadCurrentBank(); log('الأسئلة الحالية: ' + Object.keys(d).filter(k => Array.isArray(d[k])).map(k => k + ' = ' + d[k].length).join(' | '), 'ok'); } catch (e) { log(e.message, 'err'); }
   };
 
   // ---- download as Excel ----
