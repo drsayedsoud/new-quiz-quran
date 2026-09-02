@@ -264,15 +264,15 @@
 
   // مشاركة النتيجة عبر الواتساب
   function shareResult() {
-    const message = `لقد حصلت على نتيجة ${score} من ${total} (${percentage}%) في تطبيق مسابقة القرآن الكريم.\n\nوهذا رابط الموقع: https://new-quiz-quran.vercel.app/`;
+    const message = `لقد حصلت على نتيجة ${score} من ${total} (${percentage}%) في تطبيق مسابقة القرآن الكريم.\n\nوهذا رابط الموقع: ${location.origin}/`;
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
   }
 
   // مشاركة النتيجة عبر الفيسبوك
   function shareResultFB() {
-    const message = `لقد حصلت على نتيجة ${score} من ${total} (${percentage}%) في تطبيق مسابقة القرآن الكريم.\n\nوهذا رابط الموقع: https://new-quiz-quran.vercel.app/`;
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=https://new-quiz-quran.vercel.app/&quote=${encodeURIComponent(message)}`;
+    const message = `لقد حصلت على نتيجة ${score} من ${total} (${percentage}%) في تطبيق مسابقة القرآن الكريم.\n\nوهذا رابط الموقع: ${location.origin}/`;
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${location.origin}/&quote=${encodeURIComponent(message)}`;
     window.open(facebookUrl, "_blank");
   }
 </script>

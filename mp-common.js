@@ -10,7 +10,7 @@ export const AVATARS = [
 ];
 
 export const ROOM_MAX_AGE_MS = 6 * 60 * 60 * 1000; // rooms older than 6 hours are considered expired
-export const APP_URL = 'https://new-quiz-quran.vercel.app';
+export const APP_URL = (typeof location !== 'undefined' && /^https?:/.test(location.origin)) ? location.origin : 'https://new-quiz-quran.vercel.app';
 
 const CATEGORY_LABELS = {
     mixed: 'القرآن الكريم كاملاً',
