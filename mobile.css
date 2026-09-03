@@ -2,7 +2,7 @@
 html, body { overflow-x: hidden; max-width: 100%; -webkit-text-size-adjust: 100%; }
 * { -webkit-tap-highlight-color: transparent; }
 button, input, select, textarea { font-family: inherit; }
-button, .option, .card, .home-card, .cat-card, .quick-tile, .avatar-option, .mp-choice, .chip-btn { touch-action: manipulation; }
+button, .option, .card, .home-card, .cat-card, .quick-tile, .quick-row, .avatar-option, .mp-choice, .chip-btn { touch-action: manipulation; }
 img, svg, canvas, video { max-width: 100%; height: auto; }
 svg[width], svg[height] { height: auto; }
 .modal { padding: 10px; box-sizing: border-box; }
