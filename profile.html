@@ -106,6 +106,7 @@
     </script>
     <div class="row" style="flex-wrap: wrap;">
       <button class="btn blue" id="google-link-btn" style="display:none">ربط حسابي بجوجل ✨</button>
+      <button class="btn green" id="quick-login-btn" style="display:none">🚀 دخول سريع</button>
       <button class="btn ghost" id="admin-btn" style="display:none; border-color: rgba(239,68,68,0.5); color: #fca5a5;" onclick="location.href='admin.html'">🛠️ لوحة الإدارة</button>
       <button class="btn ghost" id="signout-btn" style="display:none">تسجيل الخروج</button>
     </div>
@@ -250,7 +251,7 @@
 <script type="module">
   // Global honour board: publish my card (name, place, photo) and list the top 100
   import { publishCard, loadTop, rowHtml, myCard, getLocalUserId } from './global-board.js';
-  import { currentUser, signInGoogle, signOutUser, isAdmin } from './firebase-init.js';
+  import { currentUser, signInGoogle, signInQuick, signOutUser, isAdmin } from './firebase-init.js';
   const $ = id => document.getElementById(id);
   const list = $('gb-list'), status = $('gb-status'), photoImg = $('gb-photo-img');
   let photo = '';
@@ -274,10 +275,18 @@
   // Account card: who am I, and the upgrade to Google (same uid, so nothing is lost)
   function renderAccount() {
     const u = currentUser();
-    const line = $('account-line'), link = $('google-link-btn'), out = $('signout-btn'), ben = $('account-benefits');
-    if (!u) { line.textContent = '⚠️ لم يتم تسجيل الدخول، لن تُحفظ نتائجك في لوحة الشرف'; link.style.display = 'none'; out.style.display = 'none'; ben.style.display = 'none'; return; }
+    const line = $('account-line'), link = $('google-link-btn'), out = $('signout-btn'), ben = $('account-benefits'), quick = $('quick-login-btn');
+    quick.style.display = 'none';
+    if (!u) {
+      // Not signed in at all (slow network or a failed attempt): offer both ways in, never a dead end
+      line.textContent = '⚠️ لم يتم تسجيل الدخول بعد، لن تُحفظ نتائجك في لوحة الشرف';
+      link.textContent = 'الدخول بحساب Google ✨';
+      link.style.display = ''; ben.style.display = ''; out.style.display = 'none'; quick.style.display = '';
+      return;
+    }
     if (u.isAnonymous) {
       line.textContent = '🚀 أنت في وضع الدخول السريع (بدون حساب)';
+      link.textContent = 'ربط حسابي بجوجل ✨';
       link.style.display = ''; ben.style.display = ''; out.style.display = 'none';
     } else {
       line.textContent = (isAdmin() ? '👑 مدير التطبيق — ' : '✅ مسجّل بحساب Google: ') + (u.displayName || u.email || '');
@@ -297,6 +306,12 @@
       if (!photo && u.photoURL) { photo = u.photoURL; photoImg.src = photo; }
       renderAccount();
     }
+  });
+  $('quick-login-btn').addEventListener('click', async () => {
+    const btn = $('quick-login-btn'); btn.disabled = true; btn.textContent = '⏳ جاري الدخول...';
+    const u = await signInQuick();
+    btn.disabled = false; btn.textContent = '🚀 دخول سريع';
+    if (u) { if (window.UI) UI.toast('تم الدخول السريع ✅', { type: 'ok' }); renderAccount(); render(); }
   });
   $('signout-btn').addEventListener('click', async () => {
     const ok = window.UI ? await UI.dialog({ emoji: '👋', title: 'تسجيل الخروج؟', text: 'ستعود إلى شاشة الدخول. إحصائياتك على هذا الجهاز تبقى كما هي.', primary: 'تسجيل الخروج', secondary: 'إلغاء', danger: true }) : confirm('تسجيل الخروج؟');
