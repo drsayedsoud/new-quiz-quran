@@ -1031,6 +1031,13 @@ function openModal(type, title) {
   </div>
 </div>
     <script type="module" src="multiplayer.js"></script>
+<script id="mp-offline-guard">
+  // Offline, multiplayer.js cannot load (it imports Firebase); keep the buttons from throwing.
+  window.addEventListener('load', () => {
+    if (typeof window.createMultiplayerRoomWithParams !== 'function') window.createMultiplayerRoomWithParams = () => alert('التحدي الجماعي يحتاج اتصالاً بالإنترنت');
+    if (typeof window.joinMultiplayerRoom !== 'function') window.joinMultiplayerRoom = () => alert('التحدي الجماعي يحتاج اتصالاً بالإنترنت');
+  });
+</script>
 
     <!-- Admin Settings Gear -->
     <div id="admin-gear" style="position: fixed; bottom: 20px; right: 20px; font-size: 30px; cursor: pointer; z-index: 1000; transition: transform 0.3s; opacity: 0.5;">
