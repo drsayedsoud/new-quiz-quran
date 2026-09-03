@@ -1,14 +1,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, linkWithPopup, linkWithRedirect, signInWithCredential, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPopup, linkWithPopup, signInWithCredential, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, update, onValue, remove, onDisconnect, increment, query, orderByChild, limitToLast, runTransaction, forceLongPolling } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 import { chooseSignIn } from './auth-ui.js';
 
-// Google sign-in runs through our own domain (vercel.json proxies /__/auth/* to firebaseapp.com), so the
-// redirect/popup handler is first-party and works on phones and installed apps that block third-party storage.
-const OWN_AUTH_DOMAINS = ['new-quiz-quran-one.vercel.app'];
+// Same setup as the dental-quiz app, where Google sign-in is known to work well: default authDomain + popup.
 const firebaseConfig = {
   apiKey: "AIzaSyCLjeoM82C5eGuM1vAz92sw6PoqDxkXA3U",
-  authDomain: OWN_AUTH_DOMAINS.includes(location.hostname) ? location.hostname : "newclinic1-f25d4.firebaseapp.com",
+  authDomain: "newclinic1-f25d4.firebaseapp.com",
   projectId: "newclinic1-f25d4",
   storageBucket: "newclinic1-f25d4.firebasestorage.app",
   messagingSenderId: "399508085232",
@@ -87,10 +85,6 @@ export async function signInQuick() {
   } catch (e) { authFailed(e, 'تعذر الدخول السريع'); return null; }
 }
 
-// Phones and installed apps: the Google popup opens in another tab and its result never comes back to the app,
-// so there we leave for Google and return (redirect). Desktop browsers keep the popup.
-const isMobile = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent) || window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-
 // This Google account already owns another player: switch to it (the anonymous progress stays on this device)
 async function switchToExisting(e, title) {
   const cred = GoogleAuthProvider.credentialFromError(e);
@@ -99,39 +93,29 @@ async function switchToExisting(e, title) {
   catch (e2) { authFailed(e2, title); return null; }
 }
 
-async function goRedirect() {
-  try { sessionStorage.setItem('auth-redirect', '1'); localStorage.setItem('auth-redirect-at', String(Date.now())); } catch (x) {}
-  if (window.UI) window.UI.toast('سننتقل إلى Google للدخول ثم نعود إلى التطبيق...', { type: 'info', ms: 4000 });
-  const current = auth.currentUser;
-  // If the browser has not left for Google after a while, the redirect was blocked: say so instead of staying silent
-  const watchdog = setTimeout(() => {
-    if (window.UI) window.UI.dialog({ emoji: '🔐', title: 'لم يفتح الدخول بجوجل', text: 'المتصفح منع الانتقال. جرّب من متصفح Chrome أو Safari مباشرة (وليس من داخل واتساب أو فيسبوك)، أو استخدم الدخول السريع الآن والترقية لاحقاً من «ملفي».', primary: 'حسناً' });
-  }, 12000);
-  try {
-    if (current && current.isAnonymous) await linkWithRedirect(current, google);
-    else await signInWithRedirect(auth, google);
-  } catch (e) { clearTimeout(watchdog); throw e; }
-  return null; // the page leaves
-}
-
+// Exactly like the dental-quiz app: one popup (account chooser) on every device.
+// A quick (anonymous) player upgrading is linked through the same popup so the uid — and with it the
+// honour-board card and scores — is kept; if that Google account already exists, we switch to it.
 export async function signInGoogle() {
   const current = auth.currentUser;
-  if (isMobile) {
-    try { return await goRedirect(); }
-    catch (e) { window.__authError = e; console.warn('google redirect:', e.code || e.message); if (window.UI) window.UI.fail(e, 'تعذر الدخول بجوجل'); return null; }
-  }
   try {
-    // An anonymous player upgrading keeps the same uid, so the honour-board card and scores carry over
     const user = current && current.isAnonymous
       ? (await linkWithPopup(current, google)).user
       : (await signInWithPopup(auth, google)).user;
     rememberUser(user);
+    if (window.UI) window.UI.toast('تم الدخول بحساب Google: ' + (user.displayName || user.email || '') + ' ✅', { type: 'ok', ms: 5000 });
     return user;
   } catch (e) {
-    if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') return switchToExisting(e, 'تعذر الدخول بجوجل');
-    if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment', 'auth/web-storage-unsupported'].includes(e.code)) {
-      try { return await goRedirect(); } catch (e2) { authFailed(e2, 'تعذر الدخول بجوجل'); return null; }
+    if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') {
+      const user = await switchToExisting(e, 'تعذر الدخول بجوجل');
+      if (user && window.UI) window.UI.toast('تم الدخول بحساب Google: ' + (user.displayName || user.email || '') + ' ✅', { type: 'ok', ms: 5000 });
+      return user;
     }
+    if (e.code === 'auth/popup-blocked') {
+      if (window.UI) window.UI.dialog({ emoji: '🔐', title: 'المتصفح منع نافذة الدخول', text: 'اسمح بالنوافذ المنبثقة لهذا الموقع، أو افتحه من متصفح Chrome/Safari مباشرة (وليس من داخل واتساب أو فيسبوك) ثم حاول مرة أخرى.', primary: 'حسناً' });
+      return null;
+    }
+    if (QUIET.includes(e.code)) return null; // the player closed the popup
     authFailed(e, 'تعذر الدخول بجوجل');
     return null;
   }
@@ -161,28 +145,8 @@ export function accountLabel() {
 }
 
 async function ensureSignedIn() {
-  // Coming back from Google (redirect flow)? The flag may not survive in every installed app, so also
-  // ask the SDK whenever a redirect started within the last few minutes.
-  let redirected = false;
-  try {
-    const startedAt = parseInt(localStorage.getItem('auth-redirect-at') || '0') || 0;
-    if (sessionStorage.getItem('auth-redirect') || (startedAt && Date.now() - startedAt < 10 * 60 * 1000)) {
-      sessionStorage.removeItem('auth-redirect'); localStorage.removeItem('auth-redirect-at');
-      redirected = true;
-      // getRedirectResult can stall for a long time on phones when the auth iframe is blocked: cap it
-      const r = await withTimeout(getRedirectResult(auth), 8000, null);
-      if (r && r.user) {
-        rememberUser(r.user);
-        if (window.UI) window.UI.toast('تم الدخول بحساب Google: ' + (r.user.displayName || r.user.email || '') + ' ✅', { type: 'ok', ms: 5000 });
-        return r.user.uid;
-      }
-    }
-  } catch (e) {
-    if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') {
-      const user = await switchToExisting(e, 'تعذر الدخول بجوجل');
-      if (user) { if (window.UI) window.UI.toast('تم الدخول بحساب Google: ' + (user.displayName || user.email || '') + ' ✅', { type: 'ok', ms: 5000 }); return user.uid; }
-    } else authFailed(e, 'تعذر الدخول بجوجل');
-  }
+  try { sessionStorage.removeItem('auth-redirect'); localStorage.removeItem('auth-redirect-at'); } catch (x) {} // leftovers of the old redirect flow
+  const redirected = false;
 
   let user = await restoredUser();
   if (user) { rememberUser(user); return user.uid; }
