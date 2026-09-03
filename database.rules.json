@@ -9,7 +9,7 @@
 
       "$code": {
         ".read": true,
-        ".write": "$code.matches(/^[0-9]{5}$/)",
+        ".write": "newData.child('hostId').val() === auth.uid && $code.matches(/^[0-9]{5}$/)",
         ".validate": "newData.hasChildren(['hostId', 'status', 'createdAt', 'settings'])",
 
         "code":      { ".validate": "newData.isString() && newData.val() === $code" },
@@ -49,6 +49,7 @@
 
         "players": {
           "$uid": {
+            ".write": "$uid === auth.uid",
             ".validate": "$uid.length <= 64 && newData.hasChildren(['name', 'avatar'])",
             "name":        { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
             "avatar":      { ".validate": "newData.isString() && newData.val().beginsWith('assets/') && newData.val().length <= 64" },
@@ -59,6 +60,7 @@
             "team":        { ".validate": "newData.isString() && newData.val().matches(/^(red|blue)$/)" },
             "answers": {
               "$idx": {
+                ".write": "$uid === auth.uid",
                 ".validate": "$idx.matches(/^[0-9]{1,4}$/) && newData.hasChildren(['ok'])",
                 "c":  { ".validate": "newData.isString() && newData.val().length <= 300" },
                 "ok": { ".validate": "newData.isBoolean()" },
@@ -78,11 +80,11 @@
       ".read": true,
       ".indexOn": ["points"],
       "$uid": {
-        ".write": "$uid.length <= 64",
+        ".write": "$uid === auth.uid",
         ".validate": "newData.hasChildren(['name', 'points'])",
         "name":      { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30" },
         "place":     { ".validate": "newData.isString() && newData.val().length <= 40" },
-        "photo":     { ".validate": "newData.isString() && newData.val().length <= 60000" },
+        "photoUrl":  { ".validate": "newData.isString() && (newData.val().beginsWith('https://') || newData.val().beginsWith('http://')) && newData.val().length <= 256" },
         "avatar":    { ".validate": "newData.isString() && newData.val().length <= 64" },
         "points":    { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000" },
         "games":     { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" },
@@ -98,7 +100,7 @@
         ".validate": "$week.matches(/^[0-9]{4}-W[0-9]{2}$/)",
         ".indexOn": ["score"],
         "$uid": {
-          ".write": "$uid.length <= 64 && (!data.exists() || newData.child('score').val() >= data.child('score').val())",
+          ".write": "$uid === auth.uid && (!data.exists() || newData.child('score').val() >= data.child('score').val())",
           ".validate": "newData.hasChildren(['name', 'score', 'total', 'at'])",
           "name":  { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30" },
           "score": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
@@ -113,7 +115,7 @@
       ".read": true,
       "daily": {
         "$date": {
-          ".write": "$date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)",
+          ".write": false,
           "sessions": { ".validate": "newData.isNumber() && newData.val() >= 0" },
           "correct":  { ".validate": "newData.isNumber() && newData.val() >= 0" },
           "answered": { ".validate": "newData.isNumber() && newData.val() >= 0" },
@@ -122,9 +124,10 @@
         }
       },
       "questions": {
+        ".read": true,
         ".indexOn": ["wrong"],
         "$hash": {
-          ".write": "$hash.matches(/^[a-z0-9]{1,16}$/)",
+          ".write": false,
           "text":  { ".validate": "newData.isString() && newData.val().length <= 300" },
           "type":  { ".validate": "newData.isString() && newData.val().length <= 40" },
           "wrong": { ".validate": "newData.isNumber() && newData.val() >= 0" },
