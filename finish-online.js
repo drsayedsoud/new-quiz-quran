@@ -52,6 +52,7 @@ export function weekKey(d) {
 async function renderBoard(week, targetId, myId) {
     const el = $(targetId);
     if (!el) return;
+    if (window.UI) el.innerHTML = window.UI.spinnerHtml('جاري تحميل لوحة الشرف...');
     try {
         const snap = await get(query(ref(db, 'leaderboard/' + week), orderByChild('score'), limitToLast(20)));
         const rows = [];
@@ -64,9 +65,10 @@ async function renderBoard(week, targetId, myId) {
                 <span class="lb-name">${escapeHtml(r.name)}${r.id === myId ? ' <small>(أنت)</small>' : ''}</span>
                 <span class="lb-score">${r.score}/${r.total}</span>
             </div>`).join('');
-    } catch (e) { el.innerHTML = '<div class="empty">تعذر تحميل لوحة الشرف</div>'; }
+    } catch (e) { el.innerHTML = '<div class="empty">تعذر تحميل لوحة الشرف' + (window.UI ? ' — ' + escapeHtml(window.UI.explain(e).text) : '') + '</div>'; }
 }
 
+let lastBoardError = null;
 export async function submitDaily(name) {
     if (!session || session.type !== 'daily' || !session.total) return false;
     const uid = getLocalUserId();
@@ -77,7 +79,7 @@ export async function submitDaily(name) {
         await update(ref(db, `leaderboard/${week}/${uid}`), { name: name.slice(0, 30), score: best, total: session.total, at: Date.now() });
         localStorage.setItem('mp_playerName', name.slice(0, 30));
         return true;
-    } catch (e) { console.warn('leaderboard', e.message); return false; }
+    } catch (e) { lastBoardError = e; console.warn('leaderboard', e.message); return false; }
 }
 
 if (session && session.type === 'daily' && $('board-card')) {
@@ -91,7 +93,8 @@ if (session && session.type === 'daily' && $('board-card')) {
         if (!name) return;
         $('board-status').textContent = '⏳ جاري التسجيل...';
         const ok = await submitDaily(name);
-        $('board-status').textContent = ok ? '✅ تم تسجيل نتيجتك في لوحة الشرف' : 'تعذر التسجيل، حاول لاحقاً';
+        $('board-status').textContent = ok ? '✅ تم تسجيل نتيجتك في لوحة الشرف'
+            : '⚠️ تعذر التسجيل' + (lastBoardError && window.UI ? ': ' + window.UI.explain(lastBoardError).title : '، حاول لاحقاً');
         form.style.display = 'none';
         renderBoard(week, 'board-list', myId);
     };

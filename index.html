@@ -454,7 +454,7 @@ function openModal(type, title) {
             const selectedJuz = document.getElementById("juz-select").value;
 
             if (selectedSura !== "" && selectedJuz !== "") {
-                alert("يرجى اختيار سورة واحدة أو جزء واحد فقط.");
+                UI.toast("يرجى اختيار سورة واحدة أو جزء واحد فقط.", { type: 'warn' });
                 return;
             }
 
@@ -465,7 +465,7 @@ function openModal(type, title) {
                 localStorage.setItem("selectedJuz", selectedJuz);
                 localStorage.removeItem("selectedSura");
             } else {
-                alert("يرجى اختيار سورة أو جزء لبدء المسابقة.");
+                UI.toast("يرجى اختيار سورة أو جزء لبدء المسابقة.", { type: 'warn' });
                 return;
             }
 
@@ -538,6 +538,8 @@ function openModal(type, title) {
 <script src="wake-lock.js"></script>
 <script src="net-status.js"></script>
 <script src="back-guard.js"></script>
+<script src="ui-feedback.js"></script>
+<script src="pwa-install.js"></script>
 <script src="offline-prep.js"></script>
 <script src="progress.js"></script>
 <link rel="stylesheet" href="mobile.css">
@@ -556,26 +558,7 @@ function openModal(type, title) {
     </div>
 
 
-    <!-- Install PWA Modal -->
-    <div id="install-modal" class="modal" style="display: none; z-index: 9999;">
-        <div class="modal-content" style="text-align: center; max-width: 350px;">
-            <span class="close-button" onclick="closeInstallModal()">&times;</span>
-            <h3 style="color: var(--heading-color); margin-top: 10px;">تثبيت التطبيق 📱</h3>
-            <div id="install-copy">
-                <p style="margin: 15px 0; font-size: 1.05em; color: var(--text-color);">ثبّت التطبيق على شاشتك الرئيسية: يفتح كتطبيق مستقل، أسرع، ويعمل بدون إنترنت في المسابقات الفردية.</p>
-            </div>
-            <div id="ios-steps" style="display: none; text-align: right; font-size: 0.95em; line-height: 2; color: var(--text-color);">
-                <div style="margin-bottom:10px;">للتثبيت على الآيفون من متصفح Safari:</div>
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="background:#4299e1;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;">1</span> اضغط زر المشاركة <span style="font-size:1.3em;">􀈂</span> أسفل الشاشة</div>
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="background:#4299e1;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;">2</span> اختر «إضافة إلى الشاشة الرئيسية»</div>
-                <div style="display:flex;align-items:center;gap:10px;"><span style="background:#4299e1;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;">3</span> اضغط «إضافة» في الأعلى</div>
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                <button id="install-btn" style="background-color: var(--heading-color); color: #000; padding: 10px 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; flex: 1;">تثبيت الآن</button>
-                <button onclick="closeInstallModal()" style="background-color: transparent; border: 1px solid var(--text-color); color: var(--text-color); padding: 10px 20px; border-radius: 8px; cursor: pointer; flex: 1;">ليس الآن</button>
-            </div>
-        </div>
-    </div>
+    <!-- Install PWA sheet is built by pwa-install.js -->
 
 
     <audio id="hover-sound" src="/assets/hover_main.mp3" preload="auto"></audio>
@@ -1050,8 +1033,9 @@ function openModal(type, title) {
 <script id="mp-offline-guard">
   // Offline, multiplayer.js cannot load (it imports Firebase); keep the buttons from throwing.
   window.addEventListener('load', () => {
-    if (typeof window.createMultiplayerRoomWithParams !== 'function') window.createMultiplayerRoomWithParams = () => alert('التحدي الجماعي يحتاج اتصالاً بالإنترنت');
-    if (typeof window.joinMultiplayerRoom !== 'function') window.joinMultiplayerRoom = () => alert('التحدي الجماعي يحتاج اتصالاً بالإنترنت');
+    const needNet = () => UI.toast('التحدي الجماعي يحتاج اتصالاً بالإنترنت', { type: 'warn', icon: '📡' });
+    if (typeof window.createMultiplayerRoomWithParams !== 'function') window.createMultiplayerRoomWithParams = needNet;
+    if (typeof window.joinMultiplayerRoom !== 'function') window.joinMultiplayerRoom = needNet;
   });
 </script>
 
@@ -1099,7 +1083,7 @@ function openModal(type, title) {
             if (pass === '1153') {
                 window.location.href = 'admin.html';
             } else {
-                alert('كلمة المرور غير صحيحة!');
+                UI.toast('كلمة المرور غير صحيحة', { type: 'err' });
                 document.getElementById('admin-password-input').value = '';
             }
         }
@@ -1116,71 +1100,12 @@ function openModal(type, title) {
             }).catch(console.error);
         } else {
             navigator.clipboard.writeText(window.location.href).then(() => {
-                alert('تم نسخ الرابط بنجاح! يمكنك مشاركته مع أصدقائك.');
-            });
+                UI.toast('تم نسخ الرابط، شاركه مع أصدقائك', { type: 'ok' });
+            }).catch(() => UI.toast('انسخ الرابط من شريط العنوان: ' + window.location.href, { ms: 6000 }));
         }
     }
 
-    // ---- PWA install: one real tap. The prompt is only offered when the browser says it can install. ----
-    let deferredPrompt = null;
-    const installModal = document.getElementById('install-modal');
-    const installBtn = document.getElementById('install-btn');
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-
-    function showInstallModal() {
-        if (isStandalone || localStorage.getItem('pwa-dismissed')) return;
-        installModal.style.display = 'flex';
-    }
-    function markInstallable(on) {
-        const chip = document.getElementById('install-chip');
-        if (chip) chip.style.display = on ? 'inline-flex' : 'none';
-    }
-
-    // Chrome, Edge, Samsung, Opera and desktop Chrome fire this when the app qualifies for installation.
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        markInstallable(true);
-        installBtn.textContent = 'تثبيت الآن';
-        setTimeout(showInstallModal, 1200);
-    });
-
-    window.addEventListener('appinstalled', () => {
-        deferredPrompt = null;
-        markInstallable(false);
-        installModal.style.display = 'none';
-        localStorage.setItem('pwa-dismissed', 'true');
-    });
-
-    async function doInstall() {
-        if (deferredPrompt) {
-            installModal.style.display = 'none';
-            deferredPrompt.prompt();
-            const choice = await deferredPrompt.userChoice;
-            deferredPrompt = null;
-            if (choice && choice.outcome === 'accepted') { markInstallable(false); localStorage.setItem('pwa-dismissed', 'true'); }
-            return;
-        }
-        // iOS has no install API at all: show the exact steps inside the app instead of a browser alert.
-        document.getElementById('install-copy').style.display = 'none';
-        document.getElementById('ios-steps').style.display = 'block';
-        installBtn.style.display = 'none';
-    }
-    installBtn.addEventListener('click', doInstall);
-    window.installApp = doInstall;
-
-    function closeInstallModal() {
-        installModal.style.display = 'none';
-        localStorage.setItem('pwa-dismissed', 'true');
-    }
-
-    // iOS Safari: offer the guide once, since no event will ever fire there.
-    if (isIOS && !isStandalone && !localStorage.getItem('pwa-dismissed')) {
-        markInstallable(true);
-        installBtn.textContent = 'كيف أثبّته؟';
-        setTimeout(showInstallModal, 1500);
-    }
+    // ---- PWA install: handled by pwa-install.js (shared with the results and profile pages). ----
 
     // Register Service Worker
     if ('serviceWorker' in navigator) {
@@ -1355,7 +1280,7 @@ function startSingleQuiz(category, mode, juz) {
         const juzSelect = document.getElementById(mode + '-juz-select');
         const val = juzSelect.value;
         if(!val) {
-            alert("يرجى اختيار الجزء أولاً");
+            UI.toast("يرجى اختيار الجزء أولاً", { type: 'warn' });
             return;
         }
         startSingleQuiz('mixed', mode, val);
@@ -1493,7 +1418,7 @@ function mpUpdateSummary() {
 }
 
 function confirmMultiplayerRoom() {
-    if (typeof createMultiplayerRoomWithParams !== 'function') { alert('جاري تحميل النظام، حاول مرة أخرى'); return; }
+    if (typeof createMultiplayerRoomWithParams !== 'function') { UI.toast('جاري تجهيز التحدي الجماعي، حاول بعد لحظة', { type: 'info', icon: '⏳' }); return; }
     const s = mpCollectSettings();
     try { localStorage.setItem('mp_lastSettings', JSON.stringify(s)); } catch (e) {}
     createMultiplayerRoomWithParams(tempMultiCategory, s.mode, s.val, s);

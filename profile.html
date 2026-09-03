@@ -13,6 +13,8 @@
   <script src="wake-lock.js"></script>
 <script src="net-status.js"></script>
 <script src="back-guard.js"></script>
+<script src="ui-feedback.js"></script>
+<script src="pwa-install.js"></script>
   <style>
     :root { --bg: #1a1a2e; --card: #22223f; --border: #34345c; --text: #e6e6f0; --muted: #a0aec0; --green: #10b981; --blue: #4299e1; --gold: #f6c343; --red: #ef4444; }
     * { box-sizing: border-box; }
@@ -82,6 +84,16 @@
 <body>
 <div class="wrap">
   <div class="top"><h1 id="title">👤 ملفي</h1><a class="back" href="index.html">🏠 الرئيسية</a></div>
+
+  <section class="card" id="account-card">
+    <h2>🔐 حسابي</h2>
+    <p class="sub" id="account-line">جاري التحقق من الحساب...</p>
+    <div class="row" style="flex-wrap: wrap;">
+      <button class="btn blue" id="google-link-btn" style="display:none">ربط حسابي بجوجل ✨</button>
+      <button class="btn ghost" id="signout-btn" style="display:none">تسجيل الخروج</button>
+    </div>
+    <p class="sub" id="account-benefits" style="display:none; margin: 10px 0 0;">✨ مع حساب Google: بطاقتك ونقاطك في لوحة الشرف محفوظة على كل أجهزتك، واسمك وصورتك تُملآن تلقائياً، ولا تفقد حسابك عند تغيير الهاتف.</p>
+  </section>
 
   <section class="card">
     <h2 id="stats-h">📊 إحصائياتي</h2>
@@ -192,9 +204,10 @@
 </script>
 <script type="module">
   import { db, ref, get, query, orderByChild, limitToLast } from './firebase-init.js';
-  import { escapeHtml } from './mp-common.js';
+  import { escapeHtml, getLocalUserId } from './mp-common.js';
   import { weekKey } from './finish-online.js';
   const el = document.getElementById('board-list');
+  if (window.UI) el.innerHTML = UI.spinnerHtml('جاري تحميل لوحة الأسبوع...');
   try {
     const week = weekKey(new Date());
     const snap = await get(query(ref(db, 'leaderboard/' + week), orderByChild('score'), limitToLast(20)));
@@ -202,7 +215,115 @@
     rows.sort((a, b) => (b.score - a.score) || (a.at - b.at));
     const me = getLocalUserId();
     el.innerHTML = rows.length ? rows.map((r, i) => '<div class="lb-row' + (r.id === me ? ' me' : '') + '"><span class="lb-rank">' + (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1)) + '</span><span class="lb-name">' + escapeHtml(r.name) + (r.id === me ? ' <small>(أنت)</small>' : '') + '</span><span class="lb-score">' + r.score + '/' + r.total + '</span></div>').join('') : '<div class="empty">لا أحد بعد هذا الأسبوع، كن الأول!</div>';
-  } catch (e) { el.innerHTML = '<div class="empty">تعذر تحميل لوحة الشرف</div>'; }
+  } catch (e) { el.innerHTML = '<div class="empty">تعذر تحميل لوحة الأسبوع' + (window.UI ? ' — ' + escapeHtml(UI.explain(e).text) : '') + '</div>'; }
+</script>
+<script type="module">
+  // Global honour board: publish my card (name, place, photo) and list the top 100
+  import { publishCard, loadTop, rowHtml, myCard, getLocalUserId } from './global-board.js';
+  import { currentUser, signInGoogle, signOutUser } from './firebase-init.js';
+  const $ = id => document.getElementById(id);
+  const list = $('gb-list'), status = $('gb-status'), photoImg = $('gb-photo-img');
+  let photo = '';
+
+  // Prefill from the card I published before, else from my Google account, else the name I used in a room
+  const card = myCard();
+  const gUser = currentUser();
+  if (card) {
+    $('gb-name').value = card.name || '';
+    $('gb-place').value = card.place || '';
+    if (card.photo) { photo = card.photo; photoImg.src = photo; }
+    else if (card.avatar) photoImg.src = card.avatar;
+  } else if (gUser && !gUser.isAnonymous) {
+    $('gb-name').value = (gUser.displayName || '').slice(0, 30);
+    if (gUser.photoURL) { photo = gUser.photoURL; photoImg.src = photo; }
+  } else {
+    $('gb-name').value = localStorage.getItem('mp_playerName') || '';
+    const av = localStorage.getItem('mp_avatar'); if (av) photoImg.src = av;
+  }
+
+  // Account card: who am I, and the upgrade to Google (same uid, so nothing is lost)
+  function renderAccount() {
+    const u = currentUser();
+    const line = $('account-line'), link = $('google-link-btn'), out = $('signout-btn'), ben = $('account-benefits');
+    if (!u) { line.textContent = '⚠️ لم يتم تسجيل الدخول، لن تُحفظ نتائجك في لوحة الشرف'; link.style.display = 'none'; out.style.display = 'none'; ben.style.display = 'none'; return; }
+    if (u.isAnonymous) {
+      line.textContent = '🚀 أنت في وضع الدخول السريع (بدون حساب)';
+      link.style.display = ''; ben.style.display = ''; out.style.display = 'none';
+    } else {
+      line.textContent = '✅ مسجّل بحساب Google: ' + (u.displayName || u.email || '');
+      link.style.display = 'none'; ben.style.display = 'none'; out.style.display = '';
+    }
+  }
+  renderAccount();
+  window.addEventListener('auth-changed', renderAccount);
+  $('google-link-btn').addEventListener('click', async () => {
+    const btn = $('google-link-btn'); btn.disabled = true;
+    const u = await signInGoogle();
+    btn.disabled = false;
+    if (u) {
+      if (window.UI) UI.toast('تم ربط حسابك بجوجل، نقاطك محفوظة معك ✨', { type: 'ok' });
+      if (!$('gb-name').value && u.displayName) $('gb-name').value = u.displayName.slice(0, 30);
+      if (!photo && u.photoURL) { photo = u.photoURL; photoImg.src = photo; }
+      renderAccount();
+    }
+  });
+  $('signout-btn').addEventListener('click', async () => {
+    const ok = window.UI ? await UI.dialog({ emoji: '👋', title: 'تسجيل الخروج؟', text: 'ستعود إلى شاشة الدخول. إحصائياتك على هذا الجهاز تبقى كما هي.', primary: 'تسجيل الخروج', secondary: 'إلغاء', danger: true }) : confirm('تسجيل الخروج؟');
+    if (ok) signOutUser();
+  });
+
+  // Shrink the chosen photo to a tiny square JPEG so the card stays a few KB
+  $('gb-photo').addEventListener('change', ev => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const size = 112, c = document.createElement('canvas'); c.width = c.height = size;
+      const ctx = c.getContext('2d');
+      const s = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+      let q = 0.82; photo = c.toDataURL('image/jpeg', q);
+      while (photo.length > 20000 && q > 0.3) { q -= 0.12; photo = c.toDataURL('image/jpeg', q); }
+      photoImg.src = photo;
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); if (window.UI) UI.toast('تعذر قراءة الصورة، جرّب صورة أخرى', { type: 'warn' }); };
+    img.src = url;
+  });
+
+  async function render() {
+    if (window.UI) list.innerHTML = UI.spinnerHtml('جاري تحميل لوحة الشرف...');
+    try {
+      const rows = await loadTop(100);
+      const me = getLocalUserId();
+      list.innerHTML = rows.length ? rows.map((r, i) => rowHtml(r, i, me)).join('') : '<div class="empty">لا أحد بعد، كن أول من يسجّل بطاقته!</div>';
+      const mine = rows.findIndex(r => r.id === me);
+      if (mine >= 0) status.textContent = '🏅 ترتيبك الحالي: ' + (mine + 1) + ' من ' + rows.length;
+    } catch (e) {
+      list.innerHTML = '<div class="empty">تعذر تحميل لوحة الشرف' + (window.UI ? ' — ' + UI.esc(UI.explain(e).text) : '') + '</div>';
+    }
+  }
+
+  $('gb-save').addEventListener('click', async () => {
+    const name = $('gb-name').value.trim();
+    if (!name) { $('gb-name').focus(); if (window.UI) UI.toast('اكتب اسمك أولاً', { type: 'warn' }); return; }
+    const btn = $('gb-save');
+    btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...';
+    status.textContent = '';
+    try {
+      const saved = await publishCard({ name, place: $('gb-place').value.trim(), photo, avatar: photo ? '' : (localStorage.getItem('mp_avatar') || '') });
+      if (window.UI) UI.toast('تم حفظ بطاقتك في لوحة الشرف 🎉', { type: 'ok' });
+      status.textContent = '✅ بطاقتك منشورة برصيد ' + saved.points + ' نقطة';
+      render();
+    } catch (e) {
+      if (window.UI) UI.fail(e, 'تعذر حفظ البطاقة'); else status.textContent = 'تعذر الحفظ: ' + e.message;
+    } finally {
+      btn.disabled = false; btn.textContent = '✅ سجّلني في لوحة الشرف';
+    }
+  });
+
+  render();
 </script>
 </body>
 </html>

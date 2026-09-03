@@ -57,7 +57,8 @@
     function closeTopLayer() {
         const closers = [
             ['#pick-panel', el => el.style.display = 'none'],
-            ['#install-modal', el => { el.style.display = 'none'; localStorage.setItem('pwa-dismissed', 'true'); }],
+            ['#ui-dialog', () => { if (window.UI) window.UI.closeDialog(); }],
+            ['#install-modal', el => { if (window.closeInstallModal) window.closeInstallModal(); else el.style.display = 'none'; }],
             ['#admin-password-modal', el => el.style.display = 'none'],
             ['#solo-mix-modal', el => el.style.display = 'none'],
             ['#multiplayer-modal', el => el.style.display = 'none']

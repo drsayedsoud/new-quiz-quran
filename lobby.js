@@ -218,8 +218,7 @@ async function joinRoom() {
         kidsPlay('join');
         if (isKidsRoom() && window.KidsTheme) window.KidsTheme.burst(window.innerWidth / 2, window.innerHeight / 2, 18);
     } catch (e) {
-        console.error(e);
-        alert('حدث خطأ أثناء الانضمام');
+        if (window.UI) window.UI.fail(e, 'تعذر الانضمام إلى الغرفة'); else { console.error(e); alert('حدث خطأ أثناء الانضمام'); }
         $('join-btn').disabled = false;
     }
 }
@@ -233,7 +232,8 @@ async function startGame() {
         await update(ref(db, `rooms/${roomCode}`), { status: 'playing', startedAt: Date.now() });
     } catch (e) {
         $('start-game-btn').disabled = false;
-        alert('خطأ في بدء اللعبة');
+        $('start-hint').textContent = '';
+        if (window.UI) window.UI.fail(e, 'تعذر بدء المسابقة'); else alert('خطأ في بدء اللعبة');
     }
 }
 

@@ -9,7 +9,7 @@
 
       "$code": {
         ".read": true,
-        ".write": "newData.child('hostId').val() === auth.uid && $code.matches(/^[0-9]{5}$/)",
+        ".write": "auth != null && $code.matches(/^[0-9]{5}$/) && ((!data.exists() && newData.child('hostId').val() === auth.uid) || (data.exists() && data.child('hostId').val() === auth.uid) || (data.exists() && data.child('createdAt').val() < now - 21600000 && (!newData.exists() || newData.child('hostId').val() === auth.uid)))",
         ".validate": "newData.hasChildren(['hostId', 'status', 'createdAt', 'settings'])",
 
         "code":      { ".validate": "newData.isString() && newData.val() === $code" },
@@ -49,7 +49,7 @@
 
         "players": {
           "$uid": {
-            ".write": "$uid === auth.uid",
+            ".write": "auth != null && $uid === auth.uid",
             ".validate": "$uid.length <= 64 && newData.hasChildren(['name', 'avatar'])",
             "name":        { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
             "avatar":      { ".validate": "newData.isString() && newData.val().beginsWith('assets/') && newData.val().length <= 64" },
@@ -60,7 +60,6 @@
             "team":        { ".validate": "newData.isString() && newData.val().matches(/^(red|blue)$/)" },
             "answers": {
               "$idx": {
-                ".write": "$uid === auth.uid",
                 ".validate": "$idx.matches(/^[0-9]{1,4}$/) && newData.hasChildren(['ok'])",
                 "c":  { ".validate": "newData.isString() && newData.val().length <= 300" },
                 "ok": { ".validate": "newData.isBoolean()" },
@@ -80,11 +79,11 @@
       ".read": true,
       ".indexOn": ["points"],
       "$uid": {
-        ".write": "$uid === auth.uid",
+        ".write": "auth != null && $uid === auth.uid",
         ".validate": "newData.hasChildren(['name', 'points'])",
         "name":      { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30" },
         "place":     { ".validate": "newData.isString() && newData.val().length <= 40" },
-        "photoUrl":  { ".validate": "newData.isString() && (newData.val().beginsWith('https://') || newData.val().beginsWith('http://')) && newData.val().length <= 256" },
+        "photo":     { ".validate": "newData.isString() && newData.val().length <= 60000 && (newData.val().beginsWith('data:image/') || newData.val().beginsWith('https://'))" },
         "avatar":    { ".validate": "newData.isString() && newData.val().length <= 64" },
         "points":    { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000" },
         "games":     { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" },
@@ -100,7 +99,7 @@
         ".validate": "$week.matches(/^[0-9]{4}-W[0-9]{2}$/)",
         ".indexOn": ["score"],
         "$uid": {
-          ".write": "$uid === auth.uid && (!data.exists() || newData.child('score').val() >= data.child('score').val())",
+          ".write": "auth != null && $uid === auth.uid && (!data.exists() || newData.child('score').val() >= data.child('score').val())",
           ".validate": "newData.hasChildren(['name', 'score', 'total', 'at'])",
           "name":  { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30" },
           "score": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
@@ -115,22 +114,21 @@
       ".read": true,
       "daily": {
         "$date": {
-          ".write": false,
-          "sessions": { ".validate": "newData.isNumber() && newData.val() >= 0" },
-          "correct":  { ".validate": "newData.isNumber() && newData.val() >= 0" },
-          "answered": { ".validate": "newData.isNumber() && newData.val() >= 0" },
-          "byType":   { "$t": { ".validate": "$t.length <= 40 && newData.isNumber() && newData.val() >= 0" } },
+          ".write": "auth != null && newData.exists() && $date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)",
+          "sessions": { ".validate": "newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() - data.val() <= 1) : (newData.val() >= 0 && newData.val() <= 1))" },
+          "correct":  { ".validate": "newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() - data.val() <= 1000) : (newData.val() >= 0 && newData.val() <= 1000))" },
+          "answered": { ".validate": "newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() - data.val() <= 1000) : (newData.val() >= 0 && newData.val() <= 1000))" },
+          "byType":   { "$t": { ".validate": "$t.length <= 40 && newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() - data.val() <= 1) : (newData.val() >= 0 && newData.val() <= 1))" } },
           "$other":   { ".validate": false }
         }
       },
       "questions": {
-        ".read": true,
         ".indexOn": ["wrong"],
         "$hash": {
-          ".write": false,
+          ".write": "auth != null && newData.exists() && $hash.matches(/^[a-z0-9]{1,16}$/)",
           "text":  { ".validate": "newData.isString() && newData.val().length <= 300" },
           "type":  { ".validate": "newData.isString() && newData.val().length <= 40" },
-          "wrong": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "wrong": { ".validate": "newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() - data.val() <= 1) : (newData.val() >= 0 && newData.val() <= 1))" },
           "$other": { ".validate": false }
         }
       }

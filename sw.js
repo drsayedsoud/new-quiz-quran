@@ -3,7 +3,7 @@
 // Same-origin assets/scripts: cache-first with background refresh.
 // Cross-origin (fonts, CDN libraries): cached opaquely on first success so they work offline too.
 // Firebase and the question files are never intercepted (realtime + IndexedDB handle them).
-const CACHE_NAME = 'quran-quiz-v16';
+const CACHE_NAME = 'quran-quiz-v17';
 
 const PRECACHE = [
   './',
@@ -20,6 +20,8 @@ const PRECACHE = [
   './wake-lock.js',
   './net-status.js',
   './back-guard.js',
+  './ui-feedback.js',
+  './pwa-install.js',
   './offline-prep.js',
   './progress.js',
   './script.js',
@@ -31,6 +33,7 @@ const PRECACHE = [
   './finish-online.js',
   './global-board.js',
   './firebase-init.js',
+  './auth-ui.js',
   './manifest.json',
   './assets/icon-192.png',
   './assets/icon-512.png',

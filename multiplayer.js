@@ -4,6 +4,10 @@ import { getLocalUserId, saveRoomToLocal, clearMpState, isRoomExpired, fetchRoom
 
 function generateRoomCode() { return Math.floor(10000 + Math.random() * 90000).toString(); }
 
+// In-page feedback (native alert() is blocking and looks foreign inside the installed app)
+const warn = msg => window.UI ? window.UI.toast(msg, { type: 'warn' }) : alert(msg);
+const fail = (err, title) => window.UI ? window.UI.fail(err, title) : alert(title);
+
 // Best-effort housekeeping: drop rooms nobody can use anymore (older than the expiry window)
 async function cleanupExpiredRooms() {
     try {
@@ -41,7 +45,7 @@ function setBusy(buttonId, busy, busyText) {
 
 // ---------- Create ----------
 window.createMultiplayerRoomWithParams = async function(category, mode, val, extra) {
-    if (!category) { alert('يرجى اختيار قسم أولاً'); return; }
+    if (!category) { warn('يرجى اختيار قسم أولاً'); return; }
     mode = mode === 'time' ? 'time' : 'questions';
     val = parseInt(val) || (mode === 'time' ? 3 : 10);
     extra = extra || {};
@@ -74,8 +78,7 @@ window.createMultiplayerRoomWithParams = async function(category, mode, val, ext
         saveRoomToLocal(roomCode, room);
         window.location.href = 'lobby.html?room=' + roomCode;
     } catch (e) {
-        console.error('Error creating room: ', e);
-        alert('حدث خطأ أثناء إنشاء الغرفة. تأكد من اتصالك بالإنترنت.');
+        fail(e, 'تعذر إنشاء الغرفة');
         setBusy('mp-create-btn', false);
     }
 };
@@ -84,24 +87,24 @@ window.createMultiplayerRoomWithParams = async function(category, mode, val, ext
 window.joinMultiplayerRoom = async function() {
     const input = document.getElementById('join-room-code');
     const code = (input ? input.value : '').replace(/\D/g, '').trim();
-    if (code.length !== 5) { alert('الرجاء إدخال كود صحيح مكون من 5 أرقام'); return; }
+    if (code.length !== 5) { warn('الرجاء إدخال كود صحيح مكون من 5 أرقام'); if (input) input.focus(); return; }
 
     setBusy('mp-join-btn', true, '⏳ جاري البحث...');
     try {
         const room = await fetchRoom(code);
         if (!room || isRoomExpired(room)) {
-            alert('الغرفة غير موجودة أو انتهت صلاحيتها. تأكد من الكود.');
+            warn('الغرفة غير موجودة أو انتهت صلاحيتها. تأكد من الكود.');
             return;
         }
         const myId = getLocalUserId();
         const alreadyIn = room.players && room.players[myId];
 
         if (room.status === 'closed') {
-            alert('قام المضيف بإغلاق هذه الغرفة.');
+            warn('قام المضيف بإغلاق هذه الغرفة.');
             return;
         }
         if (room.status !== 'waiting' && !alreadyIn) {
-            alert('عذراً، اللعبة بدأت بالفعل في هذه الغرفة!');
+            warn('عذراً، اللعبة بدأت بالفعل في هذه الغرفة!');
             return;
         }
         saveRoomToLocal(code, room);
@@ -112,8 +115,7 @@ window.joinMultiplayerRoom = async function() {
         }
         window.location.href = 'lobby.html?room=' + code;
     } catch (e) {
-        console.error(e);
-        alert('خطأ في الاتصال بقاعدة البيانات.');
+        fail(e, 'تعذر الوصول إلى الغرفة');
     } finally {
         setBusy('mp-join-btn', false);
     }

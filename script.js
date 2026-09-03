@@ -424,8 +424,16 @@ async function loadQuestions() {
     return;
   }
   clearResume();
+  const L = window.UI && window.UI.loader;
   const show = html => { if (loadingOverlay) { loadingOverlay.classList.remove("hidden"); loadingOverlay.innerHTML = html; } };
-  show("<div style='font-size:1.5em;'>جاري التجهيز...</div>");
+  // Three visible stages: check the device bank -> download (with a real progress bar) -> prepare the quiz
+  const stage = (step, title, sub, progress, hint) => {
+    if (L) L.show({ title, sub, progress, hint, step, steps: 3 });
+    else show("<div style='font-size:1.5em;'>" + title + "</div>");
+  };
+  // Give the overlay a frame to paint before a long synchronous step blocks the thread
+  const paint = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 20)));
+  stage(1, 'جاري التجهيز...', 'نفحص الأسئلة المحفوظة على جهازك');
   try {
     const cats = neededCategories(quizType);
     const manifest = await fetchManifest();
@@ -437,21 +445,23 @@ async function loadQuestions() {
       if (fresh) { data[cat] = cached.items; continue; }
       if (cached && cached.items && cached.items.length && !manifest) { data[cat] = cached.items; continue; }
       const label = cats.length > 1 ? ' (' + (i + 1) + '/' + cats.length + ')' : '';
+      stage(2, '⬇️ جاري تنزيل أسئلة هذا القسم' + label, 'لحظات من فضلك', null, 'تُحفظ على جهازك ولن تُنزَّل مرة أخرى');
       const items = await downloadCategory(cat, (pct, mb) => {
-        const bar = pct === null ? '' : '<div style="width:100%;height:14px;background:rgba(255,255,255,0.15);border-radius:999px;overflow:hidden;margin:14px 0 8px;"><div style="width:' + pct + '%;height:100%;background:linear-gradient(90deg,#10b981,#34d399);transition:width 0.3s;"></div></div>';
-        show('<div style="text-align:center;max-width:320px;padding:0 16px;">' +
-          '<div style="font-size:1.3em;font-weight:800;">⬇️ جاري تنزيل أسئلة هذا القسم' + label + '</div>' + bar +
-          '<div style="font-size:0.95em;color:#cbd5e0;">' + (pct === null ? '' : pct + '% · ') + mb + ' ميجابايت</div>' +
-          '<div style="font-size:0.8em;color:#a0aec0;margin-top:8px;">تُحفظ على جهازك ولن تُنزَّل مرة أخرى</div></div>');
+        stage(2, '⬇️ جاري تنزيل أسئلة هذا القسم' + label, (pct === null ? '' : pct + '% · ') + mb + ' ميجابايت', pct, 'تُحفظ على جهازك ولن تُنزَّل مرة أخرى');
       });
       data[cat] = items;
       idbPut('cat:' + cat, { v: manifest ? manifest.version : 'unknown', items });
     }
-    show("<div style='font-size:1.5em;'>جاري تهيئة المسابقة...</div>");
+    stage(3, 'جاري تهيئة المسابقة...', 'نختار الأسئلة ونرتّبها لك');
+    await paint();
     processParsedJSON(data);
   } catch (err) {
     console.error(err);
-    if (loadingOverlay) {
+    const why = window.UI ? window.UI.explain(err) : null;
+    if (L) {
+      L.error({ title: 'تعذر تحميل الأسئلة', text: why ? why.text : 'تأكد من اتصالك بالإنترنت ثم أعد المحاولة',
+        retry: () => location.reload(), home: () => { location.href = 'index.html'; } });
+    } else if (loadingOverlay) {
       show('<div style="text-align:center;max-width:320px;padding:0 16px;">' +
         '<div style="font-size:2.5em;">📡</div><div style="font-size:1.2em;font-weight:800;margin:6px 0;">تعذر تحميل الأسئلة</div>' +
         '<div style="font-size:0.9em;color:#cbd5e0;">تأكد من اتصالك بالإنترنت ثم أعد المحاولة</div>' +
@@ -460,6 +470,18 @@ async function loadQuestions() {
     } else {
       alert("خطأ في قراءة البيانات: " + err.message);
     }
+  }
+}
+
+// Empty result after filtering: explain and offer the way back instead of a bare alert
+function noQuestions(text) {
+  const overlay = document.getElementById("loading-overlay");
+  const home = () => { location.href = 'index.html'; };
+  if (window.UI) {
+    window.UI.loader.error({ emoji: '🔍', title: 'لا توجد أسئلة هنا', text: text + ' جرّب قسماً أو جزءاً آخر.', retry: home, retryLabel: 'اختيار قسم آخر' });
+  } else {
+    alert(text);
+    if (overlay) overlay.classList.add("hidden");
   }
 }
 
@@ -569,9 +591,7 @@ function processParsedJSON(jsonData) {
 
   if (!source || source.length === 0) {
 
-    alert("لا توجد بيانات متاحة لهذا النوع من المسابقة.");
-
-    document.getElementById("loading-overlay").classList.add("hidden");
+    noQuestions("لا توجد بيانات متاحة لهذا النوع من المسابقة.");
 
     return;
 
@@ -655,9 +675,7 @@ function processParsedJSON(jsonData) {
 
   if (!quizData || quizData.length === 0) {
 
-    alert("لا توجد أسئلة متاحة بعد التصفية النهائية.");
-
-    document.getElementById("loading-overlay").classList.add("hidden");
+    noQuestions("لا توجد أسئلة متاحة بعد التصفية النهائية.");
 
     return;
 

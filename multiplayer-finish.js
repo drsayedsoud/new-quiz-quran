@@ -142,8 +142,7 @@ if (roomCode) {
             });
             await update(ref(db, `rooms/${roomCode}`), updates);
         } catch (e) {
-            console.error(e);
-            alert('تعذر بدء جولة جديدة');
+            if (window.UI) window.UI.fail(e, 'تعذر بدء جولة جديدة'); else { console.error(e); alert('تعذر بدء جولة جديدة'); }
             $('mp-rematch-btn').disabled = false;
         }
     };

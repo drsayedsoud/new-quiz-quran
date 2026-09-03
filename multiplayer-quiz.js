@@ -56,8 +56,9 @@ if (roomCode) {
         if (!room) {
             leaving = true;
             clearMpState();
-            alert('تم إغلاق الغرفة من قبل المضيف.');
-            window.location.href = 'index.html';
+            const go = () => { window.location.href = 'index.html'; };
+            if (window.UI) window.UI.dialog({ emoji: '🚪', title: 'أُغلقت الغرفة', text: 'أغلق المضيف هذه الغرفة. يمكنك إنشاء غرفة جديدة أو الانضمام بكود آخر.', primary: 'الرئيسية' }).then(go);
+            else { alert('تم إغلاق الغرفة من قبل المضيف.'); go(); }
         }
     });
 
