@@ -1086,11 +1086,21 @@ function openModal(type, title) {
 </div>
     <script type="module" src="multiplayer.js"></script>
 <script id="mp-offline-guard">
-  // Offline, multiplayer.js cannot load (it imports Firebase); keep the buttons from throwing.
+  // multiplayer.js (imports Firebase and waits for sign-in) may still be loading when a button is tapped, or may
+  // never load offline. Until it defines the real functions, wait for them briefly instead of claiming "no internet".
   window.addEventListener('load', () => {
-    const needNet = () => UI.toast('التحدي الجماعي يحتاج اتصالاً بالإنترنت', { type: 'warn', icon: '📡' });
-    if (typeof window.createMultiplayerRoomWithParams !== 'function') window.createMultiplayerRoomWithParams = needNet;
-    if (typeof window.joinMultiplayerRoom !== 'function') window.joinMultiplayerRoom = needNet;
+    const waitFor = name => async function () {
+      const args = arguments;
+      if (window.UI) UI.toast('⏳ جاري تجهيز التحدي الجماعي...', { type: 'info', ms: 2500 });
+      for (let i = 0; i < 40; i++) {
+        await new Promise(r => setTimeout(r, 250));
+        if (typeof window[name] === 'function' && window[name] !== waiting[name]) return window[name].apply(null, args);
+      }
+      const online = window.netCheck ? await window.netCheck() : navigator.onLine;
+      UI.toast(online ? 'تعذر تجهيز التحدي الجماعي، أعد فتح التطبيق' : 'التحدي الجماعي يحتاج اتصالاً بالإنترنت', { type: 'warn', icon: '📡' });
+    };
+    const waiting = { createMultiplayerRoomWithParams: waitFor('createMultiplayerRoomWithParams'), joinMultiplayerRoom: waitFor('joinMultiplayerRoom') };
+    Object.keys(waiting).forEach(n => { if (typeof window[n] !== 'function') window[n] = waiting[n]; });
   });
 </script>
 

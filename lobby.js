@@ -352,7 +352,7 @@ function renderPickInfo() {
 $('display-room-code').textContent = roomCode;
 $('display-room-code').onclick = () => navigator.clipboard?.writeText(roomCode).then(() => toast('تم نسخ الكود ✅'));
 $('copy-link-btn').onclick = () => navigator.clipboard?.writeText(lobbyUrl(roomCode)).then(() => toast('تم نسخ الرابط ✅'));
-$('whatsapp-invite-btn').onclick = () => window.open(whatsappInviteUrl(roomCode), '_blank');
+// The WhatsApp button is wired inline in lobby.html (shareInvite) so it works before this module finishes loading
 $('qr-btn').onclick = () => {
     const box = $('qr-box');
     const visible = box.style.display !== 'none';

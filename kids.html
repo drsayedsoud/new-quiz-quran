@@ -143,9 +143,13 @@
 
   // rooms: sensible defaults, no settings screen for children
   document.querySelectorAll('[data-room]').forEach(b => b.onclick = async () => {
-    if (!navigator.onLine) { UI.toast('اللعب مع الأصحاب يحتاج إنترنت 📡', { type: 'warn' }); return; }
-    if (typeof window.createMultiplayerRoomWithParams !== 'function') { UI.toast('جاري التجهيز، اضغط مرة أخرى بعد لحظة ⏳'); return; }
     const cat = b.dataset.room;
+    if (typeof window.createMultiplayerRoomWithParams !== 'function') {
+      // multiplayer.js is still signing in (or we are offline): wait a little before giving up
+      UI.toast('⏳ جاري التجهيز...', { ms: 2000 });
+      for (let i = 0; i < 32 && typeof window.createMultiplayerRoomWithParams !== 'function'; i++) await new Promise(r => setTimeout(r, 250));
+      if (typeof window.createMultiplayerRoomWithParams !== 'function') { const online = window.netCheck ? await window.netCheck() : navigator.onLine; UI.toast(online ? 'تعذر التجهيز، أعد فتح الصفحة' : 'اللعب مع الأصحاب يحتاج إنترنت 📡', { type: 'warn' }); return; }
+    }
     if (cat === 'kids_piggy' && !Piggy.name()) { Piggy.askName(() => b.click()); return; }
     const label = b.querySelector('b'), old = label.textContent;
     document.querySelectorAll('[data-room]').forEach(x => x.disabled = true);
@@ -155,11 +159,19 @@
   });
 
   // join by code
-  const join = () => {
+  let joining = false;
+  const join = async () => {
     const v = $('join-room-code').value.replace(/\D/g, '');
     if (v.length !== 5) { UI.toast('الكود ٥ أرقام يا بطل', { type: 'warn' }); $('join-room-code').focus(); return; }
-    if (typeof window.joinMultiplayerRoom !== 'function') { UI.toast(navigator.onLine ? 'جاري التجهيز، حاول بعد لحظة ⏳' : 'الدخول للغرفة يحتاج إنترنت 📡', { type: 'warn' }); return; }
-    joinMultiplayerRoom();
+    if (joining) return; joining = true;
+    try {
+      if (typeof window.joinMultiplayerRoom !== 'function') {
+        UI.toast('⏳ جاري التجهيز...', { ms: 2000 });
+        for (let i = 0; i < 32 && typeof window.joinMultiplayerRoom !== 'function'; i++) await new Promise(r => setTimeout(r, 250));
+        if (typeof window.joinMultiplayerRoom !== 'function') { const online = window.netCheck ? await window.netCheck() : navigator.onLine; UI.toast(online ? 'تعذر التجهيز، أعد فتح الصفحة' : 'الدخول للغرفة يحتاج إنترنت 📡', { type: 'warn' }); return; }
+      }
+      await joinMultiplayerRoom();
+    } finally { joining = false; }
   };
   $('mp-join-btn').onclick = join;
   $('join-room-code').addEventListener('keydown', e => { if (e.key === 'Enter') join(); });

@@ -120,7 +120,8 @@ async function ensureSignedIn() {
 
   let user = await restoredUser();
   if (user) { rememberUser(user); return user.uid; }
-  if (!navigator.onLine) return null;
+  // navigator.onLine lies on some phones (reports offline on a working connection), so never bail on it:
+  // a real outage makes signInAnonymously fail fast with auth/network-request-failed, which is silent.
 
   // First time on this device: the home page lets the player choose; invite links and other pages start quickly
   if (isHome && window.UI && !localStorage.getItem('auth-choice') && !redirected) {
