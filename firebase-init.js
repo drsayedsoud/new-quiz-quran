@@ -3,9 +3,12 @@ import { getAuth, onAuthStateChanged, signInAnonymously, GoogleAuthProvider, sig
 import { getDatabase, ref, set, get, child, update, onValue, remove, onDisconnect, increment, query, orderByChild, limitToLast, runTransaction } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 import { chooseSignIn } from './auth-ui.js';
 
+// Google sign-in runs through our own domain (vercel.json proxies /__/auth/* to firebaseapp.com), so the
+// redirect/popup handler is first-party and works on phones and installed apps that block third-party storage.
+const OWN_AUTH_DOMAINS = ['new-quiz-quran-one.vercel.app'];
 const firebaseConfig = {
   apiKey: "AIzaSyCLjeoM82C5eGuM1vAz92sw6PoqDxkXA3U",
-  authDomain: "newclinic1-f25d4.firebaseapp.com",
+  authDomain: OWN_AUTH_DOMAINS.includes(location.hostname) ? location.hostname : "newclinic1-f25d4.firebaseapp.com",
   projectId: "newclinic1-f25d4",
   storageBucket: "newclinic1-f25d4.firebasestorage.app",
   messagingSenderId: "399508085232",
@@ -72,8 +75,14 @@ async function goRedirect() {
   try { sessionStorage.setItem('auth-redirect', '1'); localStorage.setItem('auth-redirect-at', String(Date.now())); } catch (x) {}
   if (window.UI) window.UI.toast('سننتقل إلى Google للدخول ثم نعود إلى التطبيق...', { type: 'info', ms: 4000 });
   const current = auth.currentUser;
-  if (current && current.isAnonymous) await linkWithRedirect(current, google);
-  else await signInWithRedirect(auth, google);
+  // If the browser has not left for Google after a while, the redirect was blocked: say so instead of staying silent
+  const watchdog = setTimeout(() => {
+    if (window.UI) window.UI.dialog({ emoji: '🔐', title: 'لم يفتح الدخول بجوجل', text: 'المتصفح منع الانتقال. جرّب من متصفح Chrome أو Safari مباشرة (وليس من داخل واتساب أو فيسبوك)، أو استخدم الدخول السريع الآن والترقية لاحقاً من «ملفي».', primary: 'حسناً' });
+  }, 12000);
+  try {
+    if (current && current.isAnonymous) await linkWithRedirect(current, google);
+    else await signInWithRedirect(auth, google);
+  } catch (e) { clearTimeout(watchdog); throw e; }
   return null; // the page leaves
 }
 
@@ -81,7 +90,7 @@ export async function signInGoogle() {
   const current = auth.currentUser;
   if (isMobile) {
     try { return await goRedirect(); }
-    catch (e) { authFailed(e, 'تعذر الدخول بجوجل'); return null; }
+    catch (e) { window.__authError = e; console.warn('google redirect:', e.code || e.message); if (window.UI) window.UI.fail(e, 'تعذر الدخول بجوجل'); return null; }
   }
   try {
     // An anonymous player upgrading keeps the same uid, so the honour-board card and scores carry over
