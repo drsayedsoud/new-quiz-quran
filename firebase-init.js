@@ -40,9 +40,11 @@ function authFailed(e, title) {
 function restoredUser() {
   return new Promise(resolve => {
     const timer = setTimeout(() => resolve(null), 6000);
-    const stop = onAuthStateChanged(auth,
-      user => { clearTimeout(timer); stop(); resolve(user); },
-      () => { clearTimeout(timer); resolve(null); });
+    try {
+      const stop = onAuthStateChanged(auth,
+        user => { clearTimeout(timer); stop(); resolve(user); },
+        () => { clearTimeout(timer); resolve(null); });
+    } catch (e) { clearTimeout(timer); resolve(null); }
   });
 }
 
@@ -128,6 +130,9 @@ async function ensureSignedIn() {
 }
 
 // Top-level await: every module that imports db also waits for the uid, so no write goes out unsigned.
-const authUid = await ensureSignedIn();
+// Never let a sign-in failure kill this module: the pages must still load (reads and solo play work without auth).
+let authUid = null;
+try { authUid = await ensureSignedIn(); }
+catch (e) { authFailed(e, 'تعذر تسجيل الدخول'); }
 
 export { db, auth, authUid, ref, set, get, child, update, onValue, remove, onDisconnect, increment, query, orderByChild, limitToLast, runTransaction };
