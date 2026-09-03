@@ -87,6 +87,12 @@
         log('realtime connected: ' + info);
       } catch (e) {}
     } catch (e) { log('❌ firebase-init/multiplayer: ' + (e.code || e.message)); }
+    // What this device recorded lately (errors + breadcrumbs of the last room attempts)
+    try {
+      const l = JSON.parse(localStorage.getItem('errorLog') || '[]').slice(0, 25);
+      log('--- device log (' + l.length + ') ---');
+      l.forEach(e => log(new Date(e.at).toLocaleTimeString('en-GB') + ' [' + e.kind + '] ' + e.page + ' : ' + e.msg));
+    } catch (e) {}
     log('done ' + ms());
   })();
 

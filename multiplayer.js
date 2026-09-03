@@ -58,10 +58,13 @@ window.createMultiplayerRoomWithParams = async function(category, mode, val, ext
         roomName: String(extra.roomName || '').trim().slice(0, 24)
     };
 
+    const trace = m => { if (window.UI && window.UI.trace) window.UI.trace(m); };
+    trace('room: start ' + category + ' ' + mode + '/' + val + ' uid=' + String(getLocalUserId()).slice(0, 6));
     setBusy('mp-create-btn', true, '⏳ جاري إنشاء الغرفة...');
     cleanupExpiredRooms();
     try {
         const roomCode = await generateUniqueRoomCode();
+        trace('room: code ' + roomCode);
         const hostId = getLocalUserId();
         const room = {
             code: roomCode,
@@ -75,9 +78,12 @@ window.createMultiplayerRoomWithParams = async function(category, mode, val, ext
             players: {}
         };
         await set(ref(db, 'rooms/' + roomCode), room);
+        trace('room: saved ' + roomCode);
         saveRoomToLocal(roomCode, room);
+        trace('room: go lobby ' + roomCode);
         window.location.href = 'lobby.html?room=' + roomCode;
     } catch (e) {
+        trace('room: FAILED ' + (e.code || e.message));
         fail(e, 'تعذر إنشاء الغرفة');
         setBusy('mp-create-btn', false);
     }

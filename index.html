@@ -1531,6 +1531,7 @@ function mpUpdateSummary() {
 }
 
 function confirmMultiplayerRoom() {
+    if (window.UI && UI.trace) UI.trace('confirm click cat=' + tempMultiCategory + ' fn=' + typeof createMultiplayerRoomWithParams);
     if (typeof createMultiplayerRoomWithParams !== 'function') { UI.toast('جاري تجهيز التحدي الجماعي، حاول بعد لحظة', { type: 'info', icon: '⏳' }); return; }
     const s = mpCollectSettings();
     try { localStorage.setItem('mp_lastSettings', JSON.stringify(s)); } catch (e) {}

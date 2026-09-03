@@ -208,6 +208,14 @@
             else { window.__errorQueue = window.__errorQueue || []; if (window.__errorQueue.length < 8) window.__errorQueue.push(entry); }
         } catch (e) { /* ignore */ }
     }
+    // Breadcrumbs (device-only, never sent): where a flow got to before something went wrong
+    function trace(msg) {
+        try {
+            const list = JSON.parse(localStorage.getItem('errorLog') || '[]');
+            list.unshift({ at: Date.now(), page: location.pathname, kind: 'trace', msg: String(msg).slice(0, 300), stack: '' });
+            localStorage.setItem('errorLog', JSON.stringify(list.slice(0, 80)));
+        } catch (e) { /* ignore */ }
+    }
     function report(err, source) {
         const text = String((err && err.message) || err || '');
         if (!text || IGNORE.test(text)) return;
@@ -236,6 +244,6 @@
     }, true);
     window.addEventListener('unhandledrejection', e => report(e.reason, 'promise'));
 
-    window.UI = { toast, dialog, closeDialog: () => { if (dialogResolve) dialogResolve(false); }, loader, spinnerHtml, explain, fail, esc, logError, errorLog: () => { try { return JSON.parse(localStorage.getItem('errorLog') || '[]'); } catch (e) { return []; } } };
+    window.UI = { toast, dialog, closeDialog: () => { if (dialogResolve) dialogResolve(false); }, loader, spinnerHtml, explain, fail, esc, logError, trace, errorLog: () => { try { return JSON.parse(localStorage.getItem('errorLog') || '[]'); } catch (e) { return []; } } };
     ensureStyles();
 })();
