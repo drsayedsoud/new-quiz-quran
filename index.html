@@ -539,6 +539,8 @@ function openModal(type, title) {
 <script src="net-status.js"></script>
 <script src="back-guard.js"></script>
 <script src="ui-feedback.js"></script>
+<link rel="stylesheet" href="piggy.css">
+<script src="piggy.js"></script>
 <script src="pwa-install.js"></script>
 <script src="offline-prep.js"></script>
 <script src="progress.js"></script>
@@ -1025,6 +1027,7 @@ function openModal(type, title) {
           <button class="level-card" style="--c:#fb7185" onclick="startSingleQuiz('kids_1', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><span><b>المستوى الأول</b><small>حساب بسيط وأسئلة سهلة · حتى 9 سنوات</small></span><span class="level-badge">١</span></button>
           <button class="level-card" style="--c:#38bdf8" onclick="startSingleQuiz('kids_2', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر <span style="font-size:0.85em;opacity:0.85;">(منهج ثاني ابتدائي)</span></small></span><span class="level-badge">٢</span></button>
           <button class="level-card" style="--c:#8b5cf6" onclick="startSingleQuiz('kids_3', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#c4b5fd"/><path d="M16 30l6-12 6 12M18.5 25h7" stroke="#5b21b6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 12l1.5 3 3.5.5-2.5 2.5.6 3.5-3.1-1.7-3.1 1.7.6-3.5L27 15.5l3.5-.5z" fill="#fbbf24"/></svg></span><span><b>المستوى الثالث</b><small>نسب وكسور وهندسة ومعلومات قرآنية وسيرة · 12 سنة فأكثر</small></span><span class="level-badge">٣</span></button>
+          <button class="level-card" style="--c:#f59e0b" onclick="Piggy.start()"><span class="opt-big-icon" style="font-size:1.7em; line-height:1;">🐷</span><span><b>زوّد رصيد حصالتك</b><small>كل إجابة صحيحة = ١٠ قروش في حصالتك، والخطأ ينقصها · اصرف شيكاً بالرصيد · أسئلة المستوى الثاني</small></span><span class="level-badge">٤</span></button>
         </div>
         <button class="mp-back" onclick="hideKidsOptions('solo')">🔙 رجوع للأقسام</button>
       </div>
@@ -1307,7 +1310,7 @@ function startSingleQuiz(category, mode, juz) {
 <script>
 let tempMultiCategory = '';
 let currentMultiMode = 'questions';
-const MP_CATEGORY_LABELS = { mixed: 'القرآن الكريم كاملاً', seerah: 'السيرة النبوية', fiqh: 'الفقه الإسلامي', general: 'معلومات قرآنية', meanings: 'معاني الكلمات', kids_1: 'الأطفال - مستوى 1', kids_2: 'الأطفال - مستوى 2', kids_3: 'الأطفال - مستوى 3', complete: 'أكمل الآية', review: 'مراجعة أخطائي', favorites: 'المفضلة' };
+const MP_CATEGORY_LABELS = { mixed: 'القرآن الكريم كاملاً', seerah: 'السيرة النبوية', fiqh: 'الفقه الإسلامي', general: 'معلومات قرآنية', meanings: 'معاني الكلمات', kids_1: 'الأطفال - مستوى 1', kids_2: 'الأطفال - مستوى 2', kids_3: 'الأطفال - مستوى 3', kids_piggy: '🐷 زوّد رصيد حصالتك', complete: 'أكمل الآية', review: 'مراجعة أخطائي', favorites: 'المفضلة' };
 
 function mpCategoryLabel(cat) {
     if (!cat) return '';

@@ -153,7 +153,7 @@
   import { db, ref, get, set, onValue, remove, query, orderByChild, limitToLast, isAdmin, currentUser, signInGoogle } from './firebase-init.js';
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const LABELS = { mixed: 'القرآن', seerah: 'السيرة', fiqh: 'الفقه', general: 'معلومات', meanings: 'معاني', kids_1: 'أطفال 1', kids_2: 'أطفال 2', kids_3: 'أطفال 3', daily: 'تحدي اليوم', complete: 'أكمل الآية', review: 'مراجعة', favorites: 'المفضلة' };
+  const LABELS = { mixed: 'القرآن', seerah: 'السيرة', fiqh: 'الفقه', general: 'معلومات', meanings: 'معاني', kids_1: 'أطفال 1', kids_2: 'أطفال 2', kids_3: 'أطفال 3', kids_piggy: 'حصالة الأطفال', daily: 'تحدي اليوم', complete: 'أكمل الآية', review: 'مراجعة', favorites: 'المفضلة' };
   const label = t => LABELS[String(t).split('_juz_')[0]] || t;
   const dayKey = d => d.toISOString().slice(0, 10);
 

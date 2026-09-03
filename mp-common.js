@@ -21,11 +21,12 @@ const CATEGORY_LABELS = {
     kids_1: 'الأطفال - مستوى 1',
     kids_2: 'الأطفال - مستوى 2',
     kids_3: 'الأطفال - مستوى 3',
+    kids_piggy: 'الأطفال - زوّد رصيد حصالتك',
     complete: 'أكمل الآية'
 };
 
 const CATEGORY_ICONS = {
-    mixed: '📖', seerah: '🕌', fiqh: '⚖️', general: '💡', meanings: '🔤', kids_1: '🎈', kids_2: '🚀', kids_3: '🏅', complete: '🧩'
+    mixed: '📖', seerah: '🕌', fiqh: '⚖️', general: '💡', meanings: '🔤', kids_1: '🎈', kids_2: '🚀', kids_3: '🏅', kids_piggy: '🐷', complete: '🧩'
 };
 
 export function categoryLabel(category) {

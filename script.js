@@ -307,6 +307,7 @@ function neededCategories(type) {
     else if (base === 'general') need.add('general');
     else if (base === 'daily') { need.add('sera'); need.add('sona'); need.add('general'); }
     else if (base === 'review' || base === 'favorites') { /* local banks only */ }
+    else if (base === 'kids_piggy') need.add('kids_2'); // piggy-bank level plays the level-2 bank
     else if (CATEGORY_FILE[base]) need.add(base);
     else need.add('quiz');
   });
@@ -564,14 +565,15 @@ function processParsedJSON(jsonData) {
   const types = quizType.split(',').map(t => t.trim());
   
   
-    if (quizType.startsWith('kids')) {
+    if (quizType.startsWith('kids') && quizType !== 'kids_piggy') {
         const track = document.getElementById('kids-hero-track');
         if(track) track.style.display = 'block';
     }
-    
+
     types.forEach(type => {
 
-      if (type === "seerah" && jsonData.sera) source = source.concat(jsonData.sera);
+      if (type === "kids_piggy" && jsonData.kids_2) source = source.concat(jsonData.kids_2);
+      else if (type === "seerah" && jsonData.sera) source = source.concat(jsonData.sera);
       else if (type === "fiqh" && jsonData.sona) source = source.concat(jsonData.sona);
       else if (type === "mixed" && jsonData.quiz) source = source.concat(jsonData.quiz);
       else if (type === "meanings" && jsonData.words) source = source.concat(jsonData.words);
@@ -1108,14 +1110,17 @@ if (isCorrectChoice(button, correctAnswer)) {
 
 
 
+  // Add-ons (piggy bank level, etc.) react to every answer through this event
+  document.dispatchEvent(new CustomEvent('quiz-answer', { detail: { ok: isCorrectChoice(button, correctAnswer), index: currentIndex } }));
   saveResume();
   const explainNow = !isMultiplayerGame() && localStorage.getItem('opt_autoexplain') === '1' && (quizData[currentIndex] || {}).explanation;
   if (explainNow) showInlineExplanation(quizData[currentIndex].explanation);
+  const piggyPause = window.Piggy && window.Piggy.active ? 4300 : 3000; // time for the spoken balance message
   setTimeout(() => {
     hideInlineExplanation();
     currentIndex++;
     displayQuestion();
-  }, explainNow ? 6500 : 3000);
+  }, explainNow ? 6500 : piggyPause);
 
 }
 
