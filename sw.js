@@ -3,7 +3,7 @@
 // Same-origin assets/scripts: cache-first with background refresh.
 // Cross-origin (fonts, CDN libraries): cached opaquely on first success so they work offline too.
 // Firebase and the question files are never intercepted (realtime + IndexedDB handle them).
-const CACHE_NAME = 'quran-quiz-v13';
+const CACHE_NAME = 'quran-quiz-v14';
 
 const PRECACHE = [
   './',
@@ -86,26 +86,40 @@ async function refresh(request, cache) {
   }
 }
 
+// Fresh when online, instant when offline: pages and code race the network against a short timeout,
+// then fall back to the cache. Images, sounds, fonts and CDN libraries stay cache-first.
+function withTimeout(promise, ms) {
+  return new Promise(resolve => {
+    let done = false;
+    const finish = v => { if (!done) { done = true; resolve(v); } };
+    promise.then(finish).catch(() => finish(null));
+    setTimeout(() => finish(null), ms);
+  });
+}
+
 self.addEventListener('fetch', event => {
   const request = event.request;
   const url = request.url;
   if (request.method !== 'GET' || skip(url)) return;
 
-  // Page loads: serve from cache immediately, refresh in the background, fall back to the home page.
-  if (request.mode === 'navigate') {
-    event.respondWith((async () => {
-      const cache = await caches.open(CACHE_NAME);
-      const cached = await cache.match(request, { ignoreSearch: true });
-      if (cached) { event.waitUntil(refresh(request, cache)); return cached; }
-      const fresh = await refresh(request, cache);
-      return fresh || (await cache.match('./index.html')) || new Response('<h1>غير متصل</h1>', { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
-    })());
-    return;
-  }
+  const sameOrigin = new URL(url).origin === self.location.origin;
+  const isMedia = /.(png|jpe?g|gif|svg|webp|mp3|woff2?|ttf)$/i.test(url.split('?')[0]);
+  const codeOrPage = request.mode === 'navigate' || (sameOrigin && !isMedia);
 
-  // Everything else: cache-first, refresh in the background, never substitute a page for a script.
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
+
+    if (codeOrPage) {
+      const fresh = await withTimeout(refresh(request, cache), 3500);
+      if (fresh) return fresh;
+      const cached = await cache.match(request, { ignoreSearch: true });
+      if (cached) return cached;
+      if (request.mode === 'navigate') {
+        return (await cache.match('./index.html')) || new Response('<h1>غير متصل</h1>', { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      }
+      return new Response('', { status: 504, statusText: 'offline' });
+    }
+
     const cached = await cache.match(request, { ignoreSearch: true });
     if (cached) { event.waitUntil(refresh(request, cache)); return cached; }
     const fresh = await refresh(request, cache);
