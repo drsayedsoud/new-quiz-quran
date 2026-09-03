@@ -32,7 +32,11 @@ const isHome = /\/(index\.html)?$/i.test(location.pathname);
 const QUIET = ['auth/network-request-failed', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/user-cancelled'];
 
 function rememberUser(user) {
-  if (user) localStorage.setItem('mp_userId', user.uid);
+  if (user) {
+    localStorage.setItem('mp_userId', user.uid);
+    // Remember that this device belongs to a Google account, so a slow restore never downgrades it to a guest
+    if (!user.isAnonymous && user.email) { localStorage.setItem('lastGoogleEmail', user.email); if (user.displayName) localStorage.setItem('lastGoogleName', user.displayName); }
+  }
   window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user } }));
 }
 function authFailed(e, title) {
@@ -43,15 +47,14 @@ function authFailed(e, title) {
 // Nothing in sign-in may hang the app: every network step gets a hard deadline
 const withTimeout = (p, ms, fallback) => Promise.race([p, new Promise(res => setTimeout(() => res(fallback), ms))]);
 
-function restoredUser() {
-  return new Promise(resolve => {
-    const timer = setTimeout(() => resolve(null), 6000);
-    try {
-      const stop = onAuthStateChanged(auth,
-        user => { clearTimeout(timer); stop(); resolve(user); },
-        () => { clearTimeout(timer); resolve(null); });
-    } catch (e) { clearTimeout(timer); resolve(null); }
-  });
+// Wait for the SDK to finish restoring the persisted session (IndexedDB) before deciding anything.
+// A short wait here used to create a fresh anonymous user on slow devices, silently replacing a Google login.
+async function restoredUser() {
+  try {
+    if (typeof auth.authStateReady === 'function') await withTimeout(auth.authStateReady(), 15000, null);
+    else await withTimeout(new Promise(res => { const stop = onAuthStateChanged(auth, u => { stop(); res(u); }, () => res(null)); }), 15000, null);
+  } catch (e) { /* fall through */ }
+  return auth.currentUser;
 }
 
 export async function signInQuick() {
@@ -117,6 +120,7 @@ export async function signOutUser() {
   try { await signOut(auth); } catch (e) {}
   localStorage.removeItem('mp_userId');
   localStorage.removeItem('auth-choice');
+  localStorage.removeItem('lastGoogleEmail'); localStorage.removeItem('lastGoogleName');
   location.href = 'index.html';
 }
 
@@ -161,6 +165,14 @@ async function ensureSignedIn() {
 
   let user = await restoredUser();
   if (user) { rememberUser(user); return user.uid; }
+
+  // This device signed in with Google before but the session is gone: never replace it with a guest account
+  // (that would hide the admin tools and orphan the honour-board card). Ask for Google again instead.
+  const lastGoogle = localStorage.getItem('lastGoogleEmail');
+  if (lastGoogle) {
+    if (window.UI) window.UI.toast('انتهت جلسة حساب Google (' + lastGoogle + ')، اضغط للدخول مجدداً', { type: 'warn', ms: 10000, icon: '🔐', action: { label: 'دخول', onClick: () => signInGoogle() } });
+    return null;
+  }
   // navigator.onLine lies on some phones (reports offline on a working connection), so never bail on it:
   // a real outage makes signInAnonymously fail fast with auth/network-request-failed, which is silent.
 
