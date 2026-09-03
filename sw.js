@@ -3,7 +3,7 @@
 // Same-origin assets/scripts: cache-first with background refresh.
 // Cross-origin (fonts, CDN libraries): cached opaquely on first success so they work offline too.
 // Firebase and the question files are never intercepted (realtime + IndexedDB handle them).
-const CACHE_NAME = 'quran-quiz-v19';
+const CACHE_NAME = 'quran-quiz-v20';
 
 const PRECACHE = [
   './',
@@ -61,7 +61,6 @@ const EXTERNAL = [
 const skip = url =>
   url.includes('firebaseio.com') ||
   url.includes('firebasedatabase') ||
-  url.includes('firebasejs') ||
   url.includes('api.github.com') ||
   url.includes('quran.json') ||
   url.includes('quran.zip') ||
@@ -116,6 +115,17 @@ self.addEventListener('fetch', event => {
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
+
+    // Firebase SDK modules from gstatic are versioned and immutable: cache-first, so a cold start on a slow
+    // mobile network does not re-download ~500 KB before the rooms can work (kept as CORS responses, which
+    // ES module imports require, so they are never fetched with no-cors here).
+    if (url.includes('gstatic.com/firebasejs/')) {
+      const hit = await cache.match(request);
+      if (hit) return hit;
+      const resp = await fetch(request);
+      if (resp && resp.ok) cache.put(request, resp.clone());
+      return resp;
+    }
 
     if (codeOrPage) {
       const fresh = await withTimeout(refresh(request, cache), 3500);

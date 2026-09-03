@@ -1,6 +1,6 @@
 {
-  "name": "مسابقة القرآن الكريم",
-  "short_name": "مسابقة",
+  "name": "مسابقات إسلامية",
+  "short_name": "مسابقات إسلامية",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1a1a2e",

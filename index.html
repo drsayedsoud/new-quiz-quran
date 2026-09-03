@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>مسابقات القرآن الكريم</title>
+    <title>مسابقات إسلامية</title>
     <meta name="description" content="مسابقات في القرآن الكريم والسيرة النبوية والفقه ومعاني الكلمات، بمفردك أو في تحدٍّ مباشر مع الأصدقاء، مع قسم خاص للأطفال. أكثر من 26 ألف سؤال.">
     <meta name="theme-color" content="#1a1a2e">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="مسابقات القرآن الكريم">
+    <meta property="og:title" content="مسابقات إسلامية">
     <meta property="og:description" content="تعلّم وتنافس في القرآن والسيرة والفقه مع أصدقائك في تحدٍّ مباشر. أكثر من 26 ألف سؤال وقسم خاص للأطفال.">
     <meta property="og:image" content="assets/icon-512.png">
     <meta name="twitter:card" content="summary">
@@ -539,6 +539,9 @@ function openModal(type, title) {
 <script src="net-status.js"></script>
 <script src="back-guard.js"></script>
 <script src="ui-feedback.js"></script>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js" crossorigin>
 <link rel="stylesheet" href="piggy.css">
 <script src="piggy.js"></script>
 <script src="pwa-install.js"></script>
@@ -678,7 +681,7 @@ function openModal(type, title) {
 
     <header class="home-hero">
       <div class="logo-badge"><svg viewBox="0 0 64 64" width="70" height="70"><defs><linearGradient id="gB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="gG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs><path d="M8 16c8-4 16-4 22 2v34c-6-6-14-6-22-2z" fill="url(#gB)"/><path d="M56 16c-8-4-16-4-22 2v34c6-6 14-6 22-2z" fill="#10b981"/><path d="M30 18c1-1 3-1 4 0v34c-1-1-3-1-4 0z" fill="#065f46"/><path d="M14 24h10M14 30h10M40 24h10M40 30h10M14 36h10M40 36h10" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round" opacity=".8"/><path d="M50 4l2.6 5.4 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L41.4 10.2l6-.8z" fill="url(#gG)"/></svg></div>
-      <h1>مسابقات القرآن الكريم</h1>
+      <h1>مسابقات إسلامية</h1>
       <p class="home-sub">تعلّم وتنافس في القرآن الكريم والسيرة والفقه ومعاني الكلمات، بمفردك أو مع أصدقائك في تحدٍّ مباشر.</p>
       <div class="home-stats">
         <span>📚 أكثر من 26 ألف سؤال</span>
@@ -1099,13 +1102,15 @@ function openModal(type, title) {
   window.addEventListener('load', () => {
     const waitFor = name => async function () {
       const args = arguments;
-      if (window.UI) UI.toast('⏳ جاري تجهيز التحدي الجماعي...', { type: 'info', ms: 2500 });
-      for (let i = 0; i < 40; i++) {
+      if (window.UI) UI.toast('⏳ جاري تجهيز التحدي الجماعي...', { type: 'info', ms: 3000 });
+      // On a slow mobile network the Firebase SDK can take a while the first time: wait up to 30 s, and say so
+      for (let i = 0; i < 120; i++) {
         await new Promise(r => setTimeout(r, 250));
         if (typeof window[name] === 'function' && window[name] !== waiting[name]) return window[name].apply(null, args);
+        if (i === 32 && window.UI) UI.toast('الاتصال بطيء قليلاً، ما زلنا نجهّز... 🐢', { type: 'info', ms: 4000 });
       }
       const online = window.netCheck ? await window.netCheck() : navigator.onLine;
-      UI.toast(online ? 'تعذر تجهيز التحدي الجماعي، أعد فتح التطبيق' : 'التحدي الجماعي يحتاج اتصالاً بالإنترنت', { type: 'warn', icon: '📡' });
+      UI.toast(online ? 'الاتصال ضعيف جداً الآن، حاول مرة أخرى بعد قليل' : 'التحدي الجماعي يحتاج اتصالاً بالإنترنت', { type: 'warn', icon: '📡' });
     };
     const waiting = { createMultiplayerRoomWithParams: waitFor('createMultiplayerRoomWithParams'), joinMultiplayerRoom: waitFor('joinMultiplayerRoom') };
     Object.keys(waiting).forEach(n => { if (typeof window[n] !== 'function') window[n] = waiting[n]; });
@@ -1187,8 +1192,8 @@ function openModal(type, title) {
     function shareApp() {
         if (navigator.share) {
             navigator.share({
-                title: 'مسابقة القرآن الكريم',
-                text: 'جرب هذا التطبيق الرائع لمسابقة القرآن الكريم وتحدى أصدقاءك!',
+                title: 'مسابقات إسلامية',
+                text: 'جرب هذا التطبيق الرائع لمسابقات إسلامية وتحدى أصدقاءك!',
                 url: window.location.href
             }).catch(console.error);
         } else {

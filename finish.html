@@ -13,6 +13,9 @@
 <script src="net-status.js"></script>
 <script src="back-guard.js"></script>
 <script src="ui-feedback.js"></script>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js" crossorigin>
 <link rel="stylesheet" href="piggy.css">
 <script src="piggy.js"></script>
 <script src="pwa-install.js"></script>
@@ -114,12 +117,12 @@
     <div id="mp-guest-hint" style="display: none; color: #a0aec0; font-size: 0.85em; margin-top: 10px;">إذا بدأ المضيف جولة جديدة ستنتقل إلى الغرفة تلقائياً</div>
     <div id="certificate-area" style="display:none; margin-top: 20px; padding: 20px; background: white; color: black; border: 10px solid #d4af37; border-radius: 10px;">
       <h1 style="color: #d4af37; margin-bottom: 5px;">شهادة تفوق</h1>
-      <h3 style="margin-top: 0;">مسابقة القرآن الكريم</h3>
+      <h3 style="margin-top: 0;">مسابقات إسلامية</h3>
       <p>يُشهد بأن المتسابق:</p>
       <h2 id="cert-name" style="color: #2e8b57;">---</h2>
       <p>قد شارك في التحدي المباشر وحصل على:</p>
       <h1 id="cert-score" style="color: #e74c3c;">---</h1>
-      <p style="font-size: 0.8em; color: gray;">Quran Quiz App</p>
+      <p style="font-size: 0.8em; color: gray;">مسابقات إسلامية</p>
     </div>
   </div>
 
@@ -305,7 +308,7 @@
     localStorage.removeItem("userSessions"); localStorage.removeItem("daily_best");
     toast('تم المسح'); setTimeout(() => location.reload(), 600);
   }
-  const shareText = () => (isKids ? '🌟 حصلت على ' : 'لقد حصلت على ') + score + ' من ' + total + ' (' + percentage + '%)' + (typeLabel ? ' في ' + typeLabel : '') + ' بتطبيق مسابقة القرآن الكريم 🏆\nجرّب أنت: ' + appUrl;
+  const shareText = () => (isKids ? '🌟 حصلت على ' : 'لقد حصلت على ') + score + ' من ' + total + ' (' + percentage + '%)' + (typeLabel ? ' في ' + typeLabel : '') + ' بتطبيق مسابقات إسلامية 🏆\nجرّب أنت: ' + appUrl;
   function shareResult() { window.open('https://wa.me/?text=' + encodeURIComponent(shareText()), '_blank'); }
   function shareResultFB() { window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(appUrl) + '&quote=' + encodeURIComponent(shareText()), '_blank', 'width=600,height=500'); }
   function copyResult() { navigator.clipboard.writeText(shareText()).then(() => toast('تم نسخ النتيجة ✅')).catch(() => toast('تعذر النسخ')); }
@@ -317,7 +320,7 @@
     g.fillStyle = grad; g.fillRect(0, 0, 1080, 1080);
     const ink = isKids ? '#2d2b55' : '#ffffff', muted = isKids ? '#5f6c7b' : '#a0aec0', accent = isKids ? '#ff9f43' : '#10b981';
     g.textAlign = 'center'; g.direction = 'rtl';
-    g.fillStyle = ink; g.font = '900 64px Cairo, sans-serif'; g.fillText('مسابقة القرآن الكريم', 540, 130);
+    g.fillStyle = ink; g.font = '900 64px Cairo, sans-serif'; g.fillText('مسابقات إسلامية', 540, 130);
     g.fillStyle = muted; g.font = '600 38px Cairo, sans-serif'; g.fillText(typeLabel || 'مسابقة', 540, 200);
     g.beginPath(); g.arc(540, 500, 220, 0, Math.PI * 2); g.strokeStyle = isKids ? '#e2dbff' : 'rgba(255,255,255,0.12)'; g.lineWidth = 36; g.stroke();
     g.beginPath(); g.arc(540, 500, 220, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * percentage / 100); g.strokeStyle = accent; g.lineCap = 'round'; g.lineWidth = 36; g.stroke();
@@ -336,13 +339,13 @@
     canvas.toBlob(async (blob) => {
       const file = new File([blob], 'natijati.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try { await navigator.share({ files: [file], title: 'نتيجتي في مسابقة القرآن الكريم', text: shareText() }); return; } catch (e) { if (e.name === 'AbortError') return; }
+        try { await navigator.share({ files: [file], title: 'نتيجتي في مسابقات إسلامية', text: shareText() }); return; } catch (e) { if (e.name === 'AbortError') return; }
       }
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'natijati.png'; document.body.appendChild(a); a.click(); a.remove();
       toast('تم حفظ الصورة');
     }, 'image/png');
   }
-  function shareNative() { navigator.share({ title: 'مسابقة القرآن الكريم', text: shareText(), url: appUrl }).catch(() => {}); }
+  function shareNative() { navigator.share({ title: 'مسابقات إسلامية', text: shareText(), url: appUrl }).catch(() => {}); }
   if (navigator.share) document.getElementById('sh-native').style.display = 'flex';
 </script>
 

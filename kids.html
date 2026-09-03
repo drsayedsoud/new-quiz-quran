@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>ركن الأطفال - مسابقة القرآن الكريم</title>
+  <title>ركن الأطفال - مسابقات إسلامية</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#7ed6ff">
   <link rel="manifest" href="/manifest.json">
@@ -13,6 +13,9 @@
   <script src="net-status.js"></script>
   <script src="back-guard.js"></script>
   <script src="ui-feedback.js"></script>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js" crossorigin>
   <link rel="stylesheet" href="piggy.css">
   <script src="piggy.js"></script>
   <style>
@@ -146,9 +149,9 @@
     const cat = b.dataset.room;
     if (typeof window.createMultiplayerRoomWithParams !== 'function') {
       // multiplayer.js is still signing in (or we are offline): wait a little before giving up
-      UI.toast('⏳ جاري التجهيز...', { ms: 2000 });
-      for (let i = 0; i < 32 && typeof window.createMultiplayerRoomWithParams !== 'function'; i++) await new Promise(r => setTimeout(r, 250));
-      if (typeof window.createMultiplayerRoomWithParams !== 'function') { const online = window.netCheck ? await window.netCheck() : navigator.onLine; UI.toast(online ? 'تعذر التجهيز، أعد فتح الصفحة' : 'اللعب مع الأصحاب يحتاج إنترنت 📡', { type: 'warn' }); return; }
+      UI.toast('⏳ جاري التجهيز...', { ms: 3000 });
+      for (let i = 0; i < 120 && typeof window.createMultiplayerRoomWithParams !== 'function'; i++) { await new Promise(r => setTimeout(r, 250)); if (i === 32) UI.toast('الاتصال بطيء قليلاً، ما زلنا نجهّز... 🐢', { ms: 4000 }); }
+      if (typeof window.createMultiplayerRoomWithParams !== 'function') { const online = window.netCheck ? await window.netCheck() : navigator.onLine; UI.toast(online ? 'الاتصال ضعيف جداً الآن، حاول بعد قليل' : 'اللعب مع الأصحاب يحتاج إنترنت 📡', { type: 'warn' }); return; }
     }
     if (cat === 'kids_piggy' && !Piggy.name()) { Piggy.askName(() => b.click()); return; }
     const label = b.querySelector('b'), old = label.textContent;
@@ -166,9 +169,9 @@
     if (joining) return; joining = true;
     try {
       if (typeof window.joinMultiplayerRoom !== 'function') {
-        UI.toast('⏳ جاري التجهيز...', { ms: 2000 });
-        for (let i = 0; i < 32 && typeof window.joinMultiplayerRoom !== 'function'; i++) await new Promise(r => setTimeout(r, 250));
-        if (typeof window.joinMultiplayerRoom !== 'function') { const online = window.netCheck ? await window.netCheck() : navigator.onLine; UI.toast(online ? 'تعذر التجهيز، أعد فتح الصفحة' : 'الدخول للغرفة يحتاج إنترنت 📡', { type: 'warn' }); return; }
+        UI.toast('⏳ جاري التجهيز...', { ms: 3000 });
+        for (let i = 0; i < 120 && typeof window.joinMultiplayerRoom !== 'function'; i++) { await new Promise(r => setTimeout(r, 250)); if (i === 32) UI.toast('الاتصال بطيء قليلاً، ما زلنا نجهّز... 🐢', { ms: 4000 }); }
+        if (typeof window.joinMultiplayerRoom !== 'function') { const online = window.netCheck ? await window.netCheck() : navigator.onLine; UI.toast(online ? 'الاتصال ضعيف جداً الآن، حاول بعد قليل' : 'الدخول للغرفة يحتاج إنترنت 📡', { type: 'warn' }); return; }
       }
       await joinMultiplayerRoom();
     } finally { joining = false; }

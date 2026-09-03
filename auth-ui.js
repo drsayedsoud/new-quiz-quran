@@ -38,7 +38,7 @@ export function chooseSignIn() {
         el.id = 'auth-sheet';
         el.innerHTML = '<div class="sheet">' +
             '<img class="logo" src="assets/icon-192.png" alt="">' +
-            '<h3>أهلاً بك في مسابقات القرآن الكريم</h3>' +
+            '<h3>أهلاً بك في مسابقات إسلامية</h3>' +
             '<p class="sub">اختر طريقة الدخول لتُحفظ نتائجك وتنافس في لوحة الشرف</p>' +
             '<button type="button" class="opt quick" data-choice="quick"><span class="ic">🚀</span><span><b>دخول سريع</b><small>بدون حساب، تبدأ اللعب فوراً</small></span></button>' +
             '<button type="button" class="opt google" data-choice="google"><span class="ic">' + GOOGLE_G + '</span><span><b>الدخول بحساب Google <span class="badge">مميزات أكثر</span></b><small>بطاقتك ونقاطك في لوحة الشرف على كل أجهزتك، واسمك وصورتك تُملآن تلقائياً، ولا تفقد حسابك عند تغيير الهاتف</small></span></button>' +

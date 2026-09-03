@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>غرفة الانتظار - مسابقة القرآن الكريم</title>
+    <title>غرفة الانتظار - مسابقات إسلامية</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -168,6 +168,9 @@
 <script src="net-status.js"></script>
 <script src="back-guard.js"></script>
 <script src="ui-feedback.js"></script>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js" crossorigin>
 <link rel="stylesheet" href="mobile.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -189,10 +192,10 @@
                     const code = (new URLSearchParams(location.search).get('room') || localStorage.getItem('mp_roomCode') || '').replace(/\D/g, '');
                     if (!code) return;
                     const link = location.origin + '/lobby.html?room=' + code;
-                    const text = 'مرحباً! أتحداك في مسابقة القرآن الكريم 🏆\nكود الغرفة: *' + code + '*\nاضغط الرابط للانضمام مباشرة:\n' + link;
+                    const text = 'مرحباً! أتحداك في مسابقات إسلامية 🏆\nكود الغرفة: *' + code + '*\nاضغط الرابط للانضمام مباشرة:\n' + link;
                     const wa = 'https://wa.me/?text=' + encodeURIComponent(text);
                     if (navigator.share) {
-                        try { await navigator.share({ title: 'مسابقة القرآن الكريم', text: text }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+                        try { await navigator.share({ title: 'مسابقات إسلامية', text: text }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
                     }
                     const a = document.createElement('a'); a.href = wa; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
                     setTimeout(() => { if (document.visibilityState === 'visible' && !document.hidden) { try { navigator.clipboard && navigator.clipboard.writeText(text); } catch (e) {} } }, 1500);

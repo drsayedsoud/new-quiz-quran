@@ -82,7 +82,7 @@
         modal = document.createElement('div');
         modal.id = 'install-modal';
         modal.innerHTML = '<div class="sheet"><div class="grab"></div><button type="button" class="x" aria-label="إغلاق">&times;</button>' +
-            '<div class="head"><img src="assets/icon-192.png" alt=""><div><h3>ثبّت التطبيق على جهازك</h3><p class="sub">مسابقة القرآن الكريم · مجاناً وبدون متجر</p></div></div>' +
+            '<div class="head"><img src="assets/icon-192.png" alt=""><div><h3>ثبّت التطبيق على جهازك</h3><p class="sub">مسابقات إسلامية · مجاناً وبدون متجر</p></div></div>' +
             '<div class="body"></div><div class="btns"><button type="button" class="go"></button><button type="button" class="later">لاحقاً</button></div></div>';
         document.body.appendChild(modal);
         modal.addEventListener('click', e => { if (e.target === modal) close(); });
