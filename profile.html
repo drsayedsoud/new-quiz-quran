@@ -15,6 +15,8 @@
 <script src="back-guard.js"></script>
 <script src="ui-feedback.js"></script>
 <script src="pwa-install.js"></script>
+<link rel="stylesheet" href="piggy.css">
+<script src="piggy.js"></script>
   <style>
     :root { --bg: #1a1a2e; --card: #22223f; --border: #34345c; --text: #e6e6f0; --muted: #a0aec0; --green: #10b981; --blue: #4299e1; --gold: #f6c343; --red: #ef4444; }
     * { box-sizing: border-box; }
@@ -94,6 +96,19 @@
       <button class="btn ghost" id="signout-btn" style="display:none">تسجيل الخروج</button>
     </div>
     <p class="sub" id="account-benefits" style="display:none; margin: 10px 0 0;">✨ مع حساب Google: بطاقتك ونقاطك في لوحة الشرف محفوظة على كل أجهزتك، واسمك وصورتك تُملآن تلقائياً، ولا تفقد حسابك عند تغيير الهاتف.</p>
+  </section>
+
+  <section class="card" id="piggy-card" style="display: none; border-color: rgba(255,214,102,0.5);">
+    <h2>🐷 حصالة <span id="pg-name"></span></h2>
+    <p class="sub">كل إجابة صحيحة في مستوى «زوّد رصيد حصالتك» = ١٠ قروش، والخطأ ينقص ١٠</p>
+    <div class="stats" id="pg-stats"></div>
+    <div class="row" style="margin-top: 10px; flex-wrap: wrap;">
+      <button class="btn green" id="pg-cheque">🧾 اصرف شيك بالرصيد</button>
+      <button class="btn ghost" id="pg-play">🐷 العب وزوّد الرصيد</button>
+    </div>
+    <h2 style="margin-top: 14px; font-size: 1em;">📜 سجل الشيكات</h2>
+    <p class="sub" id="pg-log-sub"></p>
+    <div class="lb" id="pg-log"></div>
   </section>
 
   <section class="card">

@@ -40,7 +40,7 @@
     {
       "name": "مسابقة الأطفال",
       "short_name": "الأطفال",
-      "url": "./index.html?open=kids",
+      "url": "./kids.html",
       "icons": [
         {
           "src": "assets/icon-192.png",

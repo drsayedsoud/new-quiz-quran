@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>ركن الأطفال - مسابقة القرآن الكريم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#7ed6ff">
+  <link rel="manifest" href="/manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="kids-theme.css">
+  <script src="kids-theme.js"></script>
+  <script src="wake-lock.js"></script>
+  <script src="net-status.js"></script>
+  <script src="back-guard.js"></script>
+  <script src="ui-feedback.js"></script>
+  <link rel="stylesheet" href="piggy.css">
+  <script src="piggy.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 14px 12px 40px; min-height: 100vh; font-family: 'Cairo', sans-serif; color: #2d2b55; }
+    .wrap { position: relative; z-index: 1; max-width: 560px; margin: auto; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+    .top h1 { margin: 0; font-size: 1.5em; color: #5f27cd; font-weight: 900; animation: kids-wiggle 3s ease-in-out infinite; }
+    .home { background: #fff; color: #5f27cd; border: 3px solid #c8b6ff; border-radius: 999px; padding: 8px 14px; font-weight: 900; text-decoration: none; font-size: 0.95em; }
+    .hello { background: linear-gradient(135deg, #1dd1a1, #10b981); color: #fff; border: 3px solid #fff; border-radius: 999px; padding: 6px 14px; font-weight: 900; box-shadow: 0 4px 0 #0f9f7a; display: none; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .big { display: flex; align-items: center; gap: 14px; width: 100%; border: 4px solid #fff; border-radius: 26px; padding: 16px; margin-bottom: 12px; cursor: pointer; font-family: inherit; text-align: right; color: #fff; box-shadow: 0 8px 0 rgba(0,0,0,0.15), 0 14px 30px rgba(0,0,0,0.15); transition: transform 0.15s; }
+    .big:active { transform: translateY(4px); box-shadow: 0 3px 0 rgba(0,0,0,0.15); }
+    .big .ic { width: 70px; height: 70px; border-radius: 22px; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 2.4em; flex-shrink: 0; }
+    .big b { display: block; font-size: 1.35em; font-weight: 900; }
+    .big small { display: block; font-size: 0.9em; opacity: 0.95; font-weight: 700; line-height: 1.5; }
+    .big.solo { background: linear-gradient(135deg, #54a0ff, #5f27cd); }
+    .big.friends { background: linear-gradient(135deg, #ff9f43, #ff6b6b); }
+    .big.code { background: linear-gradient(135deg, #1dd1a1, #10b981); }
+    .big.open { border-color: #feca57; }
+
+    .panel { display: none; background: rgba(255,255,255,0.94); border: 4px solid #fff; border-radius: 26px; padding: 14px; margin: -4px 0 14px; box-shadow: 0 10px 0 rgba(95,39,205,0.15), 0 16px 30px rgba(0,0,0,0.12); animation: kids-pop 0.25s ease-out; }
+    .panel.on { display: block; }
+    .panel h3 { margin: 0 0 10px; color: #5f27cd; font-size: 1.15em; text-align: center; }
+    .levels { display: grid; gap: 10px; }
+    .lvl { display: flex; align-items: center; gap: 12px; width: 100%; text-align: right; border: 3px solid var(--c); background: color-mix(in srgb, var(--c) 12%, #fff); border-radius: 20px; padding: 12px 14px; cursor: pointer; font-family: inherit; color: #2d2b55; transition: transform 0.15s; }
+    .lvl:active { transform: scale(0.98); }
+    .lvl .n { width: 46px; height: 46px; border-radius: 14px; background: var(--c); color: #fff; font-size: 1.5em; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 0 rgba(0,0,0,0.15); }
+    .lvl b { display: block; font-size: 1.05em; font-weight: 900; }
+    .lvl small { display: block; color: #5f6c7b; font-size: 0.8em; font-weight: 700; line-height: 1.5; }
+    .lvl.piggy { background: linear-gradient(135deg, #0f2733, #1f4a5c); color: #ffd166; border-color: #ffd166; }
+    .lvl.piggy small { color: #9fd3c7; }
+    .lvl.piggy .n { background: #ffd166; color: #3b2a00; font-size: 1.6em; }
+
+    .code-row { display: flex; gap: 8px; }
+    .code-row input { flex: 1; min-width: 0; padding: 12px 14px; border-radius: 999px; border: 4px solid #c8b6ff; background: #fff; color: #2d2b55; font-family: inherit; font-size: 1.5em; font-weight: 900; text-align: center; letter-spacing: 6px; outline: none; direction: ltr; }
+    .code-row input:focus { border-color: #54a0ff; box-shadow: 0 0 0 5px rgba(84,160,255,0.25); }
+    .go { background: linear-gradient(135deg, #1dd1a1, #10b981); color: #fff; border: 3px solid #fff; border-radius: 999px; padding: 10px 18px; font-family: inherit; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 5px 0 #0f9f7a; white-space: nowrap; }
+    .go:active { transform: translateY(3px); box-shadow: 0 2px 0 #0f9f7a; }
+    .hint { text-align: center; color: #5f6c7b; font-size: 0.85em; font-weight: 700; margin: 10px 0 0; }
+    .piggy-bal { display: flex; align-items: center; gap: 10px; justify-content: center; background: linear-gradient(135deg, #0f2733, #1f4a5c); color: #ffd166; border: 3px solid #ffd166; border-radius: 999px; padding: 8px 16px; font-weight: 900; margin: 0 auto 14px; width: fit-content; max-width: 100%; }
+    .piggy-bal span:first-child { font-size: 1.5em; }
+    @media (max-width: 420px) { .big .ic { width: 58px; height: 58px; font-size: 2em; } .big b { font-size: 1.15em; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>🎈 ركن الأطفال</h1>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <span class="hello" id="hello"></span>
+      <a class="home" href="index.html">🏠</a>
+    </div>
+  </div>
+
+  <div class="piggy-bal" id="piggy-bal" style="display:none;"><span>🐷</span><span>حصالتك: <b id="piggy-amount"></b></span></div>
+
+  <!-- 1) play alone -->
+  <button class="big solo" id="btn-solo" type="button"><span class="ic">🎮</span><span><b>العب لوحدك</b><small>اختر مستواك وابدأ فوراً</small></span></button>
+  <div class="panel" id="panel-solo">
+    <h3>اختر المستوى</h3>
+    <div class="levels">
+      <button class="lvl" style="--c:#fb7185" type="button" data-solo="kids_1"><span class="n">١</span><span><b>المستوى الأول</b><small>حساب بسيط وأسئلة سهلة · حتى ٩ سنوات</small></span></button>
+      <button class="lvl" style="--c:#38bdf8" type="button" data-solo="kids_2"><span class="n">٢</span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · ٩ - ١٢ سنة</small></span></button>
+      <button class="lvl" style="--c:#8b5cf6" type="button" data-solo="kids_3"><span class="n">٣</span><span><b>المستوى الثالث</b><small>نسب وكسور وهندسة ومعلومات قرآنية · ١٢ سنة فأكثر</small></span></button>
+      <button class="lvl piggy" type="button" data-solo="kids_piggy"><span class="n">🐷</span><span><b>زوّد رصيد حصالتك</b><small>كل إجابة صحيحة = ١٠ قروش، واصرف شيكاً بالرصيد</small></span></button>
+    </div>
+  </div>
+
+  <!-- 2) play with friends: one tap makes a room -->
+  <button class="big friends" id="btn-friends" type="button"><span class="ic">👫</span><span><b>العب مع أصحابك</b><small>اعمل غرفة بضغطة واحدة وشارك الكود</small></span></button>
+  <div class="panel" id="panel-friends">
+    <h3>غرفة جديدة، اختر نوعها</h3>
+    <div class="levels">
+      <button class="lvl" style="--c:#fb7185" type="button" data-room="kids_1"><span class="n">١</span><span><b>غرفة المستوى الأول</b><small>١٠ أسئلة · ٣٠ ثانية للسؤال</small></span></button>
+      <button class="lvl" style="--c:#38bdf8" type="button" data-room="kids_2"><span class="n">٢</span><span><b>غرفة المستوى الثاني</b><small>١٠ أسئلة · ٣٠ ثانية للسؤال</small></span></button>
+      <button class="lvl" style="--c:#8b5cf6" type="button" data-room="kids_3"><span class="n">٣</span><span><b>غرفة المستوى الثالث</b><small>١٠ أسئلة · ٣٠ ثانية للسؤال</small></span></button>
+      <button class="lvl piggy" type="button" data-room="kids_piggy"><span class="n">🐷</span><span><b>غرفة الحصالة (بفلوس)</b><small>كل طفل يزوّد حصالته، والأكثر إجابات صحيحة يفوز</small></span></button>
+    </div>
+    <p class="hint">بعد إنشاء الغرفة ابعت الكود لأصحابك على واتساب</p>
+    <button id="mp-create-btn" type="button" style="display:none"></button>
+  </div>
+
+  <!-- 3) join by code -->
+  <button class="big code" id="btn-code" type="button"><span class="ic">🔑</span><span><b>عندك كود؟ ادخل الغرفة</b><small>اكتب الكود اللي بعته لك صاحبك</small></span></button>
+  <div class="panel" id="panel-code">
+    <h3>اكتب كود الغرفة</h3>
+    <div class="code-row">
+      <input id="join-room-code" inputmode="numeric" pattern="[0-9]*" maxlength="5" placeholder="12345" autocomplete="off">
+      <button class="go" id="mp-join-btn" type="button">ادخل 🚀</button>
+    </div>
+    <p class="hint">الكود ٥ أرقام</p>
+  </div>
+</div>
+
+<script>
+  KidsTheme.activate();
+  const $ = id => document.getElementById(id);
+  const LABELS = { kids_1: 'الأطفال - مستوى 1', kids_2: 'الأطفال - مستوى 2', kids_3: 'الأطفال - مستوى 3' };
+
+  // greeting + piggy balance
+  (function () {
+    const name = (window.Piggy && Piggy.name()) || localStorage.getItem('mp_playerName') || '';
+    if (name) { $('hello').textContent = '👋 أهلاً ' + name; $('hello').style.display = 'inline-block'; }
+    if (window.Piggy && (Piggy.balance() > 0 || localStorage.getItem('piggyName'))) { $('piggy-amount').textContent = Piggy.words(Piggy.balance()); $('piggy-bal').style.display = 'flex'; }
+  })();
+
+  // accordion: one open panel at a time
+  const panels = { solo: ['btn-solo', 'panel-solo'], friends: ['btn-friends', 'panel-friends'], code: ['btn-code', 'panel-code'] };
+  function open(key) {
+    Object.entries(panels).forEach(([k, [b, p]]) => { const on = k === key && !$(p).classList.contains('on'); $(p).classList.toggle('on', on); $(b).classList.toggle('open', on); });
+    if (key === 'code') setTimeout(() => $('join-room-code').focus(), 150);
+    if (window.KidsTheme) KidsTheme.play('whoosh');
+  }
+  $('btn-solo').onclick = () => open('solo');
+  $('btn-friends').onclick = () => open('friends');
+  $('btn-code').onclick = () => open('code');
+
+  // solo levels
+  document.querySelectorAll('[data-solo]').forEach(b => b.onclick = () => {
+    const cat = b.dataset.solo;
+    if (cat === 'kids_piggy') { Piggy.start(); return; }
+    ['mp_roomCode', 'mp_isHost', 'selectedJuz', 'selectedSura', 'mp_pick', 'resumeNow'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('quizType', cat);
+    localStorage.setItem('quizTitle', LABELS[cat] || 'مسابقة الأطفال');
+    location.href = 'quiz.html';
+  });
+
+  // rooms: sensible defaults, no settings screen for children
+  document.querySelectorAll('[data-room]').forEach(b => b.onclick = async () => {
+    if (!navigator.onLine) { UI.toast('اللعب مع الأصحاب يحتاج إنترنت 📡', { type: 'warn' }); return; }
+    if (typeof window.createMultiplayerRoomWithParams !== 'function') { UI.toast('جاري التجهيز، اضغط مرة أخرى بعد لحظة ⏳'); return; }
+    const cat = b.dataset.room;
+    if (cat === 'kids_piggy' && !Piggy.name()) { Piggy.askName(() => b.click()); return; }
+    const label = b.querySelector('b'), old = label.textContent;
+    document.querySelectorAll('[data-room]').forEach(x => x.disabled = true);
+    label.textContent = '⏳ جاري إنشاء الغرفة...';
+    try { await createMultiplayerRoomWithParams(cat, 'questions', 10, { qTime: 30, maxPlayers: 10, showLive: true, roomName: cat === 'kids_piggy' ? '🐷 غرفة الحصالة' : '' }); }
+    finally { setTimeout(() => { label.textContent = old; document.querySelectorAll('[data-room]').forEach(x => x.disabled = false); }, 2500); }
+  });
+
+  // join by code
+  const join = () => {
+    const v = $('join-room-code').value.replace(/\D/g, '');
+    if (v.length !== 5) { UI.toast('الكود ٥ أرقام يا بطل', { type: 'warn' }); $('join-room-code').focus(); return; }
+    if (typeof window.joinMultiplayerRoom !== 'function') { UI.toast(navigator.onLine ? 'جاري التجهيز، حاول بعد لحظة ⏳' : 'الدخول للغرفة يحتاج إنترنت 📡', { type: 'warn' }); return; }
+    joinMultiplayerRoom();
+  };
+  $('mp-join-btn').onclick = join;
+  $('join-room-code').addEventListener('keydown', e => { if (e.key === 'Enter') join(); });
+  $('join-room-code').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 5); if (e.target.value.length === 5) join(); });
+
+  // deep link: kids.html?join=12345 or ?open=friends
+  const params = new URLSearchParams(location.search);
+  if (params.get('join')) { open('code'); $('join-room-code').value = params.get('join').replace(/\D/g, '').slice(0, 5); }
+  else if (params.get('open') && panels[params.get('open')]) open(params.get('open'));
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+</script>
+<script type="module" src="multiplayer.js"></script>
+</body>
+</html>

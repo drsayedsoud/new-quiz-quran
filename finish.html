@@ -326,6 +326,7 @@
     g.fillStyle = accent; g.font = '900 52px Cairo, sans-serif'; g.fillText(document.getElementById('motiv-text').textContent, 540, 820);
     const name = localStorage.getItem('mp_playerName');
     if (name) { g.fillStyle = ink; g.font = '700 44px Cairo, sans-serif'; g.fillText(name, 540, 900); }
+    if (window.Piggy && localStorage.getItem('quizType') === Piggy.TYPE) { g.fillStyle = '#b8860b'; g.font = '900 44px Cairo, sans-serif'; g.fillText('🐷 رصيد الحصالة: ' + Piggy.words(Piggy.balance()), 540, 962); }
     g.fillStyle = muted; g.font = '600 32px Cairo, sans-serif'; g.fillText(appUrl.replace(/^https?:\/\//, ''), 540, 1010);
     return c;
   }

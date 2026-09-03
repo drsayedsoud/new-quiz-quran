@@ -3,7 +3,7 @@
 // every new high is celebrated, and the child can cash the balance as a bank cheque (which resets it to zero).
 (function () {
     const TYPE = 'kids_piggy', STEP = 10;
-    const K = { bal: 'piggyBalance', best: 'piggyBest', name: 'piggyName', total: 'piggyEarnedTotal', cheques: 'piggyCheques' };
+    const K = { bal: 'piggyBalance', best: 'piggyBest', name: 'piggyName', total: 'piggyEarnedTotal', cheques: 'piggyCheques', log: 'piggyChequeLog' };
     const get = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
     const set = (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) {} };
     const num = k => parseInt(get(k, '0')) || 0;
@@ -14,8 +14,12 @@
 
     const Piggy = { active: false, TYPE };
     window.Piggy = Piggy;
-    Piggy.name = () => get(K.name, '').trim();
+    // The piggy name, else the name used in rooms (so a child joining a piggy room is greeted by name too)
+    Piggy.name = () => (get(K.name, '') || get('mp_playerName', '')).trim().slice(0, 20);
     Piggy.balance = () => num(K.bal);
+    Piggy.onChange = null; // pages hook this to refresh their own balance display
+    const log = () => { try { return JSON.parse(get(K.log, '[]')) || []; } catch (e) { return []; } };
+    Piggy.log = log;
 
     // 250 -> "جنيهان و٥٠ قرشاً"
     function words(p) {
@@ -124,8 +128,10 @@
         el.querySelector('.ch-done').onclick = () => {
             set(K.cheques, n);
             set(K.bal, 0); set(K.best, 0);
+            const l = log(); l.unshift({ n, amount: bal, at: Date.now(), name }); set(K.log, JSON.stringify(l.slice(0, 50)));
             closeOverlay();
             render(false);
+            if (typeof Piggy.onChange === 'function') { try { Piggy.onChange(); } catch (e) {} }
             if (window.KidsTheme) { KidsTheme.play('tada'); KidsTheme.confetti(4000); KidsTheme.cheer('🧾 مبروك، اتصرف الشيك!', '#ffd166'); }
             speak('مبروك يا بطل ' + name + '! صرفت شيك بمبلغ ' + words(bal) + '. يلا نبدأ رصيد جديد', 'cheque');
             if (window.UI) UI.toast('رصيد الحصالة رجع صفر، ابدأ تجميع من جديد 🐷', { type: 'ok' });
@@ -236,9 +242,36 @@
             const container = document.querySelector('.container');
             const h1 = container && container.querySelector('h1');
             if (h1) h1.after(box); else if (container) container.prepend(box);
-            box.querySelector('.cheque-btn').onclick = () => { showCheque(); const w = () => { const b = box.querySelector('.t b'); if (b) b.textContent = words(Piggy.balance()); }; const ov = document.getElementById('piggy-overlay'); if (ov) ov.addEventListener('click', () => setTimeout(w, 50)); };
+            Piggy.onChange = () => { const b = box.querySelector('.t b'); if (b) b.textContent = words(Piggy.balance()); };
+            box.querySelector('.cheque-btn').onclick = showCheque;
             box.querySelector('.again').onclick = () => Piggy.start();
             setTimeout(() => speak('رصيد حصالتك دلوقتي ' + words(Piggy.balance()), 'info'), 1800);
+        };
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    }
+
+    // ---------- profile page: balance, totals and the cheque history ----------
+    if (page.endsWith('profile.html')) {
+        const init = () => {
+            const card = document.getElementById('piggy-card');
+            if (!card) return;
+            const l = log();
+            if (!get(K.name, '') && !Piggy.balance() && !l.length && !num(K.total)) return; // never played the level
+            card.style.display = 'block';
+            const stat = (ic, v, t) => '<div class="stat"><span class="ic">' + ic + '</span><b>' + v + '</b><span>' + t + '</span></div>';
+            const refresh = () => {
+                const cur = log();
+                document.getElementById('pg-name').textContent = Piggy.name() || 'البطل';
+                document.getElementById('pg-stats').innerHTML =
+                    stat('💰', words(Piggy.balance()), 'الرصيد الحالي') + stat('🏆', words(num(K.total)), 'كل ما كسبه') +
+                    stat('🧾', ar(cur.length), 'شيكات مصروفة') + stat('💵', words(cur.reduce((a, c) => a + (c.amount || 0), 0)), 'إجمالي الشيكات');
+                document.getElementById('pg-log-sub').textContent = cur.length ? 'آخر ' + ar(Math.min(cur.length, 50)) + ' شيك' : 'لا توجد شيكات بعد، جمّع الرصيد ثم اضغط «اصرف شيك»';
+                document.getElementById('pg-log').innerHTML = cur.map(c => '<div class="lb-row"><span class="lb-rank">' + ar(c.n) + '</span><span class="lb-name">' + esc(c.name || '') + '<small> · ' + new Date(c.at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }) + '</small></span><span class="lb-score">' + words(c.amount) + '</span></div>').join('');
+            };
+            Piggy.onChange = refresh;
+            refresh();
+            document.getElementById('pg-cheque').onclick = showCheque;
+            document.getElementById('pg-play').onclick = () => Piggy.start();
         };
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
     }

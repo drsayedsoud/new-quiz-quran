@@ -551,6 +551,57 @@ function openModal(type, title) {
 <body>
 
     <!-- Top Actions -->
+    <!-- Top-right greeting: shown once we know the player's name (Google account, honour-board card, room name or piggy name) -->
+    <div id="hello-box" style="position: absolute; top: 15px; right: 15px; z-index: 100; display: none; align-items: center; gap: 8px; font-family: 'Cairo'; font-weight: 800; color: #e2e8f0; font-size: 1em;">
+        <span class="hi">أهلاً</span>
+        <button id="hello-name" onclick="onHelloClick()" title="ملفي" style="background: linear-gradient(135deg, #10b981, #059669); border: 1px solid rgba(255,255,255,0.25); color: #fff; height: 38px; padding: 0 14px; border-radius: 999px; cursor: pointer; font-family: 'Cairo'; font-weight: 900; font-size: 0.92em; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-shadow: 0 4px 12px rgba(16,185,129,0.35); display: flex; align-items: center; gap: 6px;"></button>
+    </div>
+    <style>
+        @media (max-width: 520px) { #hello-box .hi { display: none; } #hello-name { max-width: 112px !important; height: 36px !important; padding: 0 10px !important; font-size: 0.85em !important; } }
+        #hello-name img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #fff; }
+        #hello-name:hover { filter: brightness(1.08); }
+        #upd-badge { display: none; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #ef4444; color: #fff; font-size: 0.85em; font-weight: 900; box-shadow: 0 0 0 3px rgba(239,68,68,0.3); animation: updPulse 1.6s ease-in-out infinite; cursor: pointer; flex-shrink: 0; }
+        @keyframes updPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 3px rgba(239,68,68,0.3); } 50% { transform: scale(1.12); box-shadow: 0 0 0 7px rgba(239,68,68,0.12); } }
+    </style>
+    <script>
+        // New version available: red badge next to the name; tapping the name only offers the update until it is applied
+        window.__updateReady = false;
+        window.markUpdateReady = function () {
+            if (window.__updateReady) return;
+            window.__updateReady = true;
+            const box = document.getElementById('hello-box'), btn = document.getElementById('hello-name');
+            if (box && btn) {
+                box.style.display = 'flex';
+                if (!btn.textContent.trim()) btn.innerHTML = '<span>🔄</span><span>تحديث متاح</span>';
+                let b = document.getElementById('upd-badge');
+                if (!b) { b = document.createElement('span'); b.id = 'upd-badge'; b.textContent = '!'; b.title = 'يوجد إصدار جديد'; b.onclick = onHelloClick; box.appendChild(b); }
+                b.style.display = 'flex';
+            }
+            if (window.UI) UI.toast('✨ يوجد إصدار جديد، اضغط على اسمك في الأعلى للتحديث', { type: 'info', ms: 6000 });
+        };
+        function onHelloClick() {
+            if (window.__updateReady) {
+                if (window.UI) UI.dialog({ emoji: '✨', title: 'يوجد إصدار جديد', text: 'حدّث للإصدار الجديد للحصول على أحدث المميزات والإصلاحات. يستغرق ثانية واحدة.', primary: '🔄 حدّث الآن' }).then(ok => { if (ok) location.reload(); });
+                else location.reload();
+                return;
+            }
+            location.href = 'profile.html';
+        }
+        // Works offline too (no Firebase needed): the module below upgrades it with the Google name/photo when signed in
+        window.greetHome = function (googleName, photo) {
+            let name = googleName || '';
+            if (!name) { try { name = (JSON.parse(localStorage.getItem('gbCard') || 'null') || {}).name || ''; } catch (e) {} }
+            if (!name) name = localStorage.getItem('mp_playerName') || localStorage.getItem('piggyName') || '';
+            name = String(name).trim().slice(0, 20);
+            const box = document.getElementById('hello-box'), btn = document.getElementById('hello-name');
+            if (!box || !btn) return;
+            box.style.display = name ? 'flex' : 'none';
+            if (name) btn.innerHTML = (photo ? '<img src="' + photo.replace(/"/g, '') + '" alt="">' : '<span>' + (googleName ? '👤' : '🙂') + '</span>') + '<span style="overflow:hidden;text-overflow:ellipsis;">' + name.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])) + '</span>';
+            btn.title = googleName ? 'حسابك: ' + googleName : 'ملفي';
+            if (window.__updateReady) { box.style.display = 'flex'; const b = document.getElementById('upd-badge'); if (b) b.style.display = 'flex'; }
+        };
+        window.addEventListener('DOMContentLoaded', () => greetHome());
+    </script>
     <div style="position: absolute; top: 15px; left: 15px; display: flex; gap: 10px; z-index: 100;">
         <button id="admin-chip" onclick="location.href='admin.html'" title="لوحة الإدارة" style="display: none; background: rgba(239,68,68,0.18); border: 1px solid rgba(239,68,68,0.5); color: #fca5a5; height: 45px; padding: 0 14px; border-radius: 999px; cursor: pointer; align-items: center; gap: 6px; font-family: 'Cairo'; font-weight: 800; backdrop-filter: blur(10px);">🛠️ الإدارة</button>
         <button id="install-chip" onclick="installApp()" title="تثبيت التطبيق" style="display: none; background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.5); color: #6ee7b7; height: 45px; padding: 0 14px; border-radius: 999px; cursor: pointer; align-items: center; gap: 6px; font-family: 'Cairo'; font-weight: 800; backdrop-filter: blur(10px);">📲 تثبيت</button>
@@ -686,7 +737,7 @@ function openModal(type, title) {
           <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><path d="M6 10a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H20l-8 8v-8h-2a4 4 0 0 1-4-4z" fill="#c084fc"/><text x="24" y="26" text-anchor="middle" font-size="16" font-weight="700" fill="#fff" font-family="Cairo, sans-serif">أ ب</text></svg></span>
           <span class="quick-label">معاني الكلمات</span>
         </button>
-        <button class="quick-tile" style="--tile:#fb7185" onclick="openSoloMixModal(); showKidsOptions('solo')">
+        <button class="quick-tile" style="--tile:#fb7185" onclick="location.href='kids.html'">
           <span class="quick-icon"><svg viewBox="0 0 48 48" width="34" height="34"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span>
           <span class="quick-label">الأطفال</span>
         </button>
@@ -1005,7 +1056,7 @@ function openModal(type, title) {
           <div class="cat-text"><div class="cat-title">معاني الكلمات</div><div class="cat-sub">تفسير المفردات · 4,900 سؤال</div></div>
           <span class="cat-arrow">‹</span>
         </div>
-        <div class="cat-card" style="--c:#fb7185" onclick="showKidsOptions('solo')">
+        <div class="cat-card" style="--c:#fb7185" onclick="location.href='kids.html'">
           <span class="cat-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span>
           <div class="cat-text"><div class="cat-title">مسابقة الأطفال</div><div class="cat-sub">مستويان · حساب وإسلاميات</div></div>
           <span class="cat-arrow">‹</span>
@@ -1051,7 +1102,11 @@ function openModal(type, title) {
     <!-- Admin access: the owner's Google account opens the panel with one tap; anyone else long-presses the gear
          and is asked to sign in with the admin Google account (no shared password any more). -->
     <script type="module">
-        import { isAdmin, signInGoogle, db, ref, onValue } from './firebase-init.js';
+        import { isAdmin, signInGoogle, db, ref, onValue, currentUser } from './firebase-init.js';
+        // Greeting with the Google name and photo once signed in
+        const greet = () => { const u = currentUser(); const g = u && !u.isAnonymous; window.greetHome(g ? (u.displayName || u.email || '') : '', g && u.photoURL ? u.photoURL : ''); };
+        greet();
+        window.addEventListener('auth-changed', greet);
         // Owner's announcement banner (config/announcement), dismissible until the text changes
         onValue(ref(db, 'config/announcement'), snap => {
             const a = snap.val();
@@ -1133,16 +1188,15 @@ function openModal(type, title) {
             navigator.serviceWorker.register('./sw.js').then(reg => {
                 console.log('SW registered!', reg);
             }).catch(err => console.log('SW registration failed', err));
+            // A new version took over in the background: badge next to the player's name until they update
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 if (!hadController) return;
-                let toast = document.getElementById('update-toast');
-                if (!toast) {
-                    toast = document.createElement('div');
-                    toast.id = 'update-toast';
-                    toast.innerHTML = '<span>✨ يوجد تحديث جديد للتطبيق</span><button onclick="location.reload()">تحديث الآن</button>';
-                    document.body.appendChild(toast);
-                }
-                toast.style.display = 'flex';
+                window.markUpdateReady();
+            });
+            // Look for updates while the app stays open (installed apps rarely reload)
+            navigator.serviceWorker.ready.then(reg => {
+                setInterval(() => reg.update().catch(() => {}), 20 * 60 * 1000);
+                document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
             });
         });
     }
@@ -1292,7 +1346,7 @@ function startSingleQuiz(category, mode, juz) {
         } catch (e) {}
         const params = new URLSearchParams(location.search);
         if (params.get('open') === 'multi') setTimeout(() => openMultiplayerModal(), 300);
-        if (params.get('open') === 'kids') setTimeout(() => { openSoloMixModal(); showKidsOptions('solo'); }, 300);
+        if (params.get('open') === 'kids') location.replace('kids.html');
     })();
 
     function startJuzQuiz(mode) {
