@@ -37,17 +37,42 @@
         origSpeak = KidsTheme.speak;
         KidsTheme.speak = function (t, c) { if (busy) { pending = [t, c]; return; } origSpeak.call(KidsTheme, t, c); };
     }
-    function speak(text) {
-        if (!('speechSynthesis' in window) || !soundOn()) return;
+    // Voices load lazily on some phones: warm the list up so the first message picks the right one
+    if ('speechSynthesis' in window) { try { speechSynthesis.getVoices(); speechSynthesis.addEventListener('voiceschanged', () => speechSynthesis.getVoices()); } catch (e) {} }
+    const voiceFor = re => { try { return speechSynthesis.getVoices().find(v => re.test(v.lang)); } catch (e) { return null; } };
+    const arabicVoice = () => voiceFor(/^ar[-_]EG/i) || voiceFor(/^ar/i);
+    // No Arabic voice on this device: cheer in English instead ("Wow!" for a win, "Oh no!" for a loss)
+    const ENGLISH = {
+        good:   ['Wow! Great job!', 'Awesome!', 'Excellent! Well done!', 'Yes! Amazing!', 'Wow! Super!'],
+        bad:    ['Oh no!', 'Oops! Try again!', 'Almost! Next time!', 'Oh no, not this one!'],
+        pound:  ['Wow! A whole pound! Amazing!', 'Wow! One pound! You are a star!'],
+        cheque: ['Wow! Cha-ching! Enjoy your money!'],
+        info:   ['Here is your balance!']
+    };
+    function playClip(file) {
+        if (!soundOn()) return;
+        try { const a = new Audio(file); a.volume = 1; a.play().catch(() => {}); } catch (e) {}
+    }
+    function speak(text, kind) {
+        if (!soundOn()) return;
+        kind = kind || 'good';
+        if (!('speechSynthesis' in window)) { if (kind === 'bad') playClip('assets/lose.mp3'); return; }
         patchSpeak();
         try {
             speechSynthesis.cancel();
+            const arV = arabicVoice();
+            const u = new SpeechSynthesisUtterance();
+            if (arV) {
+                u.text = KidsTheme && KidsTheme.arabicizeForSpeech ? KidsTheme.arabicizeForSpeech(text).replace(/ كم؟/g, '؟') : text;
+                u.lang = arV.lang; u.voice = arV; u.rate = 0.92; u.pitch = 1.1;
+            } else {
+                const list = ENGLISH[kind] || ENGLISH.good;
+                u.text = list[Math.floor(Math.random() * list.length)];
+                const en = voiceFor(/^en[-_]US/i) || voiceFor(/^en/i);
+                u.lang = en ? en.lang : 'en-US'; if (en) u.voice = en; u.rate = 1; u.pitch = kind === 'bad' ? 0.9 : 1.25;
+                if (kind === 'bad') playClip('assets/lose.mp3');
+            }
             busy = true;
-            const u = new SpeechSynthesisUtterance(KidsTheme && KidsTheme.arabicizeForSpeech ? KidsTheme.arabicizeForSpeech(text).replace(/ كم؟/g, '؟') : text);
-            u.lang = 'ar-EG'; u.rate = 0.92; u.pitch = 1.1;
-            const voices = speechSynthesis.getVoices();
-            const v = voices.find(x => /^ar[-_]EG/i.test(x.lang)) || voices.find(x => /^ar/i.test(x.lang));
-            if (v) u.voice = v;
             const release = () => { busy = false; if (pending && origSpeak) { const p = pending; pending = null; origSpeak.call(KidsTheme, p[0], p[1]); } };
             u.onend = release; u.onerror = release;
             setTimeout(() => { if (busy) release(); }, 9000); // never block the question reading for good
@@ -102,7 +127,7 @@
             closeOverlay();
             render(false);
             if (window.KidsTheme) { KidsTheme.play('tada'); KidsTheme.confetti(4000); KidsTheme.cheer('🧾 مبروك، اتصرف الشيك!', '#ffd166'); }
-            speak('مبروك يا بطل ' + name + '! صرفت شيك بمبلغ ' + words(bal) + '. يلا نبدأ رصيد جديد');
+            speak('مبروك يا بطل ' + name + '! صرفت شيك بمبلغ ' + words(bal) + '. يلا نبدأ رصيد جديد', 'cheque');
             if (window.UI) UI.toast('رصيد الحصالة رجع صفر، ابدأ تجميع من جديد 🐷', { type: 'ok' });
         };
     }
@@ -183,10 +208,10 @@
             const newHigh = bal > best;
             if (newHigh) set(K.best, bal);
             const fullPound = newHigh && bal % 100 === 0;
-            setTimeout(() => speak(fullPound ? 'جنيه كامل ' + who + '! برافو عليك، معاك دلوقتي ' + words(bal) : 'مبروك ' + who + '! معاك دلوقتي ' + words(bal)), 1000);
+            setTimeout(() => speak(fullPound ? 'جنيه كامل ' + who + '! برافو عليك، معاك دلوقتي ' + words(bal) : 'مبروك ' + who + '! معاك دلوقتي ' + words(bal), fullPound ? 'pound' : 'good'), 1000);
             if (fullPound) bigCelebration(bal); else if (newHigh) smallCelebration(bal);
         } else {
-            setTimeout(() => speak('يا خسارة! رصيدك نقص عشرة قروش. معاك دلوقتي ' + words(bal)), 900);
+            setTimeout(() => speak('يا خسارة! رصيدك نقص عشرة قروش. معاك دلوقتي ' + words(bal), 'bad'), 900);
         }
     }
 
@@ -213,7 +238,7 @@
             if (h1) h1.after(box); else if (container) container.prepend(box);
             box.querySelector('.cheque-btn').onclick = () => { showCheque(); const w = () => { const b = box.querySelector('.t b'); if (b) b.textContent = words(Piggy.balance()); }; const ov = document.getElementById('piggy-overlay'); if (ov) ov.addEventListener('click', () => setTimeout(w, 50)); };
             box.querySelector('.again').onclick = () => Piggy.start();
-            setTimeout(() => speak('رصيد حصالتك دلوقتي ' + words(Piggy.balance())), 1800);
+            setTimeout(() => speak('رصيد حصالتك دلوقتي ' + words(Piggy.balance()), 'info'), 1800);
         };
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
     }
