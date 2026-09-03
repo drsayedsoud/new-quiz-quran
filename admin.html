@@ -182,7 +182,7 @@
 </div>
 
 <script type="module">
-  import { db, ref, get, set, onValue, remove, query, orderByChild, limitToLast, isAdmin, currentUser, signInGoogle } from './firebase-init.js';
+  import { db, ref, get, set, update, onValue, remove, query, orderByChild, limitToLast, isAdmin, currentUser, signInGoogle } from './firebase-init.js';
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const LABELS = { mixed: 'القرآن', seerah: 'السيرة', fiqh: 'الفقه', general: 'معلومات', meanings: 'معاني', kids_1: 'أطفال 1', kids_2: 'أطفال 2', kids_3: 'أطفال 3', kids_piggy: 'حصالة الأطفال', daily: 'تحدي اليوم', complete: 'أكمل الآية', review: 'مراجعة', favorites: 'المفضلة' };
@@ -242,7 +242,17 @@
       if (showLocal) { localStorage.removeItem('errorLog'); renderLocal(); return; }
       const ok = await UI.dialog({ emoji: '🧹', title: 'مسح سجل الأخطاء؟', text: 'سيُحذف كل ما وصل من كل الأجهزة.', primary: 'مسح', secondary: 'إلغاء', danger: true });
       if (!ok) return;
-      try { await remove(ref(db, 'errors')); UI.toast('تم مسح السجل', { type: 'ok' }); } catch (e) { UI.fail(e, 'تعذر المسح'); }
+      // Whole node first; if the published rules only allow row writes, fall back to deleting the loaded rows one by one
+      const rows = remoteRows.map(([id]) => id);
+      try { await remove(ref(db, 'errors')); UI.toast('تم مسح السجل', { type: 'ok' }); return; } catch (e) { console.warn('errors node delete failed, trying rows', e); }
+      try {
+        const updates = {}; rows.forEach(id => { updates[id] = null; });
+        if (rows.length) await update(ref(db, 'errors'), updates);
+        UI.toast('تم مسح ' + rows.length + ' سجلاً', { type: 'ok' });
+      } catch (e) {
+        UI.fail(e, 'تعذر المسح');
+        if (/permission/i.test(String(e.code || e.message))) UI.toast('القواعد المنشورة في Firebase لا تسمح للمدير بالحذف: انسخ database.rules.json من المشروع وانشره من لوحة Firebase', { type: 'warn', ms: 9000 });
+      }
     };
 
     // announcement shown on everyone's home page

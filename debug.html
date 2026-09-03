@@ -7,11 +7,12 @@
   <style>
     body { margin: 0; padding: 16px; background: #1a1a2e; color: #e6e6f0; font-family: 'Cairo', sans-serif, system-ui; }
     h1 { font-size: 1.2em; }
-    pre { background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; white-space: pre-wrap; word-break: break-word; font-size: 0.85em; line-height: 1.7; direction: ltr; text-align: left; }
+    pre { background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; white-space: pre-wrap; word-break: break-word; font-size: 0.85em; line-height: 1.8; direction: rtl; text-align: right; unicode-bidi: plaintext; font-family: 'Cairo', sans-serif, system-ui; }
+    pre span { display: block; unicode-bidi: plaintext; }
     button { background: #10b981; color: #fff; border: none; border-radius: 999px; padding: 10px 16px; font-family: inherit; font-weight: 800; cursor: pointer; margin: 4px; }
     button.ghost { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
     button.red { background: #ef4444; }
-    .ok { color: #86efac; } .bad { color: #fca5a5; } .warn { color: #fde68a; }
+    .ok { color: #86efac; } .bad { color: #fca5a5; } .warn { color: #fde68a; } .head { color: #93c5fd; font-weight: 800; margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -30,70 +31,85 @@
   const lines = [];
   const out = document.getElementById('out');
   const t0 = performance.now();
-  const log = (s, cls) => { lines.push(s); out.innerHTML = lines.map(l => { const c = /✅/.test(l) ? 'ok' : /❌/.test(l) ? 'bad' : /⚠️/.test(l) ? 'warn' : ''; return '<span class="' + c + '">' + l.replace(/[&<>]/g, x => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[x])) + '</span>'; }).join('\n'); };
-  const ms = () => Math.round(performance.now() - t0) + 'ms';
+  const esc = s => String(s).replace(/[&<>]/g, x => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[x]));
+  const log = s => { lines.push(s); out.innerHTML = lines.map(l => { const c = /^---/.test(l) ? 'head' : /✅/.test(l) ? 'ok' : /❌/.test(l) ? 'bad' : /⚠️/.test(l) ? 'warn' : ''; return '<span class="' + c + '">' + esc(l) + '</span>'; }).join(''); };
+  const since = a => Math.round(performance.now() - (a === undefined ? t0 : a)) + ' مللي ثانية';
+  const yesNo = v => v ? 'نعم' : 'لا';
+  // Human names for the browser and system (the raw user agent stays at the end for the developer)
+  const device = () => { const ua = navigator.userAgent; const os = /Android/.test(ua) ? 'أندرويد' : /iPhone|iPad/.test(ua) ? 'آيفون/آيباد' : /Windows/.test(ua) ? 'ويندوز' : /Mac/.test(ua) ? 'ماك' : 'غير معروف'; const br = /Chrome\/(\d+)/.exec(ua) ? 'كروم ' + /Chrome\/(\d+)/.exec(ua)[1] : /Safari/.test(ua) ? 'سفاري' : /Firefox\/(\d+)/.exec(ua) ? 'فايرفوكس ' + /Firefox\/(\d+)/.exec(ua)[1] : 'متصفح غير معروف'; const inApp = /FBAN|FBAV|Instagram|WhatsApp|Line\//.test(ua) ? ' (داخل تطبيق آخر)' : ''; return os + ' · ' + br + inApp; };
 
   (async () => {
-    log('time: ' + new Date().toISOString());
-    log('url: ' + location.href);
-    log('ua: ' + navigator.userAgent);
-    log('standalone: ' + (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true));
-    log('online flag: ' + navigator.onLine + ' | cookies: ' + navigator.cookieEnabled + ' | lang: ' + navigator.language);
-    try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); log('localStorage ✅'); } catch (e) { log('localStorage ❌ ' + e.message); }
-    try { const r = await fetch('sw.js', { cache: 'no-store' }); const v = (await r.text()).match(/quran-quiz-v\d+/); log('server version: ' + (v ? v[0] : '?') + ' ✅ ' + ms()); } catch (e) { log('server version ❌ ' + e.message); }
+    log('--- الجهاز ---');
+    log('الوقت: ' + new Date().toLocaleString('ar-EG'));
+    log('الصفحة: ' + location.href);
+    log('الجهاز والمتصفح: ' + device());
+    log('مثبّت كتطبيق: ' + yesNo(window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true));
+    log('المتصفح يقول إنه متصل: ' + yesNo(navigator.onLine) + ' · الكوكيز: ' + yesNo(navigator.cookieEnabled) + ' · اللغة: ' + navigator.language);
+    try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); log('✅ التخزين المحلي يعمل'); } catch (e) { log('❌ التخزين المحلي لا يعمل: ' + e.message); }
+    try { const ok = 'indexedDB' in window; log((ok ? '✅' : '❌') + ' قاعدة بيانات المتصفح (IndexedDB) ' + (ok ? 'متاحة' : 'غير متاحة')); } catch (e) { log('❌ قاعدة بيانات المتصفح محجوبة: ' + e.message); }
+
+    log('--- نسخة التطبيق ---');
+    try { const r = await fetch('sw.js', { cache: 'no-store' }); const v = (await r.text()).match(/quran-quiz-v(\d+)/); log('✅ نسخة الخادم: ' + (v ? v[1] : '؟') + ' · ' + since()); } catch (e) { log('❌ تعذر قراءة نسخة الخادم: ' + e.message); }
     try {
       const regs = await navigator.serviceWorker.getRegistrations();
-      log('service workers: ' + regs.length + (regs[0] && regs[0].active ? ' (active)' : ''));
-      const keys = await caches.keys(); log('caches: ' + keys.join(', '));
-    } catch (e) { log('sw ❌ ' + e.message); }
-    // top-level await support (needed by firebase-init.js)
-    try { new Function('return (async () => { await 0; })()'); const s = document.createElement('script'); s.type = 'module'; s.textContent = 'await 0; window.__tla = true;'; document.head.appendChild(s); await new Promise(r => setTimeout(r, 300)); log('top-level await: ' + (window.__tla ? '✅' : '❌ غير مدعوم — المتصفح قديم')); } catch (e) { log('top-level await ❌ ' + e.message); }
-    // Firebase SDK reachability
+      log('عامل الخدمة (التخزين للعمل بدون إنترنت): ' + (regs.length ? (regs[0].active ? 'مفعّل' : 'مسجّل وغير نشط') : 'غير مسجّل'));
+      const keys = await caches.keys(); log('النسخ المخزّنة على الجهاز: ' + (keys.map(k => k.replace('quran-quiz-v', 'نسخة ')).join('، ') || 'لا يوجد'));
+    } catch (e) { log('❌ عامل الخدمة: ' + e.message); }
+    try { const s = document.createElement('script'); s.type = 'module'; s.textContent = 'await 0; window.__tla = true;'; document.head.appendChild(s); await new Promise(r => setTimeout(r, 300)); log(window.__tla ? '✅ المتصفح حديث ويدعم الوحدات البرمجية' : '❌ المتصفح قديم ولا يدعم الوحدات البرمجية الحديثة — حدّث المتصفح'); } catch (e) { log('❌ فحص المتصفح: ' + e.message); }
+
+    log('--- الوصول إلى خوادم Firebase ---');
+    const NAMES = { 'firebase-app.js': 'ملف Firebase الأساسي', 'firebase-auth.js': 'ملف تسجيل الدخول', 'firebase-database.js': 'ملف قاعدة البيانات' };
     for (const u of ['https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js', 'https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js', 'https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js']) {
-      const a = performance.now();
-      try { const r = await fetch(u, { mode: 'cors' }); log((r.ok ? '✅ ' : '❌ ') + u.split('/').pop() + ' ' + r.status + ' ' + Math.round(performance.now() - a) + 'ms'); } catch (e) { log('❌ ' + u.split('/').pop() + ' ' + e.message); }
+      const a = performance.now(); const name = NAMES[u.split('/').pop()];
+      try { const r = await fetch(u, { mode: 'cors' }); log((r.ok ? '✅ ' : '❌ ') + name + ': ' + (r.ok ? 'وصل' : 'رمز ' + r.status) + ' · ' + since(a)); } catch (e) { log('❌ ' + name + ': ' + e.message); }
     }
-    // Auth handler through our domain
-    try { const r = await fetch('/__/auth/iframe.js', { cache: 'no-store' }); log('auth proxy /__/auth/: ' + r.status + (r.ok ? ' ✅' : ' ❌')); } catch (e) { log('auth proxy ❌ ' + e.message); }
-    // Realtime database reachability
-    try { const a = performance.now(); const r = await fetch('https://newclinic1-f25d4-default-rtdb.firebaseio.com/.json?shallow=true'); log('database reachable: ' + r.status + ' ' + Math.round(performance.now() - a) + 'ms ' + (r.ok ? '✅' : '❌')); } catch (e) { log('database ❌ ' + e.message); }
-    // The real thing: load firebase-init.js and time the sign-in
-    log('database transport: ' + (localStorage.getItem('rtdb_transport') === 'lp' ? 'long-polling (الطريقة البديلة)' : 'websocket (الافتراضي)'));
-    log('loading firebase-init.js ...');
+    try { const a = performance.now(); const r = await fetch('https://newclinic1-f25d4-default-rtdb.firebaseio.com/rooms.json?shallow=true'); log((r.ok ? '✅' : '❌') + ' خادم قاعدة البيانات: ' + (r.ok ? 'يستجيب' : 'رمز ' + r.status) + ' · ' + since(a)); } catch (e) { log('❌ خادم قاعدة البيانات لا يستجيب: ' + e.message); }
+    log('طريقة الاتصال بقاعدة البيانات: ' + (localStorage.getItem('rtdb_transport') === 'lp' ? 'الطريقة البديلة (long polling)' : 'الطريقة الافتراضية (websocket)'));
+
+    log('--- تسجيل الدخول والغرف ---');
+    log('جاري تحميل وحدة تسجيل الدخول...');
     const a = performance.now();
-    window.addEventListener('error', e => log('❌ window error: ' + e.message));
-    window.addEventListener('unhandledrejection', e => log('❌ promise error: ' + (e.reason && (e.reason.code || e.reason.message || e.reason))));
+    window.addEventListener('error', e => log('❌ خطأ في الصفحة: ' + e.message));
+    window.addEventListener('unhandledrejection', e => log('❌ خطأ غير معالج: ' + (e.reason && (e.reason.code || e.reason.message || e.reason))));
     try {
-      const timer = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 40s')), 40000));
+      const timer = new Promise((_, rej) => setTimeout(() => rej(new Error('انتهت المهلة (40 ثانية)')), 40000));
       const m = await Promise.race([import('./firebase-init.js'), timer]);
-      log('firebase-init ✅ ' + Math.round(performance.now() - a) + 'ms | uid: ' + (m.authUid || 'null') + ' | user: ' + (m.currentUser() ? (m.currentUser().isAnonymous ? 'anonymous' : m.currentUser().email) : 'none') + ' | admin: ' + m.isAdmin());
-      if (window.__authError) log('⚠️ last auth error: ' + (window.__authError.code || window.__authError.message));
-      const mp = await Promise.race([import('./multiplayer.js'), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 15s')), 15000))]);
-      log('multiplayer.js ✅ create=' + typeof window.createMultiplayerRoomWithParams + ' join=' + typeof window.joinMultiplayerRoom);
+      const u = m.currentUser();
+      log('✅ تسجيل الدخول اكتمل في ' + since(a) + (window.__authRestoreMs ? ' (استعادة الجلسة: ' + window.__authRestoreMs + ' مللي ثانية)' : ''));
+      log('الحساب: ' + (u ? (u.isAnonymous ? 'دخول سريع (بدون حساب)' : 'حساب Google: ' + (u.email || '')) : 'لا يوجد') + ' · معرّف اللاعب: ' + (m.authUid ? m.authUid.slice(0, 8) + '…' : 'لا يوجد') + ' · مدير: ' + yesNo(m.isAdmin()));
+      if (window.__authError) log('⚠️ آخر خطأ في تسجيل الدخول: ' + (window.__authError.code || window.__authError.message));
+      await Promise.race([import('./multiplayer.js'), new Promise((_, rej) => setTimeout(() => rej(new Error('انتهت مهلة تحميل وحدة الغرف (15 ثانية)')), 15000))]);
+      const ready = typeof window.createMultiplayerRoomWithParams === 'function';
+      log((ready ? '✅' : '❌') + ' وحدة الغرف ' + (ready ? 'جاهزة' : 'غير جاهزة'));
       // Real database round-trips, exactly what creating a room does (with a hang detector)
-      const step = (label, p, ms) => { const a = performance.now(); return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('HANG >' + ms / 1000 + 's — الاتصال المباشر بقاعدة البيانات محجوب غالباً')), ms))])
-        .then(v => { log('✅ ' + label + ' ' + Math.round(performance.now() - a) + 'ms'); return v; })
-        .catch(e => { log('❌ ' + label + ' ' + Math.round(performance.now() - a) + 'ms: ' + (e.code || '') + ' ' + (e.message || e)); throw e; }); };
+      const step = (label, p, ms) => { const a = performance.now(); return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('تعليق أكثر من ' + ms / 1000 + ' ثانية — الاتصال المباشر بقاعدة البيانات محجوب غالباً')), ms))])
+        .then(v => { log('✅ ' + label + ' · ' + since(a)); return v; })
+        .catch(e => { log('❌ ' + label + ' · ' + since(a) + ': ' + (e.code || '') + ' ' + (e.message || e)); throw e; }); };
       try {
-        await step('read rooms/00000', m.get(m.ref(m.db, 'rooms/00000')), 15000);
+        await step('قراءة من قاعدة البيانات', m.get(m.ref(m.db, 'rooms/00000')), 15000);
         const code = '9' + String(Math.floor(1000 + Math.random() * 9000));
         const room = { code, hostId: m.authUid || 'none', status: 'waiting', createdAt: Date.now(), round: 1, currentQuestionIndex: 0, phase: 'question', settings: { category: 'kids_2', mode: 'questions', val: 10 } };
-        await step('write rooms/' + code, m.set(m.ref(m.db, 'rooms/' + code), room), 15000);
-        await step('delete rooms/' + code, m.remove(m.ref(m.db, 'rooms/' + code)), 15000);
-        log('database write ✅ إنشاء الغرف يعمل من هذا الجهاز');
-      } catch (e) { log('⚠️ database test failed — see above'); }
+        await step('إنشاء غرفة تجريبية ' + code, m.set(m.ref(m.db, 'rooms/' + code), room), 15000);
+        await step('حذف الغرفة التجريبية', m.remove(m.ref(m.db, 'rooms/' + code)), 15000);
+        log('✅ إنشاء الغرف يعمل من هذا الجهاز');
+      } catch (e) { log('⚠️ فشل اختبار قاعدة البيانات — انظر السطر أعلاه'); }
       try {
-        const info = await step('connection state', new Promise(res => { m.onValue(m.ref(m.db, '.info/connected'), s => res(s.val()), { onlyOnce: true }); }), 10000);
-        log('realtime connected: ' + info);
+        const info = await step('حالة الاتصال المباشر', new Promise(res => { m.onValue(m.ref(m.db, '.info/connected'), s => res(s.val()), { onlyOnce: true }); }), 10000);
+        log('الاتصال المباشر بقاعدة البيانات: ' + (info ? 'متصل ✅' : 'غير متصل ⚠️'));
       } catch (e) {}
-    } catch (e) { log('❌ firebase-init/multiplayer: ' + (e.code || e.message)); }
+    } catch (e) { log('❌ تسجيل الدخول أو وحدة الغرف: ' + (e.code || e.message)); }
+
     // What this device recorded lately (errors + breadcrumbs of the last room attempts)
     try {
       const l = JSON.parse(localStorage.getItem('errorLog') || '[]').slice(0, 25);
-      log('--- device log (' + l.length + ') ---');
-      l.forEach(e => log(new Date(e.at).toLocaleTimeString('en-GB') + ' [' + e.kind + '] ' + e.page + ' : ' + e.msg));
+      const KIND = { trace: 'خطوة', error: 'خطأ', test: 'اختبار', 'session-lost': 'ضاعت الجلسة' };
+      log('--- سجل هذا الجهاز (' + l.length + ') ---');
+      if (!l.length) log('لا يوجد شيء مسجّل');
+      l.forEach(e => log(new Date(e.at).toLocaleTimeString('ar-EG') + ' [' + (KIND[e.kind] || e.kind) + '] ' + (e.page || '').replace(/^\//, '') + ' : ' + e.msg));
     } catch (e) {}
-    log('done ' + ms());
+    log('--- للمطوّر ---');
+    log('المتصفح: ' + navigator.userAgent);
+    log('انتهى الفحص في ' + since());
   })();
 
   document.getElementById('copy').onclick = async () => {

@@ -2,7 +2,7 @@
 import { db, ref, set, update, remove, onValue, onDisconnect } from './firebase-init.js';
 import {
     AVATARS, getLocalUserId, saveRoomToLocal, clearMpState, isRoomExpired,
-    categoryLabel, categoryIcon, modeLabel, modeDescription, escapeHtml, lobbyUrl, whatsappInviteUrl, questionHash
+    categoryLabel, categoryIcon, modeLabel, modeDescription, escapeHtml, lobbyUrl, whatsappInviteUrl
 } from './mp-common.js';
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -282,72 +282,6 @@ async function runCountdownAndGo() {
     }, 1000);
 }
 
-// ---------- Teacher's hand-picked question list ----------
-const CATEGORY_FILE = { mixed: 'quiz', complete: 'quiz', meanings: 'words', seerah: 'sera', fiqh: 'sona', general: 'general', kids_1: 'kids_1', kids_2: 'kids_2', kids_3: 'kids_3', kids_piggy: 'kids_2' };
-let bank = null;
-let picked = [];
-async function loadBank() {
-    const cat = String(room.settings.category || 'mixed').split('_juz_')[0];
-    const file = CATEGORY_FILE[cat] || 'quiz';
-    const r = await fetch('./data/' + file + '.zip');
-    if (!r.ok) throw new Error('bank');
-    const zip = await JSZip.loadAsync(await r.arrayBuffer());
-    let items = JSON.parse(await zip.file(file + '.json').async('string'));
-    const juz = (room.settings.category || '').split('_juz_')[1];
-    if (juz) items = items.filter(q => String(q.juz_number).replace('.0', '') === juz);
-    return items.filter(q => q && q.question && q.correct_answer);
-}
-function renderPickList() {
-    const term = $('pick-search').value.trim().toLowerCase();
-    const set = new Set(picked);
-    const rows = [];
-    // picked first, then matches
-    const pickedItems = bank.filter(q => set.has(questionHash(q.question)));
-    const others = bank.filter(q => !set.has(questionHash(q.question)) && (!term || String(q.question).toLowerCase().includes(term))).slice(0, 40);
-    [...pickedItems, ...others].forEach(q => {
-        const h = questionHash(q.question);
-        const on = set.has(h);
-        rows.push(`<label class="pick-row${on ? ' on' : ''}"><input type="checkbox" data-h="${h}" ${on ? 'checked' : ''}><span>${escapeHtml(String(q.question).replace(/^\s*Q\s*\(\s*\d+\s*\)\s*[:：\-]?\s*/i, ''))}<small>✅ ${escapeHtml(q.correct_answer)}</small></span></label>`);
-    });
-    $('pick-list').innerHTML = rows.join('') || '<div class="hint">لا نتائج</div>';
-    $('pick-status').textContent = term ? `${others.length} نتيجة معروضة من البحث · المختار ${picked.length}` : `اكتب كلمة للبحث · ${bank.length} سؤالاً في القسم · المختار ${picked.length} (حتى 40)`;
-    $('pick-count').textContent = picked.length;
-    $('pick-list').querySelectorAll('input[type=checkbox]').forEach(cb => cb.onchange = () => {
-        const h = cb.dataset.h;
-        if (cb.checked) { if (picked.length >= 40) { cb.checked = false; toast('الحد 40 سؤالاً'); return; } picked.push(h); }
-        else picked = picked.filter(x => x !== h);
-        renderPickList();
-    });
-}
-async function openPicker() {
-    $('pick-panel').style.display = 'block';
-    picked = (room.settings.pick || '').split(',').filter(Boolean);
-    if (!bank) {
-        try { bank = await loadBank(); } catch (e) { $('pick-status').textContent = 'تعذر تحميل أسئلة القسم'; return; }
-    }
-    renderPickList();
-}
-$('pick-btn').onclick = openPicker;
-$('pick-close').onclick = () => { $('pick-panel').style.display = 'none'; };
-$('pick-search').addEventListener('input', () => { if (bank) renderPickList(); });
-$('pick-clear').onclick = () => { picked = []; renderPickList(); };
-$('pick-save').onclick = async () => {
-    try {
-        const updates = { 'settings/pick': picked.join(',') };
-        if (picked.length) { updates['settings/val'] = picked.length; updates['settings/mode'] = 'questions'; }
-        await update(ref(db, `rooms/${roomCode}`), updates);
-        $('pick-panel').style.display = 'none';
-        toast(picked.length ? `تم حفظ ${picked.length} سؤالاً للجلسة` : 'أُلغيت القائمة المخصصة');
-    } catch (e) { console.error(e); toast('تعذر الحفظ: تحتاج قواعد قاعدة البيانات إلى حقل pick'); }
-};
-function renderPickInfo() {
-    const n = (room.settings.pick || '').split(',').filter(Boolean).length;
-    const el = $('pick-info');
-    if (!el) return;
-    el.style.display = n ? 'block' : 'none';
-    el.textContent = n ? `🧾 قائمة مخصصة: ${n} سؤالاً بترتيبك` : '';
-}
-
 // ---------- Wire up ----------
 $('display-room-code').textContent = roomCode;
 $('display-room-code').onclick = () => navigator.clipboard?.writeText(roomCode).then(() => toast('تم نسخ الكود ✅'));
@@ -414,5 +348,4 @@ unsubscribeRoom = onValue(ref(db, `rooms/${roomCode}`), (snapshot) => {
 
     renderControls();
     renderPlayers();
-    renderPickInfo();
 });
