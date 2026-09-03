@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تشخيص - مسابقات إسلامية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin: 0; padding: 16px; background: #1a1a2e; color: #e6e6f0; font-family: 'Cairo', sans-serif, system-ui; }
+    h1 { font-size: 1.2em; }
+    pre { background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; white-space: pre-wrap; word-break: break-word; font-size: 0.85em; line-height: 1.7; direction: ltr; text-align: left; }
+    button { background: #10b981; color: #fff; border: none; border-radius: 999px; padding: 10px 16px; font-family: inherit; font-weight: 800; cursor: pointer; margin: 4px; }
+    button.ghost { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+    button.red { background: #ef4444; }
+    .ok { color: #86efac; } .bad { color: #fca5a5; } .warn { color: #fde68a; }
+  </style>
+</head>
+<body>
+  <h1>🩺 تشخيص التطبيق</h1>
+  <p>انتظر ثوانٍ حتى تنتهي الفحوصات، ثم اضغط «نسخ التقرير» وابعته للمطوّر.</p>
+  <div>
+    <button id="copy">📋 نسخ التقرير</button>
+    <button class="ghost" onclick="location.reload()">🔄 إعادة الفحص</button>
+    <button class="red" id="reset">🧹 إعادة ضبط التطبيق (مع الاحتفاظ بتقدمك)</button>
+    <button class="ghost" onclick="location.href='index.html'">🏠 الرئيسية</button>
+  </div>
+  <pre id="out">جاري الفحص...</pre>
+
+<script>
+  const lines = [];
+  const out = document.getElementById('out');
+  const t0 = performance.now();
+  const log = (s, cls) => { lines.push(s); out.innerHTML = lines.map(l => { const c = /✅/.test(l) ? 'ok' : /❌/.test(l) ? 'bad' : /⚠️/.test(l) ? 'warn' : ''; return '<span class="' + c + '">' + l.replace(/[&<>]/g, x => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[x])) + '</span>'; }).join('\n'); };
+  const ms = () => Math.round(performance.now() - t0) + 'ms';
+
+  (async () => {
+    log('time: ' + new Date().toISOString());
+    log('url: ' + location.href);
+    log('ua: ' + navigator.userAgent);
+    log('standalone: ' + (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true));
+    log('online flag: ' + navigator.onLine + ' | cookies: ' + navigator.cookieEnabled + ' | lang: ' + navigator.language);
+    try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); log('localStorage ✅'); } catch (e) { log('localStorage ❌ ' + e.message); }
+    try { const r = await fetch('sw.js', { cache: 'no-store' }); const v = (await r.text()).match(/quran-quiz-v\d+/); log('server version: ' + (v ? v[0] : '?') + ' ✅ ' + ms()); } catch (e) { log('server version ❌ ' + e.message); }
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      log('service workers: ' + regs.length + (regs[0] && regs[0].active ? ' (active)' : ''));
+      const keys = await caches.keys(); log('caches: ' + keys.join(', '));
+    } catch (e) { log('sw ❌ ' + e.message); }
+    // top-level await support (needed by firebase-init.js)
+    try { new Function('return (async () => { await 0; })()'); const s = document.createElement('script'); s.type = 'module'; s.textContent = 'await 0; window.__tla = true;'; document.head.appendChild(s); await new Promise(r => setTimeout(r, 300)); log('top-level await: ' + (window.__tla ? '✅' : '❌ غير مدعوم — المتصفح قديم')); } catch (e) { log('top-level await ❌ ' + e.message); }
+    // Firebase SDK reachability
+    for (const u of ['https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js', 'https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js', 'https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js']) {
+      const a = performance.now();
+      try { const r = await fetch(u, { mode: 'cors' }); log((r.ok ? '✅ ' : '❌ ') + u.split('/').pop() + ' ' + r.status + ' ' + Math.round(performance.now() - a) + 'ms'); } catch (e) { log('❌ ' + u.split('/').pop() + ' ' + e.message); }
+    }
+    // Auth handler through our domain
+    try { const r = await fetch('/__/auth/iframe.js', { cache: 'no-store' }); log('auth proxy /__/auth/: ' + r.status + (r.ok ? ' ✅' : ' ❌')); } catch (e) { log('auth proxy ❌ ' + e.message); }
+    // Realtime database reachability
+    try { const a = performance.now(); const r = await fetch('https://newclinic1-f25d4-default-rtdb.firebaseio.com/.json?shallow=true'); log('database reachable: ' + r.status + ' ' + Math.round(performance.now() - a) + 'ms ' + (r.ok ? '✅' : '❌')); } catch (e) { log('database ❌ ' + e.message); }
+    // The real thing: load firebase-init.js and time the sign-in
+    log('loading firebase-init.js ...');
+    const a = performance.now();
+    window.addEventListener('error', e => log('❌ window error: ' + e.message));
+    window.addEventListener('unhandledrejection', e => log('❌ promise error: ' + (e.reason && (e.reason.code || e.reason.message || e.reason))));
+    try {
+      const timer = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 40s')), 40000));
+      const m = await Promise.race([import('./firebase-init.js'), timer]);
+      log('firebase-init ✅ ' + Math.round(performance.now() - a) + 'ms | uid: ' + (m.authUid || 'null') + ' | user: ' + (m.currentUser() ? (m.currentUser().isAnonymous ? 'anonymous' : m.currentUser().email) : 'none') + ' | admin: ' + m.isAdmin());
+      if (window.__authError) log('⚠️ last auth error: ' + (window.__authError.code || window.__authError.message));
+      const mp = await Promise.race([import('./multiplayer.js'), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 15s')), 15000))]);
+      log('multiplayer.js ✅ create=' + typeof window.createMultiplayerRoomWithParams + ' join=' + typeof window.joinMultiplayerRoom);
+    } catch (e) { log('❌ firebase-init/multiplayer: ' + (e.code || e.message)); }
+    log('done ' + ms());
+  })();
+
+  document.getElementById('copy').onclick = async () => {
+    const text = lines.join('\n');
+    try { await navigator.clipboard.writeText(text); alert('تم نسخ التقرير، ألصقه في المحادثة'); }
+    catch (e) { prompt('انسخ النص:', text); }
+  };
+  document.getElementById('reset').onclick = async () => {
+    try { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r => r.unregister())); const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k))); } catch (e) {}
+    ['auth-choice', 'auth-redirect-at', 'mp_roomCode', 'mp_isHost'].forEach(k => localStorage.removeItem(k));
+    try { sessionStorage.clear(); } catch (e) {}
+    alert('تمت إعادة الضبط، سيُعاد فتح التطبيق');
+    location.href = 'index.html?reset=' + Date.now();
+  };
+</script>
+</body>
+</html>
