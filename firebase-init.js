@@ -40,6 +40,9 @@ function authFailed(e, title) {
   console.warn('auth:', e.code || e.message);
   if (window.UI && !QUIET.includes(e.code)) window.UI.fail(e, title);
 }
+// Nothing in sign-in may hang the app: every network step gets a hard deadline
+const withTimeout = (p, ms, fallback) => Promise.race([p, new Promise(res => setTimeout(() => res(fallback), ms))]);
+
 function restoredUser() {
   return new Promise(resolve => {
     const timer = setTimeout(() => resolve(null), 6000);
@@ -53,9 +56,10 @@ function restoredUser() {
 
 export async function signInQuick() {
   try {
-    const user = (await signInAnonymously(auth)).user;
-    rememberUser(user);
-    return user;
+    const cred = await withTimeout(signInAnonymously(auth), 12000, null);
+    if (!cred) { console.warn('anonymous sign-in timed out'); return null; }
+    rememberUser(cred.user);
+    return cred.user;
   } catch (e) { authFailed(e, 'تعذر الدخول السريع'); return null; }
 }
 
@@ -140,7 +144,8 @@ async function ensureSignedIn() {
     if (sessionStorage.getItem('auth-redirect') || (startedAt && Date.now() - startedAt < 10 * 60 * 1000)) {
       sessionStorage.removeItem('auth-redirect'); localStorage.removeItem('auth-redirect-at');
       redirected = true;
-      const r = await getRedirectResult(auth);
+      // getRedirectResult can stall for a long time on phones when the auth iframe is blocked: cap it
+      const r = await withTimeout(getRedirectResult(auth), 8000, null);
       if (r && r.user) {
         rememberUser(r.user);
         if (window.UI) window.UI.toast('تم الدخول بحساب Google: ' + (r.user.displayName || r.user.email || '') + ' ✅', { type: 'ok', ms: 5000 });
