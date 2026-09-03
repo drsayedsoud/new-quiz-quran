@@ -283,7 +283,7 @@ async function runCountdownAndGo() {
 }
 
 // ---------- Teacher's hand-picked question list ----------
-const CATEGORY_FILE = { mixed: 'quiz', complete: 'quiz', meanings: 'words', seerah: 'sera', fiqh: 'sona', general: 'general', kids_1: 'kids_1', kids_2: 'kids_2', kids_3: 'kids_3' };
+const CATEGORY_FILE = { mixed: 'quiz', complete: 'quiz', meanings: 'words', seerah: 'sera', fiqh: 'sona', general: 'general', kids_1: 'kids_1', kids_2: 'kids_2', kids_3: 'kids_3', kids_piggy: 'kids_2' };
 let bank = null;
 let picked = [];
 async function loadBank() {
