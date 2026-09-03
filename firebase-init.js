@@ -85,10 +85,13 @@ const withTimeout = (p, ms, fallback) => Promise.race([p, new Promise(res => set
 // Wait for the SDK to finish restoring the persisted session (IndexedDB) before deciding anything.
 // A short wait here used to create a fresh anonymous user on slow devices, silently replacing a Google login.
 async function restoredUser() {
+  // Like the dental-quiz app, which simply waits for onAuthStateChanged: give the restore a generous minute.
+  const t0 = Date.now();
   try {
-    if (typeof auth.authStateReady === 'function') await withTimeout(auth.authStateReady(), 15000, null);
-    else await withTimeout(new Promise(res => { const stop = onAuthStateChanged(auth, u => { stop(); res(u); }, () => res(null)); }), 15000, null);
+    if (typeof auth.authStateReady === 'function') await withTimeout(auth.authStateReady(), 60000, null);
+    else await withTimeout(new Promise(res => { const stop = onAuthStateChanged(auth, u => { stop(); res(u); }, () => res(null)); }), 60000, null);
   } catch (e) { /* fall through */ }
+  window.__authRestoreMs = Date.now() - t0;
   return auth.currentUser;
 }
 
@@ -171,7 +174,12 @@ async function ensureSignedIn() {
   // (that would hide the admin tools and orphan the honour-board card). Ask for Google again instead.
   const lastGoogle = localStorage.getItem('lastGoogleEmail');
   if (lastGoogle) {
-    if (window.UI) window.UI.toast('انتهت جلسة حساب Google (' + lastGoogle + ')، اضغط للدخول مجدداً', { type: 'warn', ms: 10000, icon: '🔐', action: { label: 'دخول', onClick: () => signInGoogle() } });
+    // No nagging (the dental app just shows a login button): the pages show "تسجيل الدخول" instead.
+    window.__needLogin = true;
+    window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user: null } }));
+    // Tell the admin's Debug card why this device lost its session
+    let idb = 'n/a'; try { idb = 'indexedDB' in window ? 'yes' : 'no'; } catch (e) { idb = 'blocked'; }
+    if (window.UI) window.UI.logError({ message: 'Google session missing after restore (' + (window.__authRestoreMs || 0) + 'ms, idb=' + idb + ', standalone=' + (window.matchMedia('(display-mode: standalone)').matches) + ')' }, 'session-lost');
     return null;
   }
   // navigator.onLine lies on some phones (reports offline on a working connection), so never bail on it:

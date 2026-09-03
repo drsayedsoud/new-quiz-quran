@@ -583,6 +583,7 @@ function openModal(type, title) {
             if (window.UI) UI.toast('✨ يوجد إصدار جديد، اضغط على اسمك في الأعلى للتحديث', { type: 'info', ms: 6000 });
         };
         function onHelloClick() {
+            if (window.__needLogin && window.__loginClick) { window.__loginClick(); return; }
             if (window.__updateReady) {
                 if (window.UI) UI.dialog({ emoji: '✨', title: 'يوجد إصدار جديد', text: 'حدّث للإصدار الجديد للحصول على أحدث المميزات والإصلاحات. يستغرق ثانية واحدة.', primary: '🔄 حدّث الآن' }).then(ok => { if (ok) location.reload(); });
                 else location.reload();
@@ -1130,7 +1131,17 @@ function openModal(type, title) {
     <script type="module">
         import { isAdmin, signInGoogle, db, ref, onValue, currentUser } from './firebase-init.js';
         // Greeting with the Google name and photo once signed in
-        const greet = () => { const u = currentUser(); const g = u && !u.isAnonymous; window.greetHome(g ? (u.displayName || u.email || '') : '', g && u.photoURL ? u.photoURL : ''); };
+        window.__loginClick = async () => { const u = await signInGoogle(); if (u) { window.__needLogin = false; greet(); } };
+        const greet = () => {
+            const u = currentUser(); const g = u && !u.isAnonymous;
+            if (!u && window.__needLogin) {
+                // Session gone on a Google device: a plain login button, exactly like the dental app
+                const box = document.getElementById('hello-box'), btn = document.getElementById('hello-name');
+                if (box && btn) { box.style.display = 'flex'; btn.innerHTML = '<span>🔐</span><span>تسجيل الدخول</span>'; btn.title = 'الدخول بحساب Google'; }
+                return;
+            }
+            window.greetHome(g ? (u.displayName || u.email || '') : '', g && u.photoURL ? u.photoURL : '');
+        };
         greet();
         window.addEventListener('auth-changed', greet);
         // Owner's announcement banner (config/announcement), dismissible until the text changes
