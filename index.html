@@ -547,6 +547,7 @@ function openModal(type, title) {
 
     <!-- Top Actions -->
     <div style="position: absolute; top: 15px; left: 15px; display: flex; gap: 10px; z-index: 100;">
+        <button id="install-chip" onclick="installApp()" title="تثبيت التطبيق" style="display: none; background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.5); color: #6ee7b7; height: 45px; padding: 0 14px; border-radius: 999px; cursor: pointer; align-items: center; gap: 6px; font-family: 'Cairo'; font-weight: 800; backdrop-filter: blur(10px);">📲 تثبيت</button>
         <button onclick="location.href='profile.html'" title="ملفي وإنجازاتي" style="background: rgba(246,195,67,0.15); border: 1px solid rgba(246,195,67,0.4); color: #f6c343; height: 45px; padding: 0 14px; border-radius: 999px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Cairo'; font-weight: 800; backdrop-filter: blur(10px);">👤 ملفي <span id="profile-badge" style="display:none;background:#ef4444;color:#fff;border-radius:999px;padding:0 7px;font-size:0.75em;"></span></button>
         <button onclick="shareApp()" title="مشاركة التطبيق" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: transform 0.3s ease, background 0.3s ease;" onmouseenter="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='scale(1.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='scale(1)';">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
@@ -559,7 +560,15 @@ function openModal(type, title) {
         <div class="modal-content" style="text-align: center; max-width: 350px;">
             <span class="close-button" onclick="closeInstallModal()">&times;</span>
             <h3 style="color: var(--heading-color); margin-top: 10px;">تثبيت التطبيق 📱</h3>
-            <p style="margin: 15px 0; font-size: 1.1em; color: var(--text-color);">هل تود تثبيت تطبيق مسابقة القرآن الكريم على جهازك لسهولة الوصول إليه لاحقاً واللعب بسرعة أكبر؟</p>
+            <div id="install-copy">
+                <p style="margin: 15px 0; font-size: 1.05em; color: var(--text-color);">ثبّت التطبيق على شاشتك الرئيسية: يفتح كتطبيق مستقل، أسرع، ويعمل بدون إنترنت في المسابقات الفردية.</p>
+            </div>
+            <div id="ios-steps" style="display: none; text-align: right; font-size: 0.95em; line-height: 2; color: var(--text-color);">
+                <div style="margin-bottom:10px;">للتثبيت على الآيفون من متصفح Safari:</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="background:#4299e1;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;">1</span> اضغط زر المشاركة <span style="font-size:1.3em;">􀈂</span> أسفل الشاشة</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="background:#4299e1;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;">2</span> اختر «إضافة إلى الشاشة الرئيسية»</div>
+                <div style="display:flex;align-items:center;gap:10px;"><span style="background:#4299e1;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;">3</span> اضغط «إضافة» في الأعلى</div>
+            </div>
             <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
                 <button id="install-btn" style="background-color: var(--heading-color); color: #000; padding: 10px 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; flex: 1;">تثبيت الآن</button>
                 <button onclick="closeInstallModal()" style="background-color: transparent; border: 1px solid var(--text-color); color: var(--text-color); padding: 10px 20px; border-radius: 8px; cursor: pointer; flex: 1;">ليس الآن</button>
@@ -819,7 +828,7 @@ function openModal(type, title) {
         <div class="opt-head"><span class="cat-icon" style="--c:#fb7185"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><div><div class="cat-title">مسابقة الأطفال</div><div class="cat-sub">اختر المستوى المناسب لعمر الطفل</div></div></div>
         <div class="level-grid">
           <button class="level-card" style="--c:#fb7185" onclick="showMultiSettings('kids_1')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><span><b>المستوى الأول</b><small>حساب بسيط وأسئلة سهلة · حتى 9 سنوات</small></span><span class="level-badge">١</span></button>
-          <button class="level-card" style="--c:#38bdf8" onclick="showMultiSettings('kids_2')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر</small></span><span class="level-badge">٢</span></button>
+          <button class="level-card" style="--c:#38bdf8" onclick="showMultiSettings('kids_2')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر <span style="font-size:0.85em;opacity:0.85;">(منهج ثاني ابتدائي)</span></small></span><span class="level-badge">٢</span></button>
           <button class="level-card" style="--c:#8b5cf6" onclick="showMultiSettings('kids_3')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#c4b5fd"/><path d="M16 30l6-12 6 12M18.5 25h7" stroke="#5b21b6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 12l1.5 3 3.5.5-2.5 2.5.6 3.5-3.1-1.7-3.1 1.7.6-3.5L27 15.5l3.5-.5z" fill="#fbbf24"/></svg></span><span><b>المستوى الثالث</b><small>نسب وكسور وهندسة ومعلومات قرآنية وسيرة · 12 سنة فأكثر</small></span><span class="level-badge">٣</span></button>
         </div>
         <button class="mp-back" onclick="hideKidsOptions('multi')">🔙 رجوع للأقسام</button>
@@ -1025,7 +1034,7 @@ function openModal(type, title) {
         <div class="opt-head"><span class="cat-icon" style="--c:#fb7185"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><div><div class="cat-title">مسابقة الأطفال</div><div class="cat-sub">اختر المستوى المناسب لعمر الطفل</div></div></div>
         <div class="level-grid">
           <button class="level-card" style="--c:#fb7185" onclick="startSingleQuiz('kids_1', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><ellipse cx="18" cy="16" rx="10" ry="12" fill="#fb7185"/><ellipse cx="32" cy="20" rx="9" ry="11" fill="#38bdf8"/><path d="M18 28c-2 6 2 8 0 14M32 31c-2 5 2 7 0 12" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="15" cy="11" rx="3" ry="4" fill="#fff" opacity=".5"/><ellipse cx="29" cy="15" rx="2.5" ry="3.5" fill="#fff" opacity=".5"/></svg></span><span><b>المستوى الأول</b><small>حساب بسيط وأسئلة سهلة · حتى 9 سنوات</small></span><span class="level-badge">١</span></button>
-          <button class="level-card" style="--c:#38bdf8" onclick="startSingleQuiz('kids_2', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر</small></span><span class="level-badge">٢</span></button>
+          <button class="level-card" style="--c:#38bdf8" onclick="startSingleQuiz('kids_2', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><path d="M24 4c8 6 10 16 8 26H16C14 20 16 10 24 4z" fill="#60a5fa"/><circle cx="24" cy="18" r="4" fill="#fff"/><path d="M16 30l-6 8 8-2zM32 30l6 8-8-2z" fill="#f97316"/><path d="M20 34h8l-4 10z" fill="#fbbf24"/></svg></span><span><b>المستوى الثاني</b><small>إسلاميات وحساب أصعب · 10 سنوات فأكثر <span style="font-size:0.85em;opacity:0.85;">(منهج ثاني ابتدائي)</span></small></span><span class="level-badge">٢</span></button>
           <button class="level-card" style="--c:#8b5cf6" onclick="startSingleQuiz('kids_3', 'solo')"><span class="opt-big-icon"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#c4b5fd"/><path d="M16 30l6-12 6 12M18.5 25h7" stroke="#5b21b6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 12l1.5 3 3.5.5-2.5 2.5.6 3.5-3.1-1.7-3.1 1.7.6-3.5L27 15.5l3.5-.5z" fill="#fbbf24"/></svg></span><span><b>المستوى الثالث</b><small>نسب وكسور وهندسة ومعلومات قرآنية وسيرة · 12 سنة فأكثر</small></span><span class="level-badge">٣</span></button>
         </div>
         <button class="mp-back" onclick="hideKidsOptions('solo')">🔙 رجوع للأقسام</button>
@@ -1107,43 +1116,65 @@ function openModal(type, title) {
         }
     }
 
-    // PWA Install Logic
+    // ---- PWA install: one real tap. The prompt is only offered when the browser says it can install. ----
     let deferredPrompt = null;
     const installModal = document.getElementById('install-modal');
     const installBtn = document.getElementById('install-btn');
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
 
-    // Always check if we should show the modal (only on first visits, and not if already installed)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    
-    if (!localStorage.getItem('pwa-dismissed') && !isStandalone) {
-        // Show after 2 seconds to give them a moment
-        setTimeout(() => {
-            installModal.style.display = 'flex';
-        }, 500);
+    function showInstallModal() {
+        if (isStandalone || localStorage.getItem('pwa-dismissed')) return;
+        installModal.style.display = 'flex';
+    }
+    function markInstallable(on) {
+        const chip = document.getElementById('install-chip');
+        if (chip) chip.style.display = on ? 'inline-flex' : 'none';
     }
 
+    // Chrome, Edge, Samsung, Opera and desktop Chrome fire this when the app qualifies for installation.
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
+        markInstallable(true);
+        installBtn.textContent = 'تثبيت الآن';
+        setTimeout(showInstallModal, 1200);
     });
 
-    installBtn.addEventListener('click', async () => {
+    window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        markInstallable(false);
         installModal.style.display = 'none';
-        localStorage.setItem('pwa-dismissed', 'true'); // don't nag again
-        
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
-        } else {
-            // iOS or unsupported / prompt not fired
-            alert('لتثبيت التطبيق:\n\n1. اضغط على زر المشاركة أو القائمة في متصفحك (بأعلى أو أسفل الشاشة).\n2. اختر "إضافة إلى الشاشة الرئيسية" (Add to Home Screen).');
-        }
+        localStorage.setItem('pwa-dismissed', 'true');
     });
+
+    async function doInstall() {
+        if (deferredPrompt) {
+            installModal.style.display = 'none';
+            deferredPrompt.prompt();
+            const choice = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            if (choice && choice.outcome === 'accepted') { markInstallable(false); localStorage.setItem('pwa-dismissed', 'true'); }
+            return;
+        }
+        // iOS has no install API at all: show the exact steps inside the app instead of a browser alert.
+        document.getElementById('install-copy').style.display = 'none';
+        document.getElementById('ios-steps').style.display = 'block';
+        installBtn.style.display = 'none';
+    }
+    installBtn.addEventListener('click', doInstall);
+    window.installApp = doInstall;
 
     function closeInstallModal() {
         installModal.style.display = 'none';
         localStorage.setItem('pwa-dismissed', 'true');
+    }
+
+    // iOS Safari: offer the guide once, since no event will ever fire there.
+    if (isIOS && !isStandalone && !localStorage.getItem('pwa-dismissed')) {
+        markInstallable(true);
+        installBtn.textContent = 'كيف أثبّته؟';
+        setTimeout(showInstallModal, 1500);
     }
 
     // Register Service Worker
