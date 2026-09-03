@@ -56,9 +56,13 @@ if (RTDB_TRANSPORT !== 'lp') {
 }
 // Remember the player on this device for good: durable persistence with a fallback chain
 // (IndexedDB, then localStorage when a browser blocks IndexedDB), never session-only or in-memory.
+// No popupRedirectResolver here on purpose: with one, the SDK "proactively" loads Google's gapi script and the
+// /__/auth/iframe on every MOBILE browser before authStateReady() resolves, and when that load is slow or blocked
+// (carrier, ad blocker, in-app browser) the whole sign-in waits its 60 s timeout, so pages that need a uid
+// (kids.html one-tap rooms) looked broken on phones. The resolver is passed to the popup calls instead.
 let auth;
 try {
-  auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence], popupRedirectResolver: browserPopupRedirectResolver });
+  auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence] });
 } catch (e) {
   auth = getAuth(app);
 }
@@ -130,8 +134,8 @@ export async function signInGoogle() {
   const current = auth.currentUser;
   try {
     const user = current && current.isAnonymous
-      ? (await linkWithPopup(current, google)).user
-      : (await signInWithPopup(auth, google)).user;
+      ? (await linkWithPopup(current, google, browserPopupRedirectResolver)).user
+      : (await signInWithPopup(auth, google, browserPopupRedirectResolver)).user;
     rememberUser(user);
     if (window.UI) window.UI.toast('تم الدخول بحساب Google: ' + (user.displayName || user.email || '') + ' ✅', { type: 'ok', ms: 5000 });
     return user;
