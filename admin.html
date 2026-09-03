@@ -87,6 +87,16 @@
     <div class="kpi"><b id="k-rooms">–</b><span>غرف نشطة الآن</span></div>
     <div class="kpi"><b id="k-players">–</b><span>لاعبون في الغرف الآن</span></div>
   </div>
+  <div class="card" style="border-color: rgba(255,214,102,0.4);">
+    <h2>🐷 حصالة الأطفال (آخر 7 أيام)</h2>
+    <p class="sub">مستوى «زوّد رصيد حصالتك»: كل إجابة صحيحة ١٠ قروش</p>
+    <div class="grid" style="margin-bottom: 0;">
+      <div class="kpi"><b id="k-pg-sessions">–</b><span>مسابقات حصالة</span></div>
+      <div class="kpi"><b id="k-pg-earned">–</b><span>قروش مكتسبة</span></div>
+      <div class="kpi"><b id="k-pg-cheques">–</b><span>شيكات مصروفة</span></div>
+      <div class="kpi"><b id="k-pg-cashed">–</b><span>قيمة الشيكات</span></div>
+    </div>
+  </div>
 
   <div class="two">
     <div class="card"><h2>📈 المسابقات يومياً</h2><p class="sub">آخر 14 يوماً، من كل الأجهزة</p><div class="chart"><canvas id="daily"></canvas></div></div>
@@ -109,6 +119,11 @@
     <h2>📣 إعلان لكل المستخدمين</h2>
     <p class="sub">يظهر كشريط أعلى الصفحة الرئيسية عند الجميع. أفرغ النص أو أوقف التفعيل لإخفائه.</p>
     <textarea id="ann-text" maxlength="300" rows="2" placeholder="مثال: مسابقة كبرى الجمعة القادمة بعد المغرب، جهّزوا أنفسكم 🏆" style="width:100%; padding:10px 12px; border-radius:14px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit; font-size:0.95em; resize:vertical;"></textarea>
+    <div style="display:flex; align-items:center; gap:12px; margin-top:10px; flex-wrap:wrap;">
+      <label class="who">من <input type="datetime-local" id="ann-from" style="padding:6px 8px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit;"></label>
+      <label class="who">إلى <input type="datetime-local" id="ann-to" style="padding:6px 8px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit;"></label>
+      <span class="who">(اتركهما فارغين ليظهر فوراً وبلا نهاية)</span>
+    </div>
     <div style="display:flex; align-items:center; gap:12px; margin-top:10px; flex-wrap:wrap;">
       <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="ann-active"> مفعّل</label>
       <button type="button" id="ann-save" class="back" style="border-color:#10b981; color:#6ee7b7; cursor:pointer;">💾 حفظ الإعلان</button>
@@ -196,13 +211,22 @@
       const a = snap.val() || {};
       $('ann-text').value = a.text || '';
       $('ann-active').checked = !!a.active;
-      $('ann-status').textContent = a.at ? 'آخر تحديث: ' + new Date(a.at).toLocaleString('ar-EG') : '';
+      const local = t => { if (!t) return ''; const d = new Date(t - new Date().getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); };
+      $('ann-from').value = local(a.from); $('ann-to').value = local(a.to);
+      const now = Date.now();
+      const state = !a.active || !a.text ? 'مخفي' : (a.from && now < a.from) ? 'مجدول، يبدأ ' + new Date(a.from).toLocaleString('ar-EG') : (a.to && now > a.to) ? 'انتهى' : 'ظاهر الآن';
+      $('ann-status').textContent = (a.at ? 'آخر تحديث: ' + new Date(a.at).toLocaleString('ar-EG') + ' · ' : '') + 'الحالة: ' + state;
     });
     $('ann-save').onclick = async () => {
       const text = $('ann-text').value.trim().slice(0, 300);
+      const from = $('ann-from').value ? new Date($('ann-from').value).getTime() : 0;
+      const to = $('ann-to').value ? new Date($('ann-to').value).getTime() : 0;
+      if (from && to && to <= from) { UI.toast('تاريخ النهاية يجب أن يكون بعد البداية', { type: 'warn' }); return; }
       try {
-        await set(ref(db, 'config/announcement'), { text, active: !!text && $('ann-active').checked, at: Date.now() });
-        UI.toast(text && $('ann-active').checked ? 'الإعلان ظاهر للجميع الآن 📣' : 'تم إخفاء الإعلان', { type: 'ok' });
+        const payload = { text, active: !!text && $('ann-active').checked, at: Date.now() };
+        if (from) payload.from = from; if (to) payload.to = to;
+        await set(ref(db, 'config/announcement'), payload);
+        UI.toast(!payload.active ? 'تم إخفاء الإعلان' : from && from > Date.now() ? 'تمت جدولة الإعلان ⏰' : 'الإعلان ظاهر للجميع الآن 📣', { type: 'ok' });
       } catch (e) { UI.fail(e, 'تعذر حفظ الإعلان'); }
     };
     // one-tap cleanup of finished/closed rooms and anything older than 6 hours
@@ -246,6 +270,11 @@
     $('k-today').textContent = counts[counts.length - 1];
     $('k-week').textContent = sum(last7, 'sessions');
     const ans = sum(last7, 'answered'); $('k-acc').textContent = ans ? Math.round(sum(last7, 'correct') / ans * 100) + '%' : '–';
+    const pounds = p => (p / 100).toFixed(2) + ' ج';
+    $('k-pg-sessions').textContent = sum(last7, 'piggySessions');
+    $('k-pg-earned').textContent = (sum(last7, 'piggyCorrect') * 10) + ' قرش';
+    $('k-pg-cheques').textContent = sum(last7, 'piggyCheques');
+    $('k-pg-cashed').textContent = pounds(sum(last7, 'piggyCashed'));
     new Chart($('daily'), { type: 'line', data: { labels: days.map(k => k.slice(5)), datasets: [{ data: counts, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.15)', fill: true, tension: 0.35, pointRadius: 3 }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#a0aec0', font: { size: 10 } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: '#a0aec0', precision: 0 }, grid: { color: 'rgba(255,255,255,0.06)' } } } } });
     const byType = {};

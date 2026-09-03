@@ -37,6 +37,13 @@ export function weekKey(d) {
     updates[`stats/daily/${day}/correct`] = increment(session.score || 0);
     updates[`stats/daily/${day}/answered`] = increment(session.total || 0);
     updates[`stats/daily/${day}/byType/${type}`] = increment(1);
+    // piggy-bank level: sessions, correct answers (= piasters earned / 10) and cheques cashed since the last report
+    if (session.type === 'kids_piggy') {
+        updates[`stats/daily/${day}/piggySessions`] = increment(1);
+        updates[`stats/daily/${day}/piggyCorrect`] = increment(Math.min(1000, session.score || 0));
+    }
+    const pc = parseInt(localStorage.getItem('piggyPendingCheques')) || 0, pv = parseInt(localStorage.getItem('piggyPendingCashed')) || 0;
+    if (pc > 0) { updates[`stats/daily/${day}/piggyCheques`] = increment(Math.min(20, pc)); updates[`stats/daily/${day}/piggyCashed`] = increment(Math.min(100000, pv)); localStorage.removeItem('piggyPendingCheques'); localStorage.removeItem('piggyPendingCashed'); }
     (Array.isArray(session.wrong) ? session.wrong.slice(0, 60) : []).forEach(w => {
         const text = String(w.question || '').slice(0, 300);
         if (!text) return;

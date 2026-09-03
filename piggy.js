@@ -129,6 +129,9 @@
             set(K.cheques, n);
             set(K.bal, 0); set(K.best, 0);
             const l = log(); l.unshift({ n, amount: bal, at: Date.now(), name }); set(K.log, JSON.stringify(l.slice(0, 50)));
+            // anonymous usage counters, flushed to stats/daily by finish-online.js on the next results page
+            set('piggyPendingCheques', num('piggyPendingCheques') + 1);
+            set('piggyPendingCashed', num('piggyPendingCashed') + bal);
             closeOverlay();
             render(false);
             if (typeof Piggy.onChange === 'function') { try { Piggy.onChange(); } catch (e) {} }

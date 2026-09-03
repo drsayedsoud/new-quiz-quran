@@ -433,7 +433,8 @@ async function loadQuestions() {
     else show("<div style='font-size:1.5em;'>" + title + "</div>");
   };
   // Give the overlay a frame to paint before a long synchronous step blocks the thread
-  const paint = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 20)));
+  // (a plain timeout, not requestAnimationFrame: rAF never fires while the tab is in the background and the quiz would hang)
+  const paint = () => new Promise(r => setTimeout(r, 40));
   stage(1, 'جاري التجهيز...', 'نفحص الأسئلة المحفوظة على جهازك');
   try {
     const cats = neededCategories(quizType);
@@ -642,9 +643,24 @@ function processParsedJSON(jsonData) {
 
 
   quizData = shuffle(filteredSource);
-    
+
+  // Spaced repetition (solo only): questions this player missed in this section come back after two days,
+  // a few per quiz, mixed into the first ten so they are actually reached
+  const isMp = localStorage.getItem('mp_roomCode');
+  if (!isMp && window.Progress && !['review', 'favorites', 'daily'].includes(quizType)) {
+    try {
+      const base = quizType.split('_juz_')[0];
+      const due = Progress.getWrong().filter(w => w && w.question && String(w.src || '').split('_juz_')[0] === base && Date.now() - (w.at || 0) > 2 * 86400000);
+      const seen = new Set(quizData.map(q => cleanQuestionText(q.question)));
+      const picks = shuffle(due.filter(w => w.choice1 && w.choice2 && w.choice3 && w.choice4 && w.correct_answer && !seen.has(cleanQuestionText(w.question)))).slice(0, 3);
+      if (picks.length) {
+        picks.forEach(w => quizData.splice(Math.floor(Math.random() * Math.min(10, quizData.length + 1)), 0, Object.assign({ _repeat: true }, w)));
+        if (window.UI) setTimeout(() => UI.toast('🔁 ' + picks.length + ' من الأسئلة التي أخطأت فيها سابقاً ستعود لك في هذه المسابقة', { type: 'info', ms: 4500 }), 1200);
+      }
+    } catch (e) { console.warn('spaced repetition', e); }
+  }
+
     // MP LOGIC PATCH
-    const isMp = localStorage.getItem('mp_roomCode');
     if (isMp) {
         const mpMode = localStorage.getItem('mp_mode') || 'questions';
         const mpVal = parseInt(localStorage.getItem('mp_val')) || 10;

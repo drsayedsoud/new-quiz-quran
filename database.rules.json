@@ -117,6 +117,8 @@
         "text":   { ".validate": "newData.isString() && newData.val().length <= 300" },
         "active": { ".validate": "newData.isBoolean()" },
         "at":     { ".validate": "newData.isNumber()" },
+        "from":   { ".validate": "newData.isNumber()" },
+        "to":     { ".validate": "newData.isNumber()" },
         "$other": { ".validate": false }
       },
       "$other": { ".validate": false }
@@ -131,6 +133,10 @@
           "correct":  { ".validate": "newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() - data.val() <= 1000) : (newData.val() >= 0 && newData.val() <= 1000))" },
           "answered": { ".validate": "newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() - data.val() <= 1000) : (newData.val() >= 0 && newData.val() <= 1000))" },
           "byType":   { "$t": { ".validate": "$t.length <= 40 && newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() - data.val() <= 1) : (newData.val() >= 0 && newData.val() <= 1))" } },
+          "piggySessions": { ".validate": "newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() - data.val() <= 1) : (newData.val() >= 0 && newData.val() <= 1))" },
+          "piggyCorrect":  { ".validate": "newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() - data.val() <= 1000) : (newData.val() >= 0 && newData.val() <= 1000))" },
+          "piggyCheques":  { ".validate": "newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() - data.val() <= 20) : (newData.val() >= 0 && newData.val() <= 20))" },
+          "piggyCashed":   { ".validate": "newData.isNumber() && (data.exists() ? (newData.val() >= data.val() && newData.val() - data.val() <= 100000) : (newData.val() >= 0 && newData.val() <= 100000))" },
           "$other":   { ".validate": false }
         }
       },

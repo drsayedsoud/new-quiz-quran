@@ -1111,7 +1111,8 @@ function openModal(type, title) {
         onValue(ref(db, 'config/announcement'), snap => {
             const a = snap.val();
             let bar = document.getElementById('announce-bar');
-            const show = a && a.active && a.text;
+            const now = Date.now();
+            const show = a && a.active && a.text && (!a.from || now >= a.from) && (!a.to || now <= a.to);
             if (!show || localStorage.getItem('ann-seen') === String(a.at)) { if (bar) bar.remove(); return; }
             if (!bar) {
                 bar = document.createElement('div');
