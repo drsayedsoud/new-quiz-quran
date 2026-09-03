@@ -184,7 +184,9 @@
     function fail(err, title) {
         const why = explain(err);
         console.error(title || why.title, err);
-        toast((title || why.title) + ' — ' + why.text, { type: why.kind === 'offline' || why.kind === 'network' ? 'warn' : 'err' });
+        // keep the raw code visible (small) so a screenshot is enough to diagnose
+        const code = err && (err.code || (err.message && err.message.length < 60 ? err.message : ''));
+        toast((title || why.title) + ' — ' + why.text + (code ? ' (' + code + ')' : ''), { type: why.kind === 'offline' || why.kind === 'network' ? 'warn' : 'err', ms: 7000 });
         return why;
     }
 

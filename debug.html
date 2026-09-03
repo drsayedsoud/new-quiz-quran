@@ -68,6 +68,22 @@
       if (window.__authError) log('⚠️ last auth error: ' + (window.__authError.code || window.__authError.message));
       const mp = await Promise.race([import('./multiplayer.js'), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 15s')), 15000))]);
       log('multiplayer.js ✅ create=' + typeof window.createMultiplayerRoomWithParams + ' join=' + typeof window.joinMultiplayerRoom);
+      // Real database round-trips, exactly what creating a room does (with a hang detector)
+      const step = (label, p, ms) => { const a = performance.now(); return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('HANG >' + ms / 1000 + 's — الاتصال المباشر بقاعدة البيانات محجوب غالباً')), ms))])
+        .then(v => { log('✅ ' + label + ' ' + Math.round(performance.now() - a) + 'ms'); return v; })
+        .catch(e => { log('❌ ' + label + ' ' + Math.round(performance.now() - a) + 'ms: ' + (e.code || '') + ' ' + (e.message || e)); throw e; }); };
+      try {
+        await step('read rooms/00000', m.get(m.ref(m.db, 'rooms/00000')), 15000);
+        const code = '9' + String(Math.floor(1000 + Math.random() * 9000));
+        const room = { code, hostId: m.authUid || 'none', status: 'waiting', createdAt: Date.now(), round: 1, currentQuestionIndex: 0, phase: 'question', settings: { category: 'kids_2', mode: 'questions', val: 10 } };
+        await step('write rooms/' + code, m.set(m.ref(m.db, 'rooms/' + code), room), 15000);
+        await step('delete rooms/' + code, m.remove(m.ref(m.db, 'rooms/' + code)), 15000);
+        log('database write ✅ إنشاء الغرف يعمل من هذا الجهاز');
+      } catch (e) { log('⚠️ database test failed — see above'); }
+      try {
+        const info = await step('connection state', new Promise(res => { m.onValue(m.ref(m.db, '.info/connected'), s => res(s.val()), { onlyOnce: true }); }), 10000);
+        log('realtime connected: ' + info);
+      } catch (e) {}
     } catch (e) { log('❌ firebase-init/multiplayer: ' + (e.code || e.message)); }
     log('done ' + ms());
   })();
