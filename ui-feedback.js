@@ -184,6 +184,7 @@
     function fail(err, title) {
         const why = explain(err);
         console.error(title || why.title, err);
+        logError(err, 'fail:' + (title || why.title).slice(0, 20));
         // keep the raw code visible (small) so a screenshot is enough to diagnose
         const code = err && (err.code || (err.message && err.message.length < 60 ? err.message : ''));
         toast((title || why.title) + ' — ' + why.text + (code ? ' (' + code + ')' : ''), { type: why.kind === 'offline' || why.kind === 'network' ? 'warn' : 'err', ms: 7000 });
@@ -194,9 +195,23 @@
     const IGNORE = /ResizeObserver|AbortError|play\(\)|NotAllowedError|interrupted by a call to pause|user gesture|user didn't interact|^Script error\.?$|Loading chunk|importScripts|Non-Error promise rejection captured with value: (undefined|null)$|The operation was aborted|cancelled|speechSynthesis/i;
     const recent = new Map();
     let shown = [];
+    // ---------- error log: kept on this device (last 60) and sent to the admin's /errors node ----------
+    function logError(err, kind) {
+        try {
+            const msg = String((err && (err.code ? err.code + ': ' : '') + ((err && err.message) || err)) || '').slice(0, 500);
+            if (!msg) return;
+            const entry = { at: Date.now(), page: location.pathname, kind: kind || 'error', msg, stack: err && err.stack ? String(err.stack).slice(0, 1500) : '' };
+            const list = JSON.parse(localStorage.getItem('errorLog') || '[]');
+            list.unshift(entry);
+            localStorage.setItem('errorLog', JSON.stringify(list.slice(0, 60)));
+            if (typeof window.__reportError === 'function') window.__reportError(entry);
+            else { window.__errorQueue = window.__errorQueue || []; if (window.__errorQueue.length < 8) window.__errorQueue.push(entry); }
+        } catch (e) { /* ignore */ }
+    }
     function report(err, source) {
         const text = String((err && err.message) || err || '');
         if (!text || IGNORE.test(text)) return;
+        logError(err, source);
         const now = Date.now();
         if ((recent.get(text) || 0) > now - 8000) return;
         recent.set(text, now);
@@ -221,6 +236,6 @@
     }, true);
     window.addEventListener('unhandledrejection', e => report(e.reason, 'promise'));
 
-    window.UI = { toast, dialog, closeDialog: () => { if (dialogResolve) dialogResolve(false); }, loader, spinnerHtml, explain, fail, esc };
+    window.UI = { toast, dialog, closeDialog: () => { if (dialogResolve) dialogResolve(false); }, loader, spinnerHtml, explain, fail, esc, logError, errorLog: () => { try { return JSON.parse(localStorage.getItem('errorLog') || '[]'); } catch (e) { return []; } } };
     ensureStyles();
 })();

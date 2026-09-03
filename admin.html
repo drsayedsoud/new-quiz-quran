@@ -134,6 +134,20 @@
     </div>
   </div>
 
+  <div class="card" id="debug-card" style="border-color: rgba(252,165,165,0.4);">
+    <h2>🐞 Debug — أخطاء التطبيق</h2>
+    <p class="sub">كل جهاز يرسل أخطاءه هنا تلقائياً (آخر ١٠٠ خطأ من كل المستخدمين). الأخطاء القديمة عن ٧ أيام تُمسح تلقائياً.</p>
+    <div class="row" style="margin-bottom: 10px;">
+      <a class="back" href="debug.html" style="border-color:#7dd3fc; color:#7dd3fc;">🩺 صفحة التشخيص الكاملة</a>
+      <button type="button" id="err-local" class="back" style="cursor:pointer;">📱 أخطاء هذا الجهاز</button>
+      <button type="button" id="err-clear" class="del">🧹 مسح السجل</button>
+      <span class="who" id="err-count"></span>
+    </div>
+    <div style="overflow:auto; max-height: 420px;">
+      <table><thead><tr><th>الوقت</th><th>الصفحة</th><th>الخطأ</th><th>الجهاز</th></tr></thead><tbody id="err-rows"><tr><td colspan="4" style="text-align:center;color:var(--muted)">جاري التحميل...</td></tr></tbody></table>
+    </div>
+  </div>
+
   <div class="card" id="mod-card">
     <h2>🛡️ الإشراف على لوحات الشرف</h2>
     <p class="sub">يمكنك حذف أي بطاقة أو نتيجة مسيئة، والحذف نهائي</p>
@@ -209,6 +223,28 @@
     return date.getUTCFullYear() + '-W' + String(Math.ceil((((date - yearStart) / 86400000) + 1) / 7)).padStart(2, '0');
   }
   if (admin) {
+    // ---- debug: error reports from every device ----
+    const fmtUa = ua => { ua = String(ua || ''); const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iPhone' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : '?'; const br = /Chrome\/(\d+)/.exec(ua) ? 'Chrome ' + /Chrome\/(\d+)/.exec(ua)[1] : /Safari/.test(ua) ? 'Safari' : /Firefox\/(\d+)/.exec(ua) ? 'Firefox' : ''; return os + ' · ' + br; };
+    const errRow = (e, id) => `<tr><td style="white-space:nowrap">${new Date(e.at).toLocaleString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td><td>${esc((e.page || '').replace(/^\//, ''))}</td><td title="${esc(e.stack || '')}"><span class="badge waiting" style="margin-left:6px">${esc(e.kind || '')}</span>${esc(e.msg)}${id ? ' <span class="who">· ' + esc((e.uid || '').slice(0, 6)) + '</span>' : ''}</td><td class="who">${esc(fmtUa(e.ua))}</td></tr>`;
+    let showLocal = false;
+    const renderLocal = () => { const l = UI.errorLog(); $('err-rows').innerHTML = l.length ? l.map(e => errRow(e)).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--muted)">لا توجد أخطاء على هذا الجهاز</td></tr>'; $('err-count').textContent = 'هذا الجهاز: ' + l.length; };
+    let remoteRows = [];
+    const renderRemote = () => { $('err-rows').innerHTML = remoteRows.length ? remoteRows.map(([id, e]) => errRow(e, id)).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--muted)">لا توجد أخطاء مسجّلة 🎉</td></tr>'; $('err-count').textContent = 'كل الأجهزة: ' + remoteRows.length; };
+    onValue(query(ref(db, 'errors'), orderByChild('at'), limitToLast(100)), snap => {
+      remoteRows = []; snap.forEach(c => remoteRows.push([c.key, c.val()])); remoteRows.reverse();
+      if (!showLocal) renderRemote();
+      // housekeeping: drop reports older than 7 days
+      const old = remoteRows.filter(([, e]) => Date.now() - (e.at || 0) > 7 * 86400000);
+      old.forEach(([id]) => remove(ref(db, 'errors/' + id)).catch(() => {}));
+    }, err => { $('err-rows').innerHTML = '<tr><td colspan="4" class="err">تعذر قراءة سجل الأخطاء: ' + esc(err.message) + ' — تأكد من نشر آخر نسخة من الرولز</td></tr>'; });
+    $('err-local').onclick = () => { showLocal = !showLocal; $('err-local').textContent = showLocal ? '🌍 أخطاء كل الأجهزة' : '📱 أخطاء هذا الجهاز'; if (showLocal) renderLocal(); else renderRemote(); };
+    $('err-clear').onclick = async () => {
+      if (showLocal) { localStorage.removeItem('errorLog'); renderLocal(); return; }
+      const ok = await UI.dialog({ emoji: '🧹', title: 'مسح سجل الأخطاء؟', text: 'سيُحذف كل ما وصل من كل الأجهزة.', primary: 'مسح', secondary: 'إلغاء', danger: true });
+      if (!ok) return;
+      try { await remove(ref(db, 'errors')); UI.toast('تم مسح السجل', { type: 'ok' }); } catch (e) { UI.fail(e, 'تعذر المسح'); }
+    };
+
     // announcement shown on everyone's home page
     onValue(ref(db, 'config/announcement'), snap => {
       const a = snap.val() || {};

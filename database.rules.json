@@ -124,6 +124,25 @@
       "$other": { ".validate": false }
     },
 
+    "errors": {
+      ".read": "auth != null && auth.token.email === 'drsayedsoudnew@gmail.com' && auth.token.email_verified === true",
+      ".write": "auth != null && auth.token.email === 'drsayedsoudnew@gmail.com' && auth.token.email_verified === true",
+      ".indexOn": ["at"],
+      "$id": {
+        ".write": "auth != null && !data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['at', 'page', 'msg'])",
+        "at":    { ".validate": "newData.isNumber()" },
+        "page":  { ".validate": "newData.isString() && newData.val().length <= 120" },
+        "msg":   { ".validate": "newData.isString() && newData.val().length <= 500" },
+        "stack": { ".validate": "newData.isString() && newData.val().length <= 1500" },
+        "kind":  { ".validate": "newData.isString() && newData.val().length <= 30" },
+        "ua":    { ".validate": "newData.isString() && newData.val().length <= 200" },
+        "uid":   { ".validate": "newData.isString() && newData.val().length <= 64" },
+        "ver":   { ".validate": "newData.isString() && newData.val().length <= 30" },
+        "$other": { ".validate": false }
+      }
+    },
+
     "stats": {
       ".read": true,
       "daily": {

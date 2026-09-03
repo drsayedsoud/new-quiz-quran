@@ -23,6 +23,22 @@ const RTDB_TRANSPORT = localStorage.getItem('rtdb_transport');
 if (RTDB_TRANSPORT === 'lp') { try { forceLongPolling(); } catch (e) {} }
 const db = getDatabase(app);
 window.__rtdbTransport = RTDB_TRANSPORT === 'lp' ? 'long-polling' : 'websocket';
+
+// Error reporting hook for ui-feedback.js: every device sends its errors to /errors (admin-only readable).
+// At most 8 per page load, only when signed in; failures here are swallowed.
+let reported = 0;
+window.__reportError = async function (entry) {
+  try {
+    if (reported >= 8 || !auth.currentUser) return;
+    reported++;
+    const e = { at: Date.now(), page: String(location.pathname + location.search).slice(0, 120), msg: String(entry.msg || '').slice(0, 500), kind: String(entry.kind || 'error').slice(0, 30), ua: navigator.userAgent.slice(0, 200), uid: auth.currentUser.uid };
+    if (entry.stack) e.stack = String(entry.stack).slice(0, 1500);
+    if (window.APP_VERSION) e.ver = String(window.APP_VERSION).slice(0, 30);
+    const key = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    await set(ref(db, 'errors/' + key), e);
+  } catch (x) { /* never let error reporting cause errors */ }
+};
+if (window.__errorQueue && window.__errorQueue.length) { const q = window.__errorQueue.splice(0); q.forEach(e => window.__reportError(e)); }
 if (RTDB_TRANSPORT !== 'lp') {
   let connected = false;
   try { onValue(ref(db, '.info/connected'), s => { if (s.val() === true) connected = true; }); } catch (e) {}
