@@ -601,6 +601,12 @@ function openModal(type, title) {
             if (window.__updateReady) { box.style.display = 'flex'; const b = document.getElementById('upd-badge'); if (b) b.style.display = 'flex'; }
         };
         window.addEventListener('DOMContentLoaded', () => greetHome());
+
+        // The solo-sections modal must never depend on multiplayer.js (it waits for sign-in and needs internet):
+        // define the helpers here first; the module later re-assigns identical ones.
+        window.openSoloMixModal = function () { const m = document.getElementById('solo-mix-modal'); if (m) m.style.display = 'flex'; };
+        window.closeSoloMixModal = function () { const m = document.getElementById('solo-mix-modal'); if (m) m.style.display = 'none'; };
+        window.clearMultiplayerState = window.clearMultiplayerState || function () { ['mp_roomCode', 'mp_isHost', 'mp_mode', 'mp_val', 'mp_round', 'mp_sync', 'mp_teams', 'mp_pick'].forEach(k => localStorage.removeItem(k)); };
     </script>
     <div style="position: absolute; top: 15px; left: 15px; display: flex; gap: 10px; z-index: 100;">
         <button id="admin-chip" onclick="location.href='admin.html'" title="لوحة الإدارة" style="display: none; background: rgba(239,68,68,0.18); border: 1px solid rgba(239,68,68,0.5); color: #fca5a5; height: 45px; padding: 0 14px; border-radius: 999px; cursor: pointer; align-items: center; gap: 6px; font-family: 'Cairo'; font-weight: 800; backdrop-filter: blur(10px);">🛠️ الإدارة</button>
