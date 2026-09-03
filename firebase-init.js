@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, linkWithPopup, linkWithRedirect, signInWithCredential, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { getDatabase, ref, set, get, child, update, onValue, remove, onDisconnect, increment, query, orderByChild, limitToLast, runTransaction } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+import { getDatabase, ref, set, get, child, update, onValue, remove, onDisconnect, increment, query, orderByChild, limitToLast, runTransaction, forceLongPolling } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 import { chooseSignIn } from './auth-ui.js';
 
 // Google sign-in runs through our own domain (vercel.json proxies /__/auth/* to firebaseapp.com), so the
@@ -18,7 +18,28 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+// Some mobile networks block the Realtime Database WebSocket while plain HTTPS works; the SDK's own fallback can
+// stall for a long time. Remember per device: once the socket fails to connect, switch to long polling for good.
+const RTDB_TRANSPORT = localStorage.getItem('rtdb_transport');
+if (RTDB_TRANSPORT === 'lp') { try { forceLongPolling(); } catch (e) {} }
 const db = getDatabase(app);
+window.__rtdbTransport = RTDB_TRANSPORT === 'lp' ? 'long-polling' : 'websocket';
+if (RTDB_TRANSPORT !== 'lp') {
+  let connected = false;
+  try { onValue(ref(db, '.info/connected'), s => { if (s.val() === true) connected = true; }); } catch (e) {}
+  setTimeout(() => {
+    if (connected || !navigator.onLine) return;
+    localStorage.setItem('rtdb_transport', 'lp');
+    console.warn('Realtime Database socket did not connect in 8s: switching this device to long polling');
+    const page = location.pathname.toLowerCase();
+    const safeToReload = !page.endsWith('quiz.html'); // never restart a quiz in progress; the next page uses the new transport
+    if (safeToReload) {
+      if (window.UI) window.UI.toast('الشبكة تحجب الاتصال المباشر، سنستخدم طريقة بديلة... ⏳', { type: 'info', ms: 3000 });
+      setTimeout(() => location.reload(), 900);
+    }
+  }, 8000);
+}
 const auth = getAuth(app);
 const google = new GoogleAuthProvider();
 google.setCustomParameters({ prompt: 'select_account' });

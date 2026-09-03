@@ -21,6 +21,7 @@
     <button id="copy">📋 نسخ التقرير</button>
     <button class="ghost" onclick="location.reload()">🔄 إعادة الفحص</button>
     <button class="red" id="reset">🧹 إعادة ضبط التطبيق (مع الاحتفاظ بتقدمك)</button>
+    <button class="ghost" id="lp">📡 تبديل طريقة الاتصال بقاعدة البيانات</button>
     <button class="ghost" onclick="location.href='index.html'">🏠 الرئيسية</button>
   </div>
   <pre id="out">جاري الفحص...</pre>
@@ -57,6 +58,7 @@
     // Realtime database reachability
     try { const a = performance.now(); const r = await fetch('https://newclinic1-f25d4-default-rtdb.firebaseio.com/.json?shallow=true'); log('database reachable: ' + r.status + ' ' + Math.round(performance.now() - a) + 'ms ' + (r.ok ? '✅' : '❌')); } catch (e) { log('database ❌ ' + e.message); }
     // The real thing: load firebase-init.js and time the sign-in
+    log('database transport: ' + (localStorage.getItem('rtdb_transport') === 'lp' ? 'long-polling (الطريقة البديلة)' : 'websocket (الافتراضي)'));
     log('loading firebase-init.js ...');
     const a = performance.now();
     window.addEventListener('error', e => log('❌ window error: ' + e.message));
@@ -92,6 +94,12 @@
     const text = lines.join('\n');
     try { await navigator.clipboard.writeText(text); alert('تم نسخ التقرير، ألصقه في المحادثة'); }
     catch (e) { prompt('انسخ النص:', text); }
+  };
+  document.getElementById('lp').onclick = () => {
+    const lp = localStorage.getItem('rtdb_transport') === 'lp';
+    if (lp) localStorage.removeItem('rtdb_transport'); else localStorage.setItem('rtdb_transport', 'lp');
+    alert(lp ? 'رجعنا للطريقة الافتراضية (websocket)' : 'تم تفعيل الطريقة البديلة (long polling)');
+    location.reload();
   };
   document.getElementById('reset').onclick = async () => {
     try { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r => r.unregister())); const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k))); } catch (e) {}
