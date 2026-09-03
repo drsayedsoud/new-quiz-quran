@@ -74,6 +74,24 @@
       }
     },
 
+    "players": {
+      ".read": true,
+      ".indexOn": ["points"],
+      "$uid": {
+        ".write": "$uid.length <= 64",
+        ".validate": "newData.hasChildren(['name', 'points'])",
+        "name":      { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 30" },
+        "place":     { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "photo":     { ".validate": "newData.isString() && newData.val().length <= 60000" },
+        "avatar":    { ".validate": "newData.isString() && newData.val().length <= 64" },
+        "points":    { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000" },
+        "games":     { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" },
+        "best":      { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+        "updatedAt": { ".validate": "newData.isNumber()" },
+        "$other":    { ".validate": false }
+      }
+    },
+
     "leaderboard": {
       ".read": true,
       "$week": {

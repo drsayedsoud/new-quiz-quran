@@ -1,6 +1,10 @@
 // Results page, online part: anonymous usage stats for the admin panel + weekly honour board for the daily challenge
 import { db, ref, get, update, increment, query, orderByChild, limitToLast } from './firebase-init.js';
 import { getLocalUserId, escapeHtml } from './mp-common.js';
+import { syncPoints } from './global-board.js';
+
+// Keep the global honour board card up to date after every finished quiz
+syncPoints();
 
 const sessions = (() => { try { return JSON.parse(localStorage.getItem('userSessions') || '[]'); } catch (e) { return []; } })();
 const session = sessions[sessions.length - 1];
