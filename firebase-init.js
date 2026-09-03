@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPopup, linkWithPopup, signInWithCredential, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserPopupRedirectResolver, onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPopup, linkWithPopup, signInWithCredential, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, update, onValue, remove, onDisconnect, increment, query, orderByChild, limitToLast, runTransaction, forceLongPolling } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 import { chooseSignIn } from './auth-ui.js';
 
@@ -54,7 +54,14 @@ if (RTDB_TRANSPORT !== 'lp') {
     }
   }, 8000);
 }
-const auth = getAuth(app);
+// Remember the player on this device for good: durable persistence with a fallback chain
+// (IndexedDB, then localStorage when a browser blocks IndexedDB), never session-only or in-memory.
+let auth;
+try {
+  auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence], popupRedirectResolver: browserPopupRedirectResolver });
+} catch (e) {
+  auth = getAuth(app);
+}
 const google = new GoogleAuthProvider();
 google.setCustomParameters({ prompt: 'select_account' });
 
@@ -70,7 +77,11 @@ function rememberUser(user) {
   if (user) {
     localStorage.setItem('mp_userId', user.uid);
     // Remember that this device belongs to a Google account, so a slow restore never downgrades it to a guest
-    if (!user.isAnonymous && user.email) { localStorage.setItem('lastGoogleEmail', user.email); if (user.displayName) localStorage.setItem('lastGoogleName', user.displayName); }
+    if (!user.isAnonymous && user.email) {
+      localStorage.setItem('lastGoogleEmail', user.email);
+      if (user.displayName) localStorage.setItem('lastGoogleName', user.displayName);
+      if (user.photoURL) localStorage.setItem('lastGooglePhoto', user.photoURL);
+    }
   }
   window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user } }));
 }
@@ -144,7 +155,7 @@ export async function signOutUser() {
   try { await signOut(auth); } catch (e) {}
   localStorage.removeItem('mp_userId');
   localStorage.removeItem('auth-choice');
-  localStorage.removeItem('lastGoogleEmail'); localStorage.removeItem('lastGoogleName');
+  localStorage.removeItem('lastGoogleEmail'); localStorage.removeItem('lastGoogleName'); localStorage.removeItem('lastGooglePhoto');
   location.href = 'index.html';
 }
 

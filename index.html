@@ -593,6 +593,8 @@ function openModal(type, title) {
         }
         // Works offline too (no Firebase needed): the module below upgrades it with the Google name/photo when signed in
         window.greetHome = function (googleName, photo) {
+            // Instant greeting from what the device remembers (Google name/photo), refined once the session is restored
+            if (!googleName && localStorage.getItem('lastGoogleEmail')) { googleName = localStorage.getItem('lastGoogleName') || localStorage.getItem('lastGoogleEmail'); photo = photo || localStorage.getItem('lastGooglePhoto') || ''; }
             let name = googleName || '';
             if (!name) { try { name = (JSON.parse(localStorage.getItem('gbCard') || 'null') || {}).name || ''; } catch (e) {} }
             if (!name) name = localStorage.getItem('mp_playerName') || localStorage.getItem('piggyName') || '';
