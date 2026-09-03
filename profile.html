@@ -90,6 +90,7 @@
     <p class="sub" id="account-line">جاري التحقق من الحساب...</p>
     <div class="row" style="flex-wrap: wrap;">
       <button class="btn blue" id="google-link-btn" style="display:none">ربط حسابي بجوجل ✨</button>
+      <button class="btn ghost" id="admin-btn" style="display:none; border-color: rgba(239,68,68,0.5); color: #fca5a5;" onclick="location.href='admin.html'">🛠️ لوحة الإدارة</button>
       <button class="btn ghost" id="signout-btn" style="display:none">تسجيل الخروج</button>
     </div>
     <p class="sub" id="account-benefits" style="display:none; margin: 10px 0 0;">✨ مع حساب Google: بطاقتك ونقاطك في لوحة الشرف محفوظة على كل أجهزتك، واسمك وصورتك تُملآن تلقائياً، ولا تفقد حسابك عند تغيير الهاتف.</p>
@@ -220,7 +221,7 @@
 <script type="module">
   // Global honour board: publish my card (name, place, photo) and list the top 100
   import { publishCard, loadTop, rowHtml, myCard, getLocalUserId } from './global-board.js';
-  import { currentUser, signInGoogle, signOutUser } from './firebase-init.js';
+  import { currentUser, signInGoogle, signOutUser, isAdmin } from './firebase-init.js';
   const $ = id => document.getElementById(id);
   const list = $('gb-list'), status = $('gb-status'), photoImg = $('gb-photo-img');
   let photo = '';
@@ -250,9 +251,10 @@
       line.textContent = '🚀 أنت في وضع الدخول السريع (بدون حساب)';
       link.style.display = ''; ben.style.display = ''; out.style.display = 'none';
     } else {
-      line.textContent = '✅ مسجّل بحساب Google: ' + (u.displayName || u.email || '');
+      line.textContent = (isAdmin() ? '👑 مدير التطبيق — ' : '✅ مسجّل بحساب Google: ') + (u.displayName || u.email || '');
       link.style.display = 'none'; ben.style.display = 'none'; out.style.display = '';
     }
+    $('admin-btn').style.display = isAdmin() ? '' : 'none';
   }
   renderAccount();
   window.addEventListener('auth-changed', renderAccount);

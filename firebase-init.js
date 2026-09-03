@@ -92,6 +92,12 @@ export async function signOutUser() {
   location.href = 'index.html';
 }
 
+// The owner: a Google-verified email. database.rules.json grants the same email moderation rights server-side.
+const ADMIN_EMAILS = ['drsayedsoudnew@gmail.com'];
+export function isAdmin() {
+  const u = auth.currentUser;
+  return !!(u && !u.isAnonymous && u.email && u.emailVerified && ADMIN_EMAILS.includes(u.email.toLowerCase()));
+}
 export const currentUser = () => auth.currentUser;
 export const isGoogleUser = () => !!(auth.currentUser && !auth.currentUser.isAnonymous);
 export function accountLabel() {

@@ -8,7 +8,13 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="ui-feedback.js"></script>
   <style>
+    #admin-gate { display: none; max-width: 440px; margin: 60px auto; text-align: center; }
+    #admin-gate .g-btn { display: inline-flex; align-items: center; gap: 10px; background: #fff; color: #1f2937; border: none; border-radius: 999px; padding: 12px 22px; font-family: inherit; font-weight: 800; font-size: 1em; cursor: pointer; margin: 14px 0; }
+    .del { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.45); color: #fca5a5; border-radius: 999px; padding: 4px 10px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 0.85em; }
+    .del:hover { background: rgba(239,68,68,0.35); }
+    .who { font-size: 0.85em; color: var(--muted); }
     :root { --bg: #1a1a2e; --card: #22223f; --border: #34345c; --text: #e6e6f0; --muted: #a0aec0; --green: #10b981; --blue: #4299e1; --gold: #f6c343; --red: #ef4444; }
     * { box-sizing: border-box; }
     body { margin: 0; padding: 16px; background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif; }
@@ -64,8 +70,15 @@
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top"><h1>🛠️ لوحة الإدارة</h1><div><a class="back" href="index.html">🏠 الرئيسية</a></div></div>
+<div id="admin-gate" class="card">
+  <div style="font-size: 3em;">🔒</div>
+  <h2>لوحة الإدارة للمدير فقط</h2>
+  <p class="sub" id="gate-msg">سجّل الدخول بحساب Google الخاص بمدير التطبيق للمتابعة</p>
+  <button type="button" class="g-btn" id="gate-google"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-7.9-6.1C.9 16.6 0 20.2 0 24s.9 7.4 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.3 0 11.7-2.1 15.6-5.7l-7.5-5.8c-2.1 1.4-4.8 2.3-8.1 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg> الدخول بحساب Google</button>
+  <div><a class="back" href="index.html">🏠 الرئيسية</a></div>
+</div>
+<div class="wrap" style="display: none;">
+  <div class="top"><h1>🛠️ لوحة الإدارة</h1><div style="display:flex; align-items:center; gap:10px;"><span class="who" id="who"></span><a class="back" href="index.html">🏠 الرئيسية</a></div></div>
 
   <div class="grid">
     <div class="kpi"><b id="k-today">–</b><span>مسابقات اليوم</span></div>
@@ -88,8 +101,28 @@
 
   <div class="card">
     <h2>🎮 الغرف الحية</h2>
-    <p class="sub">تحديث لحظي من قاعدة البيانات</p>
-    <table><thead><tr><th>الكود</th><th>القسم</th><th>اللاعبون</th><th>الحالة</th><th>أُنشئت</th></tr></thead><tbody id="rooms"></tbody></table>
+    <p class="sub">تحديث لحظي من قاعدة البيانات <button type="button" id="rooms-clean" class="del" style="margin-right:10px;">🧹 مسح الغرف المنتهية والقديمة</button></p>
+    <table><thead><tr><th>الكود</th><th>القسم</th><th>اللاعبون</th><th>الحالة</th><th>أُنشئت</th><th></th></tr></thead><tbody id="rooms"></tbody></table>
+  </div>
+
+  <div class="card" id="ann-card">
+    <h2>📣 إعلان لكل المستخدمين</h2>
+    <p class="sub">يظهر كشريط أعلى الصفحة الرئيسية عند الجميع. أفرغ النص أو أوقف التفعيل لإخفائه.</p>
+    <textarea id="ann-text" maxlength="300" rows="2" placeholder="مثال: مسابقة كبرى الجمعة القادمة بعد المغرب، جهّزوا أنفسكم 🏆" style="width:100%; padding:10px 12px; border-radius:14px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit; font-size:0.95em; resize:vertical;"></textarea>
+    <div style="display:flex; align-items:center; gap:12px; margin-top:10px; flex-wrap:wrap;">
+      <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="ann-active"> مفعّل</label>
+      <button type="button" id="ann-save" class="back" style="border-color:#10b981; color:#6ee7b7; cursor:pointer;">💾 حفظ الإعلان</button>
+      <span class="who" id="ann-status"></span>
+    </div>
+  </div>
+
+  <div class="card" id="mod-card">
+    <h2>🛡️ الإشراف على لوحات الشرف</h2>
+    <p class="sub">يمكنك حذف أي بطاقة أو نتيجة مسيئة، والحذف نهائي</p>
+    <div class="two">
+      <div><h3 class="sub">🌍 لوحة الشرف العالمية (أعلى 50)</h3><table><thead><tr><th>#</th><th>الاسم</th><th>النقاط</th><th></th></tr></thead><tbody id="mod-players"><tr><td colspan="4" style="text-align:center;color:var(--muted)">جاري التحميل...</td></tr></tbody></table></div>
+      <div><h3 class="sub">📅 لوحة هذا الأسبوع</h3><table><thead><tr><th>#</th><th>الاسم</th><th>النتيجة</th><th></th></tr></thead><tbody id="mod-week"><tr><td colspan="4" style="text-align:center;color:var(--muted)">جاري التحميل...</td></tr></tbody></table></div>
+    </div>
   </div>
 
   <div class="card lib">
@@ -117,12 +150,89 @@
 </div>
 
 <script type="module">
-  import { db, ref, get, onValue, query, orderByChild, limitToLast } from './firebase-init.js';
+  import { db, ref, get, set, onValue, remove, query, orderByChild, limitToLast, isAdmin, currentUser, signInGoogle } from './firebase-init.js';
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const LABELS = { mixed: 'القرآن', seerah: 'السيرة', fiqh: 'الفقه', general: 'معلومات', meanings: 'معاني', kids_1: 'أطفال 1', kids_2: 'أطفال 2', kids_3: 'أطفال 3', daily: 'تحدي اليوم', complete: 'أكمل الآية', review: 'مراجعة', favorites: 'المفضلة' };
   const label = t => LABELS[String(t).split('_juz_')[0]] || t;
   const dayKey = d => d.toISOString().slice(0, 10);
+
+  // ---- gate: only the owner's Google account sees the panel ----
+  const admin = isAdmin();
+  document.querySelector('.wrap').style.display = admin ? '' : 'none';
+  if (!admin) {
+    $('admin-gate').style.display = 'block';
+    const u = currentUser();
+    if (u && !u.isAnonymous) $('gate-msg').textContent = 'الحساب ' + (u.email || '') + ' ليس حساب المدير. اضغط الزر واختر حساب المدير.';
+    $('gate-google').onclick = async () => {
+      const user = await signInGoogle();
+      if (user && isAdmin()) location.reload();
+      else if (user) $('gate-msg').textContent = 'الحساب ' + (user.email || '') + ' ليس حساب المدير.';
+    };
+  } else {
+    $('who').textContent = '👑 ' + (currentUser().email || '');
+  }
+
+  // ---- moderation: delete rooms, honour-board cards and weekly rows (rules allow the admin email) ----
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('button.del');
+    if (!b) return;
+    const ok = await UI.dialog({ emoji: '🗑️', title: 'حذف ' + b.dataset.what + '؟', text: 'لا يمكن التراجع عن الحذف.', primary: 'حذف', secondary: 'إلغاء', danger: true });
+    if (!ok) return;
+    try { await remove(ref(db, b.dataset.path)); UI.toast('تم الحذف', { type: 'ok' }); }
+    catch (err) { UI.fail(err, 'تعذر الحذف'); }
+  });
+  const delBtn = (path, what) => `<button type="button" class="del" data-path="${esc(path)}" data-what="${esc(what)}">🗑️ حذف</button>`;
+  function weekKey(d) {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const day = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return date.getUTCFullYear() + '-W' + String(Math.ceil((((date - yearStart) / 86400000) + 1) / 7)).padStart(2, '0');
+  }
+  if (admin) {
+    // announcement shown on everyone's home page
+    onValue(ref(db, 'config/announcement'), snap => {
+      const a = snap.val() || {};
+      $('ann-text').value = a.text || '';
+      $('ann-active').checked = !!a.active;
+      $('ann-status').textContent = a.at ? 'آخر تحديث: ' + new Date(a.at).toLocaleString('ar-EG') : '';
+    });
+    $('ann-save').onclick = async () => {
+      const text = $('ann-text').value.trim().slice(0, 300);
+      try {
+        await set(ref(db, 'config/announcement'), { text, active: !!text && $('ann-active').checked, at: Date.now() });
+        UI.toast(text && $('ann-active').checked ? 'الإعلان ظاهر للجميع الآن 📣' : 'تم إخفاء الإعلان', { type: 'ok' });
+      } catch (e) { UI.fail(e, 'تعذر حفظ الإعلان'); }
+    };
+    // one-tap cleanup of finished/closed rooms and anything older than 6 hours
+    $('rooms-clean').onclick = async () => {
+      const snap = await get(ref(db, 'rooms'));
+      const all = snap.val() || {};
+      const stale = Object.entries(all).filter(([, r]) => !r || !r.createdAt || Date.now() - r.createdAt > 6 * 3600000 || r.status === 'finished' || r.status === 'closed').map(([c]) => c);
+      if (!stale.length) { UI.toast('لا توجد غرف تحتاج مسحاً', { type: 'info' }); return; }
+      const ok = await UI.dialog({ emoji: '🧹', title: 'مسح ' + stale.length + ' غرفة؟', text: 'الغرف المنتهية أو المغلقة أو الأقدم من 6 ساعات فقط. اللاعبون النشطون لن يتأثروا.', primary: 'مسح', secondary: 'إلغاء', danger: true });
+      if (!ok) return;
+      let n = 0;
+      for (const c of stale) { try { await remove(ref(db, 'rooms/' + c)); n++; } catch (e) { console.warn(c, e.message); } }
+      UI.toast('تم مسح ' + n + ' غرفة', { type: 'ok' });
+    };
+    onValue(query(ref(db, 'players'), orderByChild('points'), limitToLast(50)), snap => {
+      const rows = []; snap.forEach(c => rows.push(Object.assign({ id: c.key }, c.val())));
+      rows.sort((a, b) => (b.points || 0) - (a.points || 0));
+      $('mod-players').innerHTML = rows.length ? rows.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.name)}${r.place ? ' <span class="who">· ' + esc(r.place) + '</span>' : ''}</td><td><b>${r.points || 0}</b></td><td>${delBtn('players/' + r.id, 'بطاقة ' + r.name)}</td></tr>`).join('')
+        : '<tr><td colspan="4" style="text-align:center;color:var(--muted)">لا توجد بطاقات بعد</td></tr>';
+    });
+    const wk = weekKey(new Date());
+    onValue(ref(db, 'leaderboard/' + wk), snap => {
+      const rows = []; snap.forEach(c => rows.push(Object.assign({ id: c.key }, c.val())));
+      rows.sort((a, b) => (b.score - a.score) || (a.at - b.at));
+      $('mod-week').innerHTML = rows.length ? rows.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.name)}</td><td><b>${r.score}/${r.total}</b></td><td>${delBtn('leaderboard/' + wk + '/' + r.id, 'نتيجة ' + r.name)}</td></tr>`).join('')
+        : '<tr><td colspan="4" style="text-align:center;color:var(--muted)">لا أحد هذا الأسبوع بعد</td></tr>';
+    });
+  }
+
+  if (admin) {
 
   // ---- daily stats ----
   (async () => {
@@ -164,10 +274,11 @@
       const st = r.status || 'waiting';
       const badge = { waiting: 'في الانتظار', playing: 'جارٍ اللعب', finished: 'انتهت', closed: 'مغلقة' }[st] || st;
       const age = r.createdAt ? Math.round((Date.now() - r.createdAt) / 60000) + ' د' : '';
-      return `<tr><td><b>${code}</b></td><td>${esc(label((r.settings || {}).category))}${(r.settings || {}).sync ? ' 👨‍🏫' : ''}${(r.settings || {}).teams ? ' 🔴🔵' : ''}</td><td>${n}</td><td><span class="badge ${st}">${badge}</span></td><td>${age}</td></tr>`;
-    }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted)">لا توجد غرف الآن</td></tr>';
+      return `<tr><td><b>${code}</b></td><td>${esc(label((r.settings || {}).category))}${(r.settings || {}).sync ? ' 👨‍🏫' : ''}${(r.settings || {}).teams ? ' 🔴🔵' : ''}</td><td>${n}</td><td><span class="badge ${st}">${badge}</span></td><td>${age}</td><td>${delBtn('rooms/' + code, 'الغرفة ' + code)}</td></tr>`;
+    }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted)">لا توجد غرف الآن</td></tr>';
     $('k-rooms').textContent = active; $('k-players').textContent = players;
   });
+  } // admin only
 </script>
 
 <script>

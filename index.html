@@ -550,6 +550,7 @@ function openModal(type, title) {
 
     <!-- Top Actions -->
     <div style="position: absolute; top: 15px; left: 15px; display: flex; gap: 10px; z-index: 100;">
+        <button id="admin-chip" onclick="location.href='admin.html'" title="لوحة الإدارة" style="display: none; background: rgba(239,68,68,0.18); border: 1px solid rgba(239,68,68,0.5); color: #fca5a5; height: 45px; padding: 0 14px; border-radius: 999px; cursor: pointer; align-items: center; gap: 6px; font-family: 'Cairo'; font-weight: 800; backdrop-filter: blur(10px);">🛠️ الإدارة</button>
         <button id="install-chip" onclick="installApp()" title="تثبيت التطبيق" style="display: none; background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.5); color: #6ee7b7; height: 45px; padding: 0 14px; border-radius: 999px; cursor: pointer; align-items: center; gap: 6px; font-family: 'Cairo'; font-weight: 800; backdrop-filter: blur(10px);">📲 تثبيت</button>
         <button onclick="location.href='profile.html'" title="ملفي وإنجازاتي" style="background: rgba(246,195,67,0.15); border: 1px solid rgba(246,195,67,0.4); color: #f6c343; height: 45px; padding: 0 14px; border-radius: 999px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Cairo'; font-weight: 800; backdrop-filter: blur(10px);">👤 ملفي <span id="profile-badge" style="display:none;background:#ef4444;color:#fff;border-radius:999px;padding:0 7px;font-size:0.75em;"></span></button>
         <button onclick="shareApp()" title="مشاركة التطبيق" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: transform 0.3s ease, background 0.3s ease;" onmouseenter="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='scale(1.1)';" onmouseleave="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='scale(1)';">
@@ -1044,17 +1045,42 @@ function openModal(type, title) {
         ⚙️
     </div>
 
-    <!-- Admin Password Modal -->
-    <div id="admin-password-modal" class="modal" style="display: none; align-items: center; justify-content: center; z-index: 2000; background: rgba(0, 0, 0, 0.8);">
-        <div style="background: linear-gradient(135deg, #2a2a4e, #16213e); padding: 30px; border-radius: 15px; border: 2px solid var(--button-blue); text-align: center; box-shadow: 0 0 20px var(--button-blue); max-width: 300px; width: 90%;">
-            <h3 style="color: var(--button-blue); margin-top: 0;">🔒 لوحة التحكم</h3>
-            <p style="color: #ccc; font-size: 0.9em;">يرجى إدخال كلمة المرور للوصول</p>
-            <input type="password" id="admin-password-input" placeholder="••••" style="width: 80%; padding: 10px; text-align: center; font-size: 1.5em; border-radius: 8px; border: 1px solid var(--button-blue); background: #111; color: white; letter-spacing: 10px; margin-bottom: 20px;">
-            <br>
-            <button onclick="checkAdminPassword()" style="background: var(--button-blue); color: white; padding: 10px 30px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; width: 100%;">دخول</button>
-            <button onclick="document.getElementById('admin-password-modal').style.display='none'" style="background: transparent; color: #888; border: none; margin-top: 15px; cursor: pointer;">إلغاء</button>
-        </div>
-    </div>
+    <!-- Admin access: the owner's Google account opens the panel with one tap; anyone else long-presses the gear
+         and is asked to sign in with the admin Google account (no shared password any more). -->
+    <script type="module">
+        import { isAdmin, signInGoogle, db, ref, onValue } from './firebase-init.js';
+        // Owner's announcement banner (config/announcement), dismissible until the text changes
+        onValue(ref(db, 'config/announcement'), snap => {
+            const a = snap.val();
+            let bar = document.getElementById('announce-bar');
+            const show = a && a.active && a.text;
+            if (!show || localStorage.getItem('ann-seen') === String(a.at)) { if (bar) bar.remove(); return; }
+            if (!bar) {
+                bar = document.createElement('div');
+                bar.id = 'announce-bar';
+                bar.style.cssText = 'display:flex;align-items:center;gap:10px;max-width:900px;width:100%;margin:0 auto 18px;padding:12px 16px;border-radius:16px;background:linear-gradient(135deg,rgba(246,195,67,0.18),rgba(245,158,11,0.12));border:1px solid rgba(246,195,67,0.5);color:#fde68a;font-weight:700;line-height:1.6;animation:fadeIn 0.6s ease-out;';
+                bar.innerHTML = '<span style="font-size:1.5em;">📣</span><span class="t" style="flex:1;"></span><button type="button" aria-label="إغلاق" style="background:none;border:none;color:#fde68a;font-size:1.4em;cursor:pointer;line-height:1;">&times;</button>';
+                bar.querySelector('button').onclick = () => { localStorage.setItem('ann-seen', String(a.at)); bar.remove(); };
+                const hero = document.querySelector('.home-hero');
+                if (hero) hero.after(bar); else document.body.prepend(bar);
+            }
+            bar.querySelector('.t').textContent = a.text;
+        }, () => {});
+        const chip = document.getElementById('admin-chip');
+        const gearEl = document.getElementById('admin-gear');
+        const sync = () => { const a = isAdmin(); if (chip) chip.style.display = a ? 'inline-flex' : 'none'; if (gearEl) { gearEl.style.opacity = a ? '0.95' : '0.5'; gearEl.title = a ? 'لوحة الإدارة' : ''; } };
+        sync();
+        window.addEventListener('auth-changed', sync);
+        window.openAdmin = async () => {
+            if (isAdmin()) { location.href = 'admin.html'; return; }
+            const ok = await UI.dialog({ emoji: '🔒', title: 'لوحة الإدارة', text: 'هذه اللوحة لمدير التطبيق فقط. سجّل الدخول بحساب Google الخاص بالمدير للمتابعة.', primary: 'الدخول بحساب Google', secondary: 'إلغاء' });
+            if (!ok) return;
+            const u = await signInGoogle();
+            if (u && isAdmin()) location.href = 'admin.html';
+            else if (u) UI.toast('الحساب ' + (u.email || '') + ' ليس حساب المدير', { type: 'warn' });
+        };
+        if (gearEl) gearEl.addEventListener('click', () => { if (isAdmin()) location.href = 'admin.html'; });
+    </script>
     <script>
         const adminGear = document.getElementById('admin-gear');
         let pressTimer;
@@ -1063,9 +1089,8 @@ function openModal(type, title) {
             adminGear.style.transform = 'rotate(180deg) scale(1.2)';
             adminGear.style.opacity = '1';
             pressTimer = window.setTimeout(() => {
-                document.getElementById('admin-password-modal').style.display = 'flex';
-                document.getElementById('admin-password-input').value = '';
-                document.getElementById('admin-password-input').focus();
+                if (window.openAdmin) window.openAdmin();
+                else UI.toast('لوحة الإدارة تحتاج اتصالاً بالإنترنت', { type: 'warn' });
             }, 2000);
         };
         const cancelPress = () => {
@@ -1078,15 +1103,6 @@ function openModal(type, title) {
         adminGear.addEventListener('mouseup', cancelPress);
         adminGear.addEventListener('mouseleave', cancelPress);
         adminGear.addEventListener('touchend', cancelPress);
-        function checkAdminPassword() {
-            const pass = document.getElementById('admin-password-input').value;
-            if (pass === '1153') {
-                window.location.href = 'admin.html';
-            } else {
-                UI.toast('كلمة المرور غير صحيحة', { type: 'err' });
-                document.getElementById('admin-password-input').value = '';
-            }
-        }
     </script>
 
 <script>
